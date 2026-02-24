@@ -41,12 +41,13 @@ import {
 //    Firebase Console → Project Settings → Your Apps → SDK setup
 // ============================================================
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID",
+  apiKey: "AIzaSyDwALfNxoI8_r_wjmhFv4HqgofsiyqaWF8",
+  authDomain: "rentgosl.firebaseapp.com",
+  projectId: "rentgosl",
+  storageBucket: "rentgosl.firebasestorage.app",
+  messagingSenderId: "1002200341463",
+  appId: "1:1002200341463:web:eddbb5ad2e94202c8a0992",
+  measurementId: "G-GC2D74X4TK"
 };
 // ============================================================
 
