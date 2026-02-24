@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>RentItSL — Database Setup</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .card { background: #1e293b; border-radius: 16px; padding: 36px; max-width: 620px; width: 100%; box-shadow: 0 8px 32px #0008; }
+    h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; color: #f8fafc; }
+    .subtitle { color: #94a3b8; font-size: .9rem; margin-bottom: 28px; }
+    .log { background: #0f172a; border-radius: 10px; padding: 16px; font-family: monospace; font-size: .82rem; height: 300px; overflow-y: auto; margin-bottom: 20px; }
+    .log-line { padding: 3px 0; border-bottom: 1px solid #1e293b; }
+    .ok   { color: #4ade80; }
+    .err  { color: #f87171; }
+    .info { color: #60a5fa; }
+    .warn { color: #fbbf24; }
+    button { width: 100%; padding: 14px; border-radius: 10px; border: none; font-size: 1rem; font-weight: 600; cursor: pointer; transition: opacity .2s; }
+    #startBtn { background: #3b82f6; color: #fff; }
+    #startBtn:disabled { opacity: .5; cursor: not-allowed; }
+    .done-banner { background: #14532d; color: #4ade80; border-radius: 10px; padding: 14px 18px; text-align: center; font-weight: 600; display: none; margin-bottom: 16px; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <h1>RentItSL — Database Setup</h1>
+  <p class="subtitle">Click the button to automatically create all required Firestore collections and documents.</p>
+
+  <div class="log" id="log"></div>
+  <div class="done-banner" id="doneBanner">All collections created successfully!</div>
+  <button id="startBtn" onclick="runSetup()">Run Database Setup</button>
+</div>
+
+<script type="module">
+import { initializeApp }  from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getFirestore, doc, setDoc, collection, getDocs, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+// ── Firebase config ──────────────────────────────────────────
+const firebaseConfig = {
+  apiKey:            "AIzaSyDwALfNxoI8_r_wjmhFv4HqgofsiyqaWF8",
+  authDomain:        "rentgosl.firebaseapp.com",
+  projectId:         "rentgosl",
+  storageBucket:     "rentgosl.firebasestorage.app",
+  messagingSenderId: "1002200341463",
+  appId:             "1:1002200341463:web:eddbb5ad2e94202c8a0992",
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+// ── Logging helpers ──────────────────────────────────────────
+const logEl = document.getElementById("log");
+function log(msg, type = "info") {
+  const div = document.createElement("div");
+  div.className = `log-line ${type}`;
+  const ts = new Date().toLocaleTimeString();
+  div.textContent = `[${ts}] ${msg}`;
+  logEl.appendChild(div);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+// ── Data to seed ─────────────────────────────────────────────
+const CATEGORIES = [
+  // Vehicles
+  { id: "car",            group: "Vehicles",            name: "Car",                   icon: "bi-car-front",             order: 1  },
+  { id: "van",            group: "Vehicles",            name: "Van",                   icon: "bi-truck",                 order: 2  },
+  { id: "motorcycle",     group: "Vehicles",            name: "Motorcycle",            icon: "bi-bicycle",               order: 3  },
+  { id: "truck-lorry",    group: "Vehicles",            name: "Truck / Lorry",         icon: "bi-truck-front-fill",      order: 4  },
+  { id: "bus-coach",      group: "Vehicles",            name: "Bus / Coach",           icon: "bi-bus-front",             order: 5  },
+  { id: "tuk-tuk",        group: "Vehicles",            name: "Tuk Tuk",               icon: "bi-taxi-front",            order: 6  },
+  { id: "boat",           group: "Vehicles",            name: "Boat",                  icon: "bi-water",                 order: 7  },
+  // Wedding & Events
+  { id: "wedding-car",    group: "Wedding & Events",    name: "Wedding Car",           icon: "bi-heart",                 order: 8  },
+  { id: "wedding-decor",  group: "Wedding & Events",    name: "Wedding Decor",         icon: "bi-flower1",               order: 9  },
+  { id: "sound-lighting", group: "Wedding & Events",    name: "Sound & Lighting",      icon: "bi-speaker-fill",          order: 10 },
+  { id: "event-tent",     group: "Wedding & Events",    name: "Event Tent / Marquee",  icon: "bi-umbrella",              order: 11 },
+  { id: "dj-equipment",   group: "Wedding & Events",    name: "DJ Equipment",          icon: "bi-music-note-beamed",     order: 12 },
+  // Construction
+  { id: "heavy-machinery",      group: "Construction",  name: "Heavy Machinery",       icon: "bi-gear-wide-connected",   order: 13 },
+  { id: "construction-equip",   group: "Construction",  name: "Construction Equipment",icon: "bi-tools",                 order: 14 },
+  { id: "generator",            group: "Construction",  name: "Generator",             icon: "bi-lightning-charge-fill", order: 15 },
+  { id: "power-tools",          group: "Construction",  name: "Power Tools",           icon: "bi-wrench-adjustable-circle", order: 16 },
+  { id: "scaffolding",          group: "Construction",  name: "Scaffolding",           icon: "bi-ladder",                order: 17 },
+  // Property
+  { id: "house-villa",          group: "Property",      name: "House / Villa",         icon: "bi-house-door",            order: 18 },
+  { id: "apartment-room",       group: "Property",      name: "Apartment / Room",      icon: "bi-building",              order: 19 },
+  { id: "commercial-space",     group: "Property",      name: "Commercial Space",      icon: "bi-shop",                  order: 20 },
+  // Electronics & Media
+  { id: "camera-photography",   group: "Electronics & Media", name: "Camera & Photography", icon: "bi-camera",           order: 21 },
+  { id: "video-equipment",      group: "Electronics & Media", name: "Video Equipment",      icon: "bi-camera-video",     order: 22 },
+  { id: "av-equipment",         group: "Electronics & Media", name: "AV Equipment",         icon: "bi-display",          order: 23 },
+  { id: "computer-it",          group: "Electronics & Media", name: "Computer & IT",        icon: "bi-laptop",           order: 24 },
+  // Party & Leisure
+  { id: "party-items",          group: "Party & Leisure", name: "Party Items",         icon: "bi-gift",                  order: 25 },
+  { id: "bouncy-castle",        group: "Party & Leisure", name: "Bouncy Castle",       icon: "bi-balloon",               order: 26 },
+  { id: "sports-equipment",     group: "Party & Leisure", name: "Sports Equipment",    icon: "bi-trophy",                order: 27 },
+  { id: "bicycle",              group: "Party & Leisure", name: "Bicycle",             icon: "bi-bicycle",               order: 28 },
+  { id: "camping-gear",         group: "Party & Leisure", name: "Camping Gear",        icon: "bi-tree",                  order: 29 },
+  // Clothing
+  { id: "formal-wear",          group: "Clothing",        name: "Formal Wear",         icon: "bi-person-badge",          order: 30 },
+  { id: "costume-theatrical",   group: "Clothing",        name: "Costume & Theatrical",icon: "bi-mask",                  order: 31 },
+  // Other
+  { id: "other",                group: "Other",           name: "Other",               icon: "bi-box2",                  order: 32 },
+];
+
+const SITE_SETTINGS = {
+  siteName:            "RentItSL",
+  tagline:             "Sri Lanka's Rental Marketplace",
+  contactEmail:        "rentitgosl@gmail.com",
+  contactPhone:        "",
+  currency:            "LKR",
+  currencySymbol:      "Rs.",
+  featuredAdPrice:     1500,
+  featuredAdDays:      7,
+  maxImagesPerAd:      6,
+  maxImageSizeMB:      5,
+  adsRequireApproval:  true,
+  maintenanceMode:     false,
+  createdAt:           null, // filled below
+};
+
+// ── Setup runner ─────────────────────────────────────────────
+window.runSetup = async function () {
+  const btn = document.getElementById("startBtn");
+  btn.disabled = true;
+  btn.textContent = "Running…";
+  log("Starting database setup for RentItSL…", "info");
+
+  try {
+    // 1. categories collection
+    log("Creating 'categories' collection…", "info");
+    let catCount = 0;
+    for (const cat of CATEGORIES) {
+      await setDoc(doc(db, "categories", cat.id), {
+        group:     cat.group,
+        name:      cat.name,
+        icon:      cat.icon,
+        order:     cat.order,
+        active:    true,
+        createdAt: serverTimestamp(),
+      });
+      catCount++;
+      log(`  ✓ categories/${cat.id}  (${cat.name})`, "ok");
+    }
+    log(`categories done — ${catCount} documents written`, "ok");
+
+    // 2. settings collection
+    log("Creating 'settings/site' document…", "info");
+    await setDoc(doc(db, "settings", "site"), {
+      ...SITE_SETTINGS,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+    log("  ✓ settings/site", "ok");
+
+    // 3. settings/featuredPlans
+    log("Creating 'settings/featuredPlans' document…", "info");
+    await setDoc(doc(db, "settings", "featuredPlans"), {
+      plans: [
+        { days: 3,  price: 800,  label: "3 Days"  },
+        { days: 7,  price: 1500, label: "1 Week"  },
+        { days: 14, price: 2500, label: "2 Weeks" },
+        { days: 30, price: 4000, label: "1 Month" },
+      ],
+      updatedAt: serverTimestamp(),
+    });
+    log("  ✓ settings/featuredPlans", "ok");
+
+    // 4. ads placeholder (collection exists once any doc is added)
+    log("Creating 'ads/_placeholder' document…", "info");
+    await setDoc(doc(db, "ads", "_placeholder"), {
+      _note:     "This document keeps the collection visible in the console. Safe to delete once real ads exist.",
+      createdAt: serverTimestamp(),
+    });
+    log("  ✓ ads/_placeholder", "ok");
+
+    // 5. users placeholder
+    log("Creating 'users/_placeholder' document…", "info");
+    await setDoc(doc(db, "users", "_placeholder"), {
+      _note:     "This document keeps the collection visible in the console. Safe to delete once real users sign in.",
+      createdAt: serverTimestamp(),
+    });
+    log("  ✓ users/_placeholder", "ok");
+
+    // Done
+    log("", "info");
+    log("All collections created successfully!", "ok");
+    log("Next step: go to Firebase Console → Firestore and verify the collections.", "info");
+    log("You can delete the _placeholder docs from 'ads' and 'users' any time.", "warn");
+
+    document.getElementById("doneBanner").style.display = "block";
+    btn.textContent = "Done!";
+
+  } catch (err) {
+    log("ERROR: " + err.message, "err");
+    log("Make sure your Firestore rules allow writes (use the rules from the README, or temporarily allow all).", "warn");
+    btn.disabled = false;
+    btn.textContent = "Retry Setup";
+  }
+};
+</script>
+</body>
+</html>
