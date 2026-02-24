@@ -25,9 +25,8 @@ function getToastContainer() {
 export function showToast(message, type = "info", duration = 3500) {
   const container = getToastContainer();
   const toast = document.createElement("div");
-  const icons = { success: "✓", error: "✕", warning: "⚠", info: "ℹ" };
   toast.className = `toast ${type}`;
-  toast.innerHTML = `<span>${icons[type] || icons.info}</span><span>${message}</span>`;
+  toast.innerHTML = `<span>${message}</span>`;
   container.appendChild(toast);
   setTimeout(() => {
     toast.classList.add("exit");
@@ -61,7 +60,6 @@ export function hideLoading() {
 // AUTHENTICATION HELPERS
 // ============================================================
 
-/** Sign in with Google popup */
 export async function signInWithGoogle() {
   try {
     showLoading("Signing in...");
@@ -79,7 +77,6 @@ export async function signInWithGoogle() {
   }
 }
 
-/** Sign out */
 export async function signOutUser() {
   try {
     await signOut(auth);
@@ -90,7 +87,6 @@ export async function signOutUser() {
   }
 }
 
-/** Create or update user document in Firestore */
 export async function ensureUserDoc(user) {
   const userRef = doc(db, "users", user.uid);
   const snap = await getDoc(userRef);
@@ -107,14 +103,12 @@ export async function ensureUserDoc(user) {
   return snap.data() || {};
 }
 
-/** Get current user role from Firestore */
 export async function getUserRole(uid) {
   const snap = await getDoc(doc(db, "users", uid));
   if (snap.exists()) return snap.data().role || "user";
   return "user";
 }
 
-/** Get full user data from Firestore */
 export async function getUserData(uid) {
   const snap = await getDoc(doc(db, "users", uid));
   if (snap.exists()) return snap.data();
@@ -122,54 +116,48 @@ export async function getUserData(uid) {
 }
 
 // ============================================================
-// AUTH STATE — Navbar & Session
+// NAVBAR — with user dropdown + role-based links
 // ============================================================
 
-/**
- * Initialise navbar based on auth state.
- * Looks for elements: #nav-login-btn, #nav-user-menu, #nav-user-name,
- * #nav-user-avatar, #nav-logout-btn, #nav-dashboard-link, #nav-admin-link
- */
 export function initNavbar() {
-  const loginBtn = document.getElementById("nav-login-btn");
-  const userMenu = document.getElementById("nav-user-menu");
-  const userName = document.getElementById("nav-user-name");
-  const userAvatar = document.getElementById("nav-user-avatar");
-  const logoutBtn = document.getElementById("nav-logout-btn");
-  const dashboardLink = document.getElementById("nav-dashboard-link");
-  const adminLink = document.getElementById("nav-admin-link");
-  const hamburger = document.getElementById("hamburger");
-  const mobileNav = document.getElementById("mobile-nav");
+  const loginBtn      = document.getElementById("nav-login-btn");
+  const userWrap      = document.getElementById("nav-user-wrap");
+  const userBtn       = document.getElementById("nav-user-btn");
+  const userDropdown  = document.getElementById("nav-user-dropdown");
+  const userName      = document.getElementById("nav-user-name");
+  const userAvatar    = document.getElementById("nav-user-avatar");
+  const logoutBtn     = document.getElementById("nav-logout-btn");
+  const mobLogoutBtn  = document.getElementById("mob-logout-btn");
+  const dropAdminLink = document.getElementById("dropdown-admin-link");
+  const navAdminLink  = document.getElementById("nav-admin-link");
+  const mobAdminLink  = document.getElementById("mob-admin-link");
+  const dropEmail     = document.getElementById("dropdown-user-email");
+  const hamburger     = document.getElementById("hamburger");
+  const mobileNav     = document.getElementById("mobile-nav");
 
+  // Hamburger
   if (hamburger && mobileNav) {
-    hamburger.addEventListener("click", () => {
-      mobileNav.classList.toggle("open");
+    hamburger.addEventListener("click", () => mobileNav.classList.toggle("open"));
+  }
+
+  // Dropdown toggle
+  if (userBtn && userDropdown) {
+    userBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      userDropdown.classList.toggle("open");
+    });
+    document.addEventListener("click", (e) => {
+      if (userWrap && !userWrap.contains(e.target)) {
+        userDropdown.classList.remove("open");
+      }
     });
   }
 
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      if (loginBtn) loginBtn.classList.add("hidden");
-      if (userMenu) userMenu.classList.remove("hidden");
-      if (userName) userName.textContent = user.displayName?.split(" ")[0] || "User";
-      if (userAvatar && user.photoURL) userAvatar.src = user.photoURL;
-      if (dashboardLink) dashboardLink.classList.remove("hidden");
+  // Logout handlers
+  if (logoutBtn)    logoutBtn.addEventListener("click", signOutUser);
+  if (mobLogoutBtn) mobLogoutBtn.addEventListener("click", signOutUser);
 
-      // Show admin link if admin
-      const role = await getUserRole(user.uid);
-      if (adminLink && role === "admin") adminLink.classList.remove("hidden");
-    } else {
-      if (loginBtn) loginBtn.classList.remove("hidden");
-      if (userMenu) userMenu.classList.add("hidden");
-      if (dashboardLink) dashboardLink?.classList.add("hidden");
-      if (adminLink) adminLink?.classList.add("hidden");
-    }
-  });
-
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", signOutUser);
-  }
-
+  // Login handler
   if (loginBtn) {
     loginBtn.addEventListener("click", async () => {
       try {
@@ -178,17 +166,40 @@ export function initNavbar() {
       } catch (_) {}
     });
   }
+
+  // Auth state observer
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      if (loginBtn)    loginBtn.classList.add("hidden");
+      if (userWrap)    userWrap.classList.remove("hidden");
+      if (mobLogoutBtn) mobLogoutBtn.classList.remove("hidden");
+      if (userName)    userName.textContent = user.displayName?.split(" ")[0] || "User";
+      if (userAvatar && user.photoURL) userAvatar.src = user.photoURL;
+      if (dropEmail)   dropEmail.textContent = user.email || "";
+
+      const role = await getUserRole(user.uid);
+      if (role === "admin") {
+        if (dropAdminLink) dropAdminLink.classList.remove("hidden");
+        if (navAdminLink)  navAdminLink.classList.remove("hidden");
+        if (mobAdminLink)  mobAdminLink.classList.remove("hidden");
+      }
+    } else {
+      if (loginBtn)    loginBtn.classList.remove("hidden");
+      if (userWrap)    userWrap.classList.add("hidden");
+      if (mobLogoutBtn) mobLogoutBtn?.classList.add("hidden");
+    }
+  });
 }
 
-/**
- * Require authentication — redirect to index.html if not logged in.
- * Returns the Firebase user.
- */
+// ============================================================
+// AUTH GUARDS
+// ============================================================
+
 export function requireAuth(callback) {
-  showLoading("Checking session...");
+  showLoading("Verifying session...");
   return new Promise((resolve) => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      unsubscribe();
+    const unsub = onAuthStateChanged(auth, async (user) => {
+      unsub();
       hideLoading();
       if (!user) {
         showToast("Please sign in to continue", "warning");
@@ -201,14 +212,11 @@ export function requireAuth(callback) {
   });
 }
 
-/**
- * Require admin role — redirect to index.html if not admin.
- */
 export function requireAdmin(callback) {
   showLoading("Verifying access...");
   return new Promise((resolve) => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      unsubscribe();
+    const unsub = onAuthStateChanged(auth, async (user) => {
+      unsub();
       if (!user) {
         hideLoading();
         showToast("Please sign in to continue", "warning");
@@ -218,7 +226,7 @@ export function requireAdmin(callback) {
       const role = await getUserRole(user.uid);
       hideLoading();
       if (role !== "admin") {
-        showToast("Access denied: Admin only", "error");
+        showToast("Access denied: Admins only", "error");
         window.location.href = "index.html";
         return;
       }
@@ -232,24 +240,22 @@ export function requireAdmin(callback) {
 // UTILITIES
 // ============================================================
 
-/** Format price display */
 export function formatPrice(price, priceType = "day") {
   const num = parseFloat(price);
-  if (isNaN(num)) return price;
-  return `R ${num.toLocaleString("en-ZA", { minimumFractionDigits: 0, maximumFractionDigits: 2 })} / ${priceType}`;
+  if (isNaN(num)) return price || "—";
+  const labels = { day: "Day", km: "KM", week: "Week", month: "Month", event: "Event", hour: "Hour" };
+  return `Rs. ${num.toLocaleString("en-LK")} / ${labels[priceType] || priceType}`;
 }
 
-/** Format date from Firestore Timestamp or JS Date */
 export function formatDate(timestamp) {
   if (!timestamp) return "—";
   let date;
   if (timestamp.toDate) date = timestamp.toDate();
   else if (timestamp instanceof Date) date = timestamp;
   else date = new Date(timestamp);
-  return date.toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" });
+  return date.toLocaleDateString("en-LK", { day: "numeric", month: "short", year: "numeric" });
 }
 
-/** Get relative time string */
 export function timeAgo(timestamp) {
   if (!timestamp) return "";
   let date;
@@ -266,14 +272,12 @@ export function timeAgo(timestamp) {
   return formatDate(timestamp);
 }
 
-/** Check if featured badge is still valid */
 export function isFeaturedActive(featuredUntil) {
   if (!featuredUntil) return false;
   const until = featuredUntil.toDate ? featuredUntil.toDate() : new Date(featuredUntil);
   return until > new Date();
 }
 
-/** Get remaining featured days */
 export function featuredDaysLeft(featuredUntil) {
   if (!featuredUntil) return 0;
   const until = featuredUntil.toDate ? featuredUntil.toDate() : new Date(featuredUntil);
@@ -282,7 +286,6 @@ export function featuredDaysLeft(featuredUntil) {
   return Math.ceil(diff / (1000 * 60 * 60 * 24));
 }
 
-/** Build ad card HTML */
 export function buildAdCard(ad, id) {
   const featured = isFeaturedActive(ad.featuredUntil);
   const img = (ad.imageUrls && ad.imageUrls[0]) || "https://placehold.co/400x250/e2e8f0/94a3b8?text=No+Image";
@@ -290,71 +293,133 @@ export function buildAdCard(ad, id) {
   const ago = timeAgo(ad.createdAt);
 
   return `
-    <a href="ad.html?id=${id}" class="card ${featured ? "featured-card" : ""}" style="display:block; text-decoration:none;">
+    <a href="ad.html?id=${id}" class="card ${featured ? "featured-card" : ""}" style="display:block;text-decoration:none;">
       <div class="card-img-wrap">
-        <img src="${img}" alt="${escapeHtml(ad.title)}" loading="lazy" onerror="this.src='https://placehold.co/400x250/e2e8f0/94a3b8?text=No+Image'">
+        <img src="${img}" alt="${escapeHtml(ad.title)}" loading="lazy"
+             onerror="this.src='https://placehold.co/400x250/e2e8f0/94a3b8?text=No+Image'">
         <div class="card-badges">
           <span class="badge badge-category">${escapeHtml(ad.category || "Other")}</span>
         </div>
-        ${featured ? `<div class="featured-badge-overlay">⭐ Featured</div>` : ""}
+        ${featured ? `<div class="featured-badge-overlay"><i class="bi bi-star-fill"></i> Featured</div>` : ""}
       </div>
       <div class="card-body">
         <div class="card-title">${escapeHtml(ad.title)}</div>
         <div class="card-price">${price}</div>
         <div class="card-meta">
-          <span>📍 ${escapeHtml(ad.location || "")}</span>
-          <span>🕐 ${ago}</span>
+          <span><i class="bi bi-geo-alt"></i> ${escapeHtml(ad.location || "")}</span>
+          <span><i class="bi bi-clock"></i> ${ago}</span>
         </div>
       </div>
     </a>
   `;
 }
 
-/** Escape HTML to prevent XSS */
 export function escapeHtml(str) {
   if (!str) return "";
   return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
-/** Get URL search param */
 export function getParam(name) {
   return new URLSearchParams(window.location.search).get(name);
 }
 
-/** Debounce function */
 export function debounce(fn, delay = 300) {
   let timer;
-  return (...args) => {
-    clearTimeout(timer);
-    timer = setTimeout(() => fn(...args), delay);
-  };
+  return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), delay); };
 }
 
-/** Render skeleton cards */
 export function renderSkeletons(container, count = 4) {
-  container.innerHTML = Array.from({ length: count }, () => `
-    <div class="skeleton skeleton-card"></div>
-  `).join("");
+  container.innerHTML = Array.from({ length: count }, () =>
+    `<div class="skeleton skeleton-card"></div>`).join("");
 }
 
-/** Category icons map */
-export const CATEGORY_ICONS = {
-  "Van": "🚐",
-  "Car": "🚗",
-  "Wedding": "💍",
-  "Construction": "🏗️",
-  "Party": "🎉",
-  "Other": "📦",
+// ============================================================
+// CATEGORIES — Comprehensive rental categories
+// ============================================================
+
+export const CATEGORY_GROUPS = {
+  "Vehicles":           ["Car", "Van", "Motorcycle", "Truck / Lorry", "Bus / Coach", "Tuk Tuk", "Boat"],
+  "Wedding & Events":   ["Wedding Car", "Wedding Decor", "Sound & Lighting", "Event Tent / Marquee", "DJ Equipment"],
+  "Construction":       ["Heavy Machinery", "Construction Equipment", "Generator", "Power Tools", "Scaffolding"],
+  "Property":           ["House / Villa", "Apartment / Room", "Commercial Space"],
+  "Electronics & Media":["Camera & Photography", "Video Equipment", "AV Equipment", "Computer & IT"],
+  "Party & Leisure":    ["Party Items", "Bouncy Castle", "Sports Equipment", "Bicycle", "Camping Gear"],
+  "Clothing":           ["Formal Wear", "Costume & Theatrical"],
+  "Other":              ["Other"],
 };
 
-export const CATEGORIES = ["Van", "Car", "Wedding", "Construction", "Party", "Other"];
+export const CATEGORIES = Object.values(CATEGORY_GROUPS).flat();
 
-/** Category icon helper */
-export function categoryIcon(cat) {
-  return CATEGORY_ICONS[cat] || "📦";
+export const CATEGORY_ICONS = {
+  "Car":                   "bi-car-front",
+  "Van":                   "bi-truck",
+  "Motorcycle":            "bi-bicycle",
+  "Truck / Lorry":         "bi-truck-front-fill",
+  "Bus / Coach":           "bi-bus-front",
+  "Tuk Tuk":               "bi-taxi-front",
+  "Boat":                  "bi-water",
+  "Wedding Car":           "bi-heart",
+  "Wedding Decor":         "bi-flower1",
+  "Sound & Lighting":      "bi-speaker-fill",
+  "Event Tent / Marquee":  "bi-umbrella",
+  "DJ Equipment":          "bi-music-note-beamed",
+  "Heavy Machinery":       "bi-gear-wide-connected",
+  "Construction Equipment":"bi-tools",
+  "Generator":             "bi-lightning-charge-fill",
+  "Power Tools":           "bi-wrench-adjustable-circle",
+  "Scaffolding":           "bi-ladder",
+  "House / Villa":         "bi-house-door",
+  "Apartment / Room":      "bi-building",
+  "Commercial Space":      "bi-shop",
+  "Camera & Photography":  "bi-camera",
+  "Video Equipment":       "bi-camera-video",
+  "AV Equipment":          "bi-display",
+  "Computer & IT":         "bi-laptop",
+  "Party Items":           "bi-gift",
+  "Bouncy Castle":         "bi-balloon",
+  "Sports Equipment":      "bi-trophy",
+  "Bicycle":               "bi-bicycle",
+  "Camping Gear":          "bi-tree",
+  "Formal Wear":           "bi-person-badge",
+  "Costume & Theatrical":  "bi-mask",
+  "Other":                 "bi-box2",
+};
+
+/** Populate a <select> element with grouped category options */
+export function buildCategorySelect(selectEl, includeAll = false) {
+  let html = includeAll
+    ? `<option value="">All Categories</option>`
+    : `<option value="">Select a category</option>`;
+  Object.entries(CATEGORY_GROUPS).forEach(([group, cats]) => {
+    html += `<optgroup label="${group}">`;
+    cats.forEach(cat => { html += `<option value="${escapeHtml(cat)}">${escapeHtml(cat)}</option>`; });
+    html += `</optgroup>`;
+  });
+  selectEl.innerHTML = html;
+}
+
+// ============================================================
+// SRI LANKA — Cities & Provinces
+// ============================================================
+
+export const SL_CITIES = [
+  "Colombo", "Kandy", "Galle", "Jaffna", "Negombo", "Batticaloa",
+  "Trincomalee", "Matara", "Kurunegala", "Ratnapura", "Badulla",
+  "Anuradhapura", "Polonnaruwa", "Ampara", "Vavuniya", "Mannar",
+  "Hambantota", "Nuwara Eliya", "Kegalle", "Puttalam", "Kalutara",
+  "Dambulla", "Matale", "Kalmunai", "Kilinochchi", "Mullaitivu",
+  "Monaragala", "Avissawella", "Panadura", "Moratuwa", "Dehiwala",
+  "Wattala", "Kelaniya", "Gampaha", "Chilaw", "Kuliyapitiya",
+  "Mawanella", "Hatton", "Bandarawela", "Haputale", "Welimada",
+  "Tangalle", "Tissamaharama", "Embilipitiya", "Balangoda",
+  "Peradeniya", "Kaduwela", "Horana", "Piliyandala", "Kottawa",
+  "Sri Jayawardenepura Kotte", "Ja-Ela", "Homagama", "Maharagama",
+  "Nugegoda", "Boralesgamuwa", "Ragama", "Katunayake", "Seeduwa",
+];
+
+/** Build a datalist element with Sri Lanka cities */
+export function buildLocationDatalist(datalistEl) {
+  datalistEl.innerHTML = SL_CITIES.map(c => `<option value="${escapeHtml(c)}">`).join("");
 }

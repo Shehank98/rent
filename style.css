@@ -1289,6 +1289,123 @@ footer ul li a:hover { color: var(--white); }
   .my-ad-thumb { width: 100%; height: 160px; }
 }
 
+/* ---------- USER DROPDOWN ---------- */
+.nav-user-wrap {
+  position: relative;
+}
+.user-menu-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.75rem 0.3rem 0.3rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--gray-200);
+  background: var(--white);
+  cursor: pointer;
+  transition: all var(--transition);
+  font-family: inherit;
+}
+.user-menu-btn:hover { background: var(--gray-50); border-color: var(--gray-300); }
+.user-name { font-size: 0.875rem; font-weight: 600; color: var(--dark-2); max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dropdown-arrow { font-size: 0.7rem; color: var(--gray-400); transition: transform var(--transition); }
+.user-menu-btn[aria-expanded="true"] .dropdown-arrow { transform: rotate(180deg); }
+
+.user-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  min-width: 220px;
+  z-index: 150;
+  overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px);
+  transition: all 0.18s ease;
+}
+.user-dropdown.open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+.dropdown-user-email {
+  padding: 0.75rem 1rem 0.5rem;
+  font-size: 0.75rem;
+  color: var(--gray-400);
+  border-bottom: 1px solid var(--gray-100);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--gray-700);
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--transition);
+  font-family: inherit;
+  text-decoration: none;
+}
+.dropdown-item:hover { background: var(--gray-50); color: var(--dark-2); }
+.dropdown-item i { font-size: 1rem; color: var(--gray-500); width: 16px; }
+.dropdown-item:hover i { color: var(--primary); }
+.dropdown-divider { height: 1px; background: var(--gray-100); margin: 0.25rem 0; }
+.dropdown-logout { color: var(--danger) !important; }
+.dropdown-logout i { color: var(--danger) !important; }
+.dropdown-logout:hover { background: var(--danger-bg) !important; }
+
+/* ---------- CATEGORY CARD — icon via BI ---------- */
+.cat-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius);
+  background: #eff6ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 0.5rem;
+  transition: all var(--transition);
+}
+.cat-icon-wrap i { font-size: 1.3rem; color: var(--primary); }
+.category-card:hover .cat-icon-wrap,
+.category-card.active .cat-icon-wrap {
+  background: var(--primary);
+}
+.category-card:hover .cat-icon-wrap i,
+.category-card.active .cat-icon-wrap i { color: white; }
+
+/* ---------- HERO STATS redesign ---------- */
+.hero-stats { margin-top: 2.5rem; }
+.hero-stat strong { font-size: 1.75rem; }
+
+/* ---------- SECTION BADGE ---------- */
+.section-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #eff6ff;
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.2rem 0.75rem;
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.5rem;
+}
+.section-badge.gold { background: var(--warning-bg); color: #92400e; }
+
 /* ---------- PRINT / Accessibility ---------- */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }

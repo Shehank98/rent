@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Browse Listings — RentHub</title>
-  <meta name="description" content="Browse all rental listings — vans, cars, wedding vehicles, construction equipment, party items and more." />
+  <title>Browse Listings — RentHub Sri Lanka</title>
+  <meta name="description" content="Browse all rental listings across Sri Lanka — vehicles, property, equipment, wedding, electronics and more." />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -16,64 +17,81 @@
     <div class="nav-links">
       <a href="index.html">Home</a>
       <a href="listings.html" style="color:var(--primary);font-weight:700;">Browse</a>
-      <a href="dashboard.html" id="nav-dashboard-link" class="hidden">Dashboard</a>
       <a href="admin.html" id="nav-admin-link" class="hidden">Admin</a>
     </div>
     <div class="nav-actions">
-      <button id="nav-login-btn" class="btn btn-primary btn-sm">Sign In</button>
-      <div id="nav-user-menu" class="user-menu hidden">
-        <img id="nav-user-avatar" class="user-avatar" src="https://placehold.co/36" alt="avatar" />
-        <span id="nav-user-name" class="user-name"></span>
-        <span style="color:var(--gray-400);font-size:0.75rem;">▾</span>
+      <button id="nav-login-btn" class="btn btn-primary btn-sm">
+        <i class="bi bi-google"></i> Sign In
+      </button>
+      <div id="nav-user-wrap" class="nav-user-wrap hidden">
+        <button class="user-menu-btn" id="nav-user-btn">
+          <img id="nav-user-avatar" class="user-avatar" src="" alt="avatar" />
+          <span id="nav-user-name" class="user-name"></span>
+          <i class="bi bi-chevron-down dropdown-arrow"></i>
+        </button>
+        <div class="user-dropdown" id="nav-user-dropdown">
+          <div class="dropdown-user-email" id="dropdown-user-email"></div>
+          <a href="dashboard.html" class="dropdown-item">
+            <i class="bi bi-grid-1x2-fill"></i> My Dashboard
+          </a>
+          <a href="admin.html" class="dropdown-item hidden" id="dropdown-admin-link">
+            <i class="bi bi-shield-check"></i> Admin Panel
+          </a>
+          <div class="dropdown-divider"></div>
+          <button class="dropdown-item dropdown-logout" id="nav-logout-btn">
+            <i class="bi bi-box-arrow-right"></i> Sign Out
+          </button>
+        </div>
       </div>
-      <button id="nav-logout-btn" class="btn btn-ghost btn-sm hidden">Sign Out</button>
     </div>
-    <button class="hamburger" id="hamburger" aria-label="Menu">
+    <button class="hamburger" id="hamburger" aria-label="Toggle menu">
       <span></span><span></span><span></span>
     </button>
   </div>
   <nav class="mobile-nav" id="mobile-nav">
     <a href="index.html">Home</a>
     <a href="listings.html">Browse All</a>
-    <a href="dashboard.html">Dashboard</a>
-    <button id="mob-login-btn" class="btn btn-primary btn-sm" style="width:fit-content">Sign In</button>
+    <a href="dashboard.html">My Dashboard</a>
+    <a href="admin.html" class="hidden" id="mob-admin-link">Admin Panel</a>
     <button id="mob-logout-btn" class="btn btn-ghost btn-sm hidden" style="width:fit-content">Sign Out</button>
   </nav>
 </nav>
 
-<!-- ==================== LISTINGS HERO ==================== -->
+<!-- ==================== PAGE HEADER ==================== -->
 <section class="listings-hero">
   <div class="container">
     <h1>Browse All Listings</h1>
-    <p>Find the perfect rental for your needs</p>
+    <p>Find the perfect rental across Sri Lanka</p>
   </div>
 </section>
 
 <!-- ==================== FILTER BAR ==================== -->
-<div class="filter-bar" id="filter-bar">
+<div class="filter-bar">
   <div class="container">
     <div class="filter-search-wrap">
-      <span class="search-icon">🔍</span>
+      <i class="bi bi-search search-icon"></i>
       <input type="text" id="search-input" placeholder="Search listings..." />
     </div>
+
     <select class="filter-select" id="category-filter">
-      <option value="">All Categories</option>
-      <option value="Van">🚐 Van</option>
-      <option value="Car">🚗 Car</option>
-      <option value="Wedding">💍 Wedding</option>
-      <option value="Construction">🏗️ Construction</option>
-      <option value="Party">🎉 Party</option>
-      <option value="Other">📦 Other</option>
+      <!-- populated by JS -->
     </select>
-    <input type="text" class="filter-select" id="location-filter" placeholder="📍 Location..." style="min-width:160px;" />
+
+    <input type="text" class="filter-select" id="location-filter"
+           placeholder="Location..." list="location-list" style="min-width:160px;" />
+    <datalist id="location-list"></datalist>
+
     <select class="filter-select" id="sort-select">
       <option value="newest">Newest First</option>
       <option value="featured">Featured First</option>
       <option value="price-asc">Price: Low to High</option>
       <option value="price-desc">Price: High to Low</option>
     </select>
+
+    <button class="btn btn-ghost btn-sm" id="clear-filters-btn">
+      <i class="bi bi-x-circle"></i> Clear
+    </button>
     <span class="results-count" id="results-count">Loading...</span>
-    <button class="btn btn-ghost btn-sm" id="clear-filters-btn">Clear</button>
   </div>
 </div>
 
@@ -91,10 +109,12 @@
       <div class="skeleton skeleton-card"></div>
     </div>
     <div id="no-results" class="no-results hidden">
-      <div class="no-icon">🔍</div>
+      <i class="bi bi-search" style="font-size:3.5rem;color:var(--gray-300);"></i>
       <h3>No listings found</h3>
-      <p>Try adjusting your filters or search term</p>
-      <button class="btn btn-outline" id="reset-btn">Reset Filters</button>
+      <p>Try adjusting your search or filters</p>
+      <button class="btn btn-outline" id="reset-btn">
+        <i class="bi bi-arrow-counterclockwise"></i> Reset Filters
+      </button>
     </div>
     <div id="load-more-wrap" class="text-center mt-3 hidden">
       <button class="btn btn-outline" id="load-more-btn">Load More</button>
@@ -105,68 +125,36 @@
 <!-- ==================== FOOTER ==================== -->
 <footer>
   <div class="container">
-    <div class="footer-grid">
-      <div>
-        <div class="footer-brand">Rent<span>Hub</span></div>
-        <p class="footer-desc">South Africa's rental marketplace.</p>
-      </div>
-      <div>
-        <h4>Quick Links</h4>
-        <ul>
-          <li><a href="index.html">Home</a></li>
-          <li><a href="dashboard.html">Post an Ad</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4>Categories</h4>
-        <ul>
-          <li><a href="?category=Van">Vans</a></li>
-          <li><a href="?category=Car">Cars</a></li>
-          <li><a href="?category=Wedding">Wedding</a></li>
-          <li><a href="?category=Construction">Construction</a></li>
-        </ul>
-      </div>
-    </div>
     <div class="footer-bottom">
-      <span>&copy; 2024 RentHub. All rights reserved.</span>
+      <a href="index.html" class="footer-brand" style="font-size:1.2rem;">Rent<span>Hub</span></a>
+      <span style="font-size:0.8rem;color:var(--gray-600);">&copy; 2024 RentHub Sri Lanka. All rights reserved.</span>
     </div>
   </div>
 </footer>
 
 <script type="module">
   import {
-    db, onAuthStateChanged, auth,
-    collection, query, where, orderBy, getDocs, limit
+    db, auth, onAuthStateChanged,
+    collection, query, where, orderBy, getDocs,
   } from "./firebase.js";
   import {
-    initNavbar, buildAdCard, isFeaturedActive, debounce, escapeHtml
+    initNavbar, buildAdCard, isFeaturedActive, debounce,
+    buildCategorySelect, buildLocationDatalist,
   } from "./main.js";
 
   initNavbar();
-
-  // Handle user menu dropdown toggle for logout
-  const userMenu = document.getElementById("nav-user-menu");
-  const logoutBtn = document.getElementById("nav-logout-btn");
-  if (userMenu && logoutBtn) {
-    userMenu.addEventListener("click", () => logoutBtn.classList.toggle("hidden"));
-  }
+  buildCategorySelect(document.getElementById("category-filter"), true);
+  buildLocationDatalist(document.getElementById("location-list"));
 
   const PAGE_SIZE = 24;
-  let allAds = [];
-  let filtered = [];
-  let displayed = 0;
+  let allAds = [], filtered = [], rendered = 0;
 
-  // ---- Read URL params ----
+  // Pre-fill from URL params
   const params = new URLSearchParams(window.location.search);
-  const initSearch = params.get("q") || "";
-  const initCategory = params.get("category") || "";
-  const initLocation = params.get("location") || "";
-  const initSort = params.get("sort") || "newest";
-
-  document.getElementById("search-input").value = initSearch;
-  document.getElementById("category-filter").value = initCategory;
-  document.getElementById("location-filter").value = initLocation;
-  document.getElementById("sort-select").value = initSort;
+  document.getElementById("search-input").value    = params.get("q") || "";
+  document.getElementById("category-filter").value = params.get("category") || "";
+  document.getElementById("location-filter").value = params.get("location") || "";
+  document.getElementById("sort-select").value     = params.get("sort") || "newest";
 
   // ---- Fetch all approved ads ----
   async function fetchAds() {
@@ -178,38 +166,31 @@
     applyFilters();
   }
 
-  // ---- Apply search/filter/sort ----
+  // ---- Apply filters + sort ----
   function applyFilters() {
-    const search = document.getElementById("search-input").value.trim().toLowerCase();
+    const search   = document.getElementById("search-input").value.trim().toLowerCase();
     const category = document.getElementById("category-filter").value;
     const location = document.getElementById("location-filter").value.trim().toLowerCase();
-    const sort = document.getElementById("sort-select").value;
+    const sort     = document.getElementById("sort-select").value;
 
     filtered = allAds.filter(ad => {
       if (category && ad.category !== category) return false;
       if (location && !ad.location?.toLowerCase().includes(location)) return false;
       if (search) {
-        const haystack = `${ad.title} ${ad.description} ${ad.category} ${ad.location}`.toLowerCase();
-        if (!haystack.includes(search)) return false;
+        const hay = `${ad.title} ${ad.description} ${ad.category} ${ad.location}`.toLowerCase();
+        if (!hay.includes(search)) return false;
       }
       return true;
     });
 
-    // Sort
     if (sort === "newest") {
-      filtered.sort((a, b) => {
-        const ta = a.createdAt?.toDate?.() || new Date(0);
-        const tb = b.createdAt?.toDate?.() || new Date(0);
-        return tb - ta;
-      });
+      filtered.sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
     } else if (sort === "featured") {
       filtered.sort((a, b) => {
         const af = isFeaturedActive(a.featuredUntil) ? 1 : 0;
         const bf = isFeaturedActive(b.featuredUntil) ? 1 : 0;
         if (bf !== af) return bf - af;
-        const ta = a.createdAt?.toDate?.() || new Date(0);
-        const tb = b.createdAt?.toDate?.() || new Date(0);
-        return tb - ta;
+        return (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0);
       });
     } else if (sort === "price-asc") {
       filtered.sort((a, b) => parseFloat(a.price || 0) - parseFloat(b.price || 0));
@@ -221,18 +202,13 @@
     renderBatch(true);
   }
 
-  let rendered = 0;
-
   function renderBatch(reset = false) {
-    const grid = document.getElementById("listings-grid");
-    const noResults = document.getElementById("no-results");
+    const grid         = document.getElementById("listings-grid");
+    const noResults    = document.getElementById("no-results");
     const loadMoreWrap = document.getElementById("load-more-wrap");
-    const countEl = document.getElementById("results-count");
+    const countEl      = document.getElementById("results-count");
 
-    if (reset) {
-      grid.innerHTML = "";
-      rendered = 0;
-    }
+    if (reset) { grid.innerHTML = ""; rendered = 0; }
 
     if (filtered.length === 0) {
       grid.innerHTML = "";
@@ -248,43 +224,35 @@
     const batch = filtered.slice(rendered, rendered + PAGE_SIZE);
     grid.insertAdjacentHTML("beforeend", batch.map(ad => buildAdCard(ad, ad.id)).join(""));
     rendered += batch.length;
-
-    if (rendered < filtered.length) {
-      loadMoreWrap.classList.remove("hidden");
-    } else {
-      loadMoreWrap.classList.add("hidden");
-    }
+    rendered < filtered.length
+      ? loadMoreWrap.classList.remove("hidden")
+      : loadMoreWrap.classList.add("hidden");
   }
 
-  // ---- Event listeners ----
   const debouncedFilter = debounce(applyFilters, 300);
   document.getElementById("search-input").addEventListener("input", debouncedFilter);
   document.getElementById("category-filter").addEventListener("change", applyFilters);
   document.getElementById("location-filter").addEventListener("input", debouncedFilter);
   document.getElementById("sort-select").addEventListener("change", applyFilters);
 
+  function resetAll() {
+    document.getElementById("search-input").value    = "";
+    document.getElementById("category-filter").value = "";
+    document.getElementById("location-filter").value = "";
+    document.getElementById("sort-select").value     = "newest";
+    applyFilters();
+  }
+  document.getElementById("clear-filters-btn").addEventListener("click", resetAll);
+  document.getElementById("reset-btn").addEventListener("click", resetAll);
   document.getElementById("load-more-btn").addEventListener("click", () => renderBatch(false));
-
-  document.getElementById("reset-btn").addEventListener("click", () => {
-    document.getElementById("search-input").value = "";
-    document.getElementById("category-filter").value = "";
-    document.getElementById("location-filter").value = "";
-    document.getElementById("sort-select").value = "newest";
-    applyFilters();
-  });
-
-  document.getElementById("clear-filters-btn").addEventListener("click", () => {
-    document.getElementById("search-input").value = "";
-    document.getElementById("category-filter").value = "";
-    document.getElementById("location-filter").value = "";
-    document.getElementById("sort-select").value = "newest";
-    applyFilters();
-  });
 
   fetchAds().catch(err => {
     console.error(err);
     document.getElementById("listings-grid").innerHTML =
-      `<div class="alert alert-warning" style="grid-column:1/-1">Could not load listings. Check your Firebase configuration.</div>`;
+      `<div class="alert alert-warning" style="grid-column:1/-1">
+         <i class="bi bi-exclamation-triangle"></i>
+         Could not load listings. Check your Firebase configuration.
+       </div>`;
     document.getElementById("results-count").textContent = "Error";
   });
 </script>

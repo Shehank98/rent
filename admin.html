@@ -3,28 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Panel — RentHub</title>
+  <title>Admin Panel — RentHub Sri Lanka</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
   <link rel="stylesheet" href="style.css" />
   <style>
-    .admin-search-wrap {
-      position: relative;
-      max-width: 360px;
-      margin-bottom: 1.5rem;
-    }
-    .admin-search-wrap input {
-      width: 100%;
-      padding: 0.6rem 1rem 0.6rem 2.5rem;
-      border: 2px solid var(--gray-200);
-      border-radius: var(--radius);
-      font-size: 0.9rem;
-      outline: none;
-      transition: border-color var(--transition);
-    }
-    .admin-search-wrap input:focus { border-color: var(--primary); }
-    .admin-search-wrap .si { position: absolute; left: 0.875rem; top: 50%; transform: translateY(-50%); color: var(--gray-400); }
-    .featured-days-left { font-size: 0.75rem; color: var(--warning); font-weight: 600; }
-    .ad-user-info { font-size: 0.78rem; color: var(--gray-500); }
-    .action-divider { width: 1px; background: var(--gray-200); align-self: stretch; }
+    .admin-search-wrap { position:relative; max-width:360px; margin-bottom:1.5rem; }
+    .admin-search-wrap input { width:100%; padding:0.6rem 1rem 0.6rem 2.5rem; border:2px solid var(--gray-200); border-radius:var(--radius); font-size:0.9rem; outline:none; transition:border-color var(--transition); }
+    .admin-search-wrap input:focus { border-color:var(--primary); }
+    .admin-search-wrap .si { position:absolute; left:0.875rem; top:50%; transform:translateY(-50%); color:var(--gray-400); }
+    .ad-user-info { font-size:0.78rem; color:var(--gray-500); margin-top:0.3rem; }
   </style>
 </head>
 <body>
@@ -32,7 +19,10 @@
 <!-- ==================== NAVBAR ==================== -->
 <nav class="navbar">
   <div class="container">
-    <a href="index.html" class="nav-brand">Rent<span>Hub</span> <span style="font-size:0.7rem;background:var(--danger);color:white;padding:0.15rem 0.5rem;border-radius:var(--radius-full);margin-left:0.5rem;vertical-align:middle;">ADMIN</span></a>
+    <a href="index.html" class="nav-brand">
+      Rent<span>Hub</span>
+      <span style="font-size:0.65rem;background:var(--danger);color:white;padding:0.15rem 0.5rem;border-radius:var(--radius-full);margin-left:0.5rem;vertical-align:middle;letter-spacing:0.05em;">ADMIN</span>
+    </a>
     <div class="nav-links">
       <a href="index.html">Home</a>
       <a href="listings.html">Browse</a>
@@ -40,21 +30,37 @@
       <a href="admin.html" style="color:var(--primary);font-weight:700;">Admin</a>
     </div>
     <div class="nav-actions">
-      <div id="nav-user-menu" class="user-menu hidden">
-        <img id="nav-user-avatar" class="user-avatar" src="https://placehold.co/36" alt="avatar" />
-        <span id="nav-user-name" class="user-name"></span>
+      <div id="nav-user-wrap" class="nav-user-wrap hidden">
+        <button class="user-menu-btn" id="nav-user-btn">
+          <img id="nav-user-avatar" class="user-avatar" src="" alt="avatar" />
+          <span id="nav-user-name" class="user-name"></span>
+          <i class="bi bi-chevron-down dropdown-arrow"></i>
+        </button>
+        <div class="user-dropdown" id="nav-user-dropdown">
+          <div class="dropdown-user-email" id="dropdown-user-email"></div>
+          <a href="dashboard.html" class="dropdown-item">
+            <i class="bi bi-grid-1x2-fill"></i> My Dashboard
+          </a>
+          <a href="admin.html" class="dropdown-item" style="font-weight:700;color:var(--primary)">
+            <i class="bi bi-shield-check"></i> Admin Panel
+          </a>
+          <div class="dropdown-divider"></div>
+          <button class="dropdown-item dropdown-logout" id="nav-logout-btn">
+            <i class="bi bi-box-arrow-right"></i> Sign Out
+          </button>
+        </div>
       </div>
-      <button id="nav-logout-btn" class="btn btn-ghost btn-sm">Sign Out</button>
     </div>
-    <button class="hamburger" id="hamburger" aria-label="Menu">
+    <button class="hamburger" id="hamburger" aria-label="Toggle menu">
       <span></span><span></span><span></span>
     </button>
   </div>
   <nav class="mobile-nav" id="mobile-nav">
     <a href="index.html">Home</a>
     <a href="listings.html">Browse</a>
-    <a href="dashboard.html">Dashboard</a>
-    <button id="mob-logout-btn" class="btn btn-ghost btn-sm" style="width:fit-content">Sign Out</button>
+    <a href="dashboard.html">My Dashboard</a>
+    <a href="admin.html">Admin Panel</a>
+    <button id="mob-logout-btn" class="btn btn-ghost btn-sm hidden" style="width:fit-content">Sign Out</button>
   </nav>
 </nav>
 
@@ -67,17 +73,19 @@
       <img id="sidebar-avatar" class="sidebar-avatar" src="https://placehold.co/48" alt="avatar" />
       <div class="sidebar-name" id="sidebar-name">Admin</div>
       <div class="sidebar-email" id="sidebar-email"></div>
-      <span class="badge badge-rejected" style="margin-top:0.3rem;">Admin</span>
+      <span class="badge badge-rejected" style="margin-top:0.4rem;font-size:0.7rem;">
+        <i class="bi bi-shield-fill"></i> Administrator
+      </span>
     </div>
     <nav class="sidebar-nav">
-      <a href="#" class="active" id="sidebar-ads-link">
-        <span class="nav-icon">📋</span> All Ads
+      <a href="#" class="active">
+        <span class="nav-icon"><i class="bi bi-card-list"></i></span> Manage Ads
       </a>
       <a href="listings.html">
-        <span class="nav-icon">🔍</span> Browse Public
+        <span class="nav-icon"><i class="bi bi-eye"></i></span> Public Listings
       </a>
       <a href="index.html">
-        <span class="nav-icon">🏠</span> Home
+        <span class="nav-icon"><i class="bi bi-house"></i></span> Home
       </a>
     </nav>
   </aside>
@@ -89,65 +97,67 @@
         <h2>Ad Management</h2>
         <p>Review, approve, reject and feature rental listings</p>
       </div>
-      <button class="btn btn-primary btn-sm" id="refresh-btn">↻ Refresh</button>
+      <button class="btn btn-outline btn-sm" id="refresh-btn">
+        <i class="bi bi-arrow-clockwise"></i> Refresh
+      </button>
     </div>
 
     <!-- STATS -->
-    <div class="stats-grid" id="stats-grid">
+    <div class="stats-grid">
       <div class="stat-card">
-        <div class="stat-icon blue">📋</div>
+        <div class="stat-icon blue"><i class="bi bi-card-list" style="font-size:1.3rem;color:var(--primary);"></i></div>
         <div><div class="stat-value" id="stat-total">—</div><div class="stat-label">Total Ads</div></div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon yellow">⏳</div>
-        <div><div class="stat-value" id="stat-pending">—</div><div class="stat-label">Pending</div></div>
+        <div class="stat-icon yellow"><i class="bi bi-hourglass-split" style="font-size:1.3rem;color:var(--warning);"></i></div>
+        <div><div class="stat-value" id="stat-pending">—</div><div class="stat-label">Pending Review</div></div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon green">✓</div>
+        <div class="stat-icon green"><i class="bi bi-check-circle" style="font-size:1.3rem;color:var(--success);"></i></div>
         <div><div class="stat-value" id="stat-approved">—</div><div class="stat-label">Approved</div></div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon red">✕</div>
+        <div class="stat-icon red"><i class="bi bi-x-circle" style="font-size:1.3rem;color:var(--danger);"></i></div>
         <div><div class="stat-value" id="stat-rejected">—</div><div class="stat-label">Rejected</div></div>
       </div>
     </div>
 
     <!-- FILTER TABS -->
-    <div class="filter-tabs" id="filter-tabs">
+    <div class="filter-tabs">
       <button class="filter-tab active" data-status="all">
         All <span class="tab-count" id="tc-all">0</span>
       </button>
       <button class="filter-tab" data-status="pending">
-        ⏳ Pending <span class="tab-count" id="tc-pending">0</span>
+        Pending <span class="tab-count" id="tc-pending">0</span>
       </button>
       <button class="filter-tab" data-status="approved">
-        ✓ Approved <span class="tab-count" id="tc-approved">0</span>
+        Approved <span class="tab-count" id="tc-approved">0</span>
       </button>
       <button class="filter-tab" data-status="rejected">
-        ✕ Rejected <span class="tab-count" id="tc-rejected">0</span>
+        Rejected <span class="tab-count" id="tc-rejected">0</span>
       </button>
       <button class="filter-tab" data-status="featured">
-        ⭐ Featured <span class="tab-count" id="tc-featured">0</span>
+        Featured <span class="tab-count" id="tc-featured">0</span>
       </button>
     </div>
 
     <!-- SEARCH -->
     <div class="admin-search-wrap">
-      <span class="si">🔍</span>
+      <i class="bi bi-search si"></i>
       <input type="text" id="admin-search" placeholder="Search by title, user, location..." />
     </div>
 
     <!-- ADS LIST -->
-    <div id="admin-loading" style="text-align:center;padding:2rem;">
+    <div id="admin-loading" style="text-align:center;padding:2.5rem;">
       <div class="spinner" style="margin:0 auto;"></div>
     </div>
 
     <div class="admin-ad-list" id="admin-ad-list" style="display:none;"></div>
 
     <div id="admin-empty" class="empty-state hidden">
-      <div class="empty-icon">📋</div>
+      <i class="bi bi-clipboard2-x" style="font-size:3rem;color:var(--gray-300);"></i>
       <h3>No ads found</h3>
-      <p>There are no ads matching your current filter.</p>
+      <p>No listings match your current filter.</p>
     </div>
 
   </main>
@@ -156,43 +166,52 @@
 <!-- ==================== FEATURE MODAL ==================== -->
 <div class="modal-overlay" id="feature-modal">
   <div class="modal">
-    <h3>⭐ Feature This Ad</h3>
-    <p style="margin-bottom:1.25rem;">Select how many days to feature this listing. Featured ads appear at the top of search results and on the homepage.</p>
-    <div class="days-grid" id="days-grid">
+    <h3><i class="bi bi-star-fill" style="color:var(--warning);"></i> Feature This Listing</h3>
+    <p style="margin-bottom:1.25rem;">Select how many days to feature this listing. Featured ads appear at the top of results and on the homepage.</p>
+    <div class="days-grid">
       <div class="day-option" data-days="3"><strong>3</strong><span>Days</span></div>
       <div class="day-option" data-days="7"><strong>7</strong><span>Days</span></div>
       <div class="day-option" data-days="14"><strong>14</strong><span>Days</span></div>
       <div class="day-option" data-days="30"><strong>30</strong><span>Days</span></div>
     </div>
-    <p class="text-muted" style="font-size:0.8rem;margin-bottom:1.25rem;">Selected: <strong id="selected-days-text">None</strong></p>
+    <p style="font-size:0.8rem;color:var(--gray-500);margin-bottom:1.25rem;">
+      Selected: <strong id="selected-days-text">None</strong>
+    </p>
     <div class="modal-actions">
       <button class="btn btn-ghost" id="cancel-feature-btn">Cancel</button>
-      <button class="btn btn-accent" id="confirm-feature-btn" disabled>Apply Feature</button>
+      <button class="btn btn-accent" id="confirm-feature-btn" disabled>
+        <i class="bi bi-star-fill"></i> Apply Feature
+      </button>
     </div>
   </div>
 </div>
 
-<!-- ==================== DELETE CONFIRM MODAL ==================== -->
+<!-- ==================== DELETE MODAL ==================== -->
 <div class="modal-overlay" id="admin-delete-modal">
   <div class="modal">
-    <h3>Delete Ad</h3>
-    <p>Are you sure you want to delete <strong id="admin-delete-title"></strong>? This cannot be undone.</p>
+    <h3>Delete Listing</h3>
+    <p>Permanently delete <strong id="admin-delete-title"></strong>? This cannot be undone.</p>
     <div class="modal-actions">
       <button class="btn btn-ghost" id="admin-cancel-delete-btn">Cancel</button>
-      <button class="btn btn-danger" id="admin-confirm-delete-btn">Delete Permanently</button>
+      <button class="btn btn-danger" id="admin-confirm-delete-btn">
+        <i class="bi bi-trash3"></i> Delete
+      </button>
     </div>
   </div>
 </div>
 
-<!-- ==================== REJECT REASON MODAL ==================== -->
+<!-- ==================== REJECT MODAL ==================== -->
 <div class="modal-overlay" id="reject-modal">
   <div class="modal">
-    <h3>Reject Ad</h3>
-    <p style="margin-bottom:1rem;">Optionally provide a reason for rejection:</p>
-    <textarea class="form-control" id="reject-reason" rows="3" placeholder="e.g. Insufficient description, inappropriate content..."></textarea>
+    <h3>Reject Listing</h3>
+    <p style="margin-bottom:1rem;">Optionally provide a reason (visible to the poster):</p>
+    <textarea class="form-control" id="reject-reason" rows="3"
+              placeholder="e.g. Insufficient description, incomplete information..."></textarea>
     <div class="modal-actions" style="margin-top:1rem;">
       <button class="btn btn-ghost" id="cancel-reject-btn">Cancel</button>
-      <button class="btn btn-danger" id="confirm-reject-btn">Reject Ad</button>
+      <button class="btn btn-danger" id="confirm-reject-btn">
+        <i class="bi bi-x-circle"></i> Reject
+      </button>
     </div>
   </div>
 </div>
@@ -202,47 +221,52 @@
     auth, db, storage,
     onAuthStateChanged, signOut,
     collection, doc, getDoc, getDocs, updateDoc, deleteDoc,
-    query, orderBy, where, serverTimestamp, Timestamp,
+    query, orderBy, serverTimestamp, Timestamp,
     ref, deleteObject,
   } from "./firebase.js";
   import {
     requireAdmin, showToast, formatPrice, formatDate,
-    isFeaturedActive, featuredDaysLeft, escapeHtml, debounce
+    isFeaturedActive, featuredDaysLeft, escapeHtml, debounce,
   } from "./main.js";
 
-  let allAds = [];
-  let currentFilter = "all";
-  let currentSearch = "";
-  let featureTarget = null;
-  let deleteTarget = null;
-  let rejectTarget = null;
+  let allAds = [], currentFilter = "all", currentSearch = "";
+  let featureTarget = null, deleteTarget = null, rejectTarget = null;
   let selectedFeatureDays = null;
 
-  // Admin guard
   requireAdmin(async (user) => {
-    document.getElementById("sidebar-name").textContent = user.displayName || "Admin";
+    document.getElementById("sidebar-name").textContent  = user.displayName || "Admin";
     document.getElementById("sidebar-email").textContent = user.email || "";
     if (user.photoURL) {
-      document.getElementById("sidebar-avatar").src = user.photoURL;
-      document.getElementById("nav-user-avatar").src = user.photoURL;
+      document.getElementById("sidebar-avatar").src   = user.photoURL;
+      document.getElementById("nav-user-avatar").src  = user.photoURL;
     }
     document.getElementById("nav-user-name").textContent = user.displayName?.split(" ")[0] || "Admin";
-    document.getElementById("nav-user-menu").classList.remove("hidden");
+    document.getElementById("nav-user-wrap").classList.remove("hidden");
+    document.getElementById("dropdown-user-email").textContent = user.email || "";
     loadAds();
   });
 
-  // Logout
+  // Hamburger
+  document.getElementById("hamburger")?.addEventListener("click", () =>
+    document.getElementById("mobile-nav").classList.toggle("open")
+  );
+
+  // Dropdown toggle
+  const userBtn = document.getElementById("nav-user-btn");
+  const userDropdown = document.getElementById("nav-user-dropdown");
+  const userWrap = document.getElementById("nav-user-wrap");
+  if (userBtn) {
+    userBtn.addEventListener("click", (e) => { e.stopPropagation(); userDropdown.classList.toggle("open"); });
+    document.addEventListener("click", (e) => { if (!userWrap?.contains(e.target)) userDropdown?.classList.remove("open"); });
+  }
+
   document.getElementById("nav-logout-btn").addEventListener("click", async () => {
-    await signOut(auth);
-    window.location.href = "index.html";
+    await signOut(auth); window.location.href = "index.html";
+  });
+  document.getElementById("mob-logout-btn")?.addEventListener("click", async () => {
+    await signOut(auth); window.location.href = "index.html";
   });
 
-  // Hamburger
-  const hamburger = document.getElementById("hamburger");
-  const mobileNav = document.getElementById("mobile-nav");
-  hamburger?.addEventListener("click", () => mobileNav.classList.toggle("open"));
-
-  // Refresh
   document.getElementById("refresh-btn").addEventListener("click", loadAds);
 
   // ---- LOAD ALL ADS ----
@@ -250,27 +274,25 @@
     document.getElementById("admin-loading").style.display = "block";
     document.getElementById("admin-ad-list").style.display = "none";
     document.getElementById("admin-empty").classList.add("hidden");
-
     try {
       const snap = await getDocs(query(collection(db, "ads"), orderBy("createdAt", "desc")));
       allAds = [];
       snap.forEach(d => allAds.push({ id: d.id, ...d.data() }));
 
-      // Update stats
-      const pending = allAds.filter(a => a.status === "pending").length;
+      const pending  = allAds.filter(a => a.status === "pending").length;
       const approved = allAds.filter(a => a.status === "approved").length;
       const rejected = allAds.filter(a => a.status === "rejected").length;
       const featured = allAds.filter(a => a.featured && isFeaturedActive(a.featuredUntil)).length;
 
-      document.getElementById("stat-total").textContent = allAds.length;
-      document.getElementById("stat-pending").textContent = pending;
+      document.getElementById("stat-total").textContent    = allAds.length;
+      document.getElementById("stat-pending").textContent  = pending;
       document.getElementById("stat-approved").textContent = approved;
       document.getElementById("stat-rejected").textContent = rejected;
-      document.getElementById("tc-all").textContent = allAds.length;
-      document.getElementById("tc-pending").textContent = pending;
-      document.getElementById("tc-approved").textContent = approved;
-      document.getElementById("tc-rejected").textContent = rejected;
-      document.getElementById("tc-featured").textContent = featured;
+      document.getElementById("tc-all").textContent        = allAds.length;
+      document.getElementById("tc-pending").textContent    = pending;
+      document.getElementById("tc-approved").textContent   = approved;
+      document.getElementById("tc-rejected").textContent   = rejected;
+      document.getElementById("tc-featured").textContent   = featured;
 
       renderList();
     } catch (err) {
@@ -291,24 +313,21 @@
     });
   });
 
-  // ---- SEARCH ----
   document.getElementById("admin-search").addEventListener("input", debounce(() => {
     currentSearch = document.getElementById("admin-search").value.trim().toLowerCase();
     renderList();
   }, 300));
 
   function renderList() {
-    const listEl = document.getElementById("admin-ad-list");
+    const listEl  = document.getElementById("admin-ad-list");
     const emptyEl = document.getElementById("admin-empty");
 
     let filtered = allAds;
-
     if (currentFilter === "featured") {
       filtered = filtered.filter(a => a.featured && isFeaturedActive(a.featuredUntil));
     } else if (currentFilter !== "all") {
       filtered = filtered.filter(a => a.status === currentFilter);
     }
-
     if (currentSearch) {
       filtered = filtered.filter(a => {
         const hay = `${a.title} ${a.location} ${a.userName} ${a.userEmail} ${a.category}`.toLowerCase();
@@ -323,122 +342,94 @@
       emptyEl.classList.remove("hidden");
       return;
     }
-
     emptyEl.classList.add("hidden");
     listEl.style.display = "flex";
-    listEl.innerHTML = filtered.map(ad => renderAdminAdItem(ad)).join("");
+    listEl.innerHTML = filtered.map(renderAdminItem).join("");
 
-    // Attach event listeners
     listEl.querySelectorAll("[data-action]").forEach(btn => {
       btn.addEventListener("click", () => handleAction(btn.dataset.action, btn.dataset.id, btn.dataset.title));
     });
   }
 
-  function renderAdminAdItem(ad) {
-    const img = (ad.imageUrls && ad.imageUrls[0]) || "https://placehold.co/100x72/e2e8f0/94a3b8?text=No+Img";
+  function renderAdminItem(ad) {
+    const img  = ad.imageUrls?.[0] || "https://placehold.co/100x72/e2e8f0/94a3b8?text=No+Image";
+    const safe = escapeHtml(ad.title || "Untitled");
+    const featActive = ad.featured && isFeaturedActive(ad.featuredUntil);
+
     const statusBadge = {
-      pending: `<span class="badge badge-pending">⏳ Pending</span>`,
-      approved: `<span class="badge badge-approved">✓ Approved</span>`,
-      rejected: `<span class="badge badge-rejected">✕ Rejected</span>`,
+      pending:  `<span class="badge badge-pending"><i class="bi bi-hourglass-split"></i> Pending</span>`,
+      approved: `<span class="badge badge-approved"><i class="bi bi-check-circle"></i> Approved</span>`,
+      rejected: `<span class="badge badge-rejected"><i class="bi bi-x-circle"></i> Rejected</span>`,
     }[ad.status] || "";
 
-    const featActive = ad.featured && isFeaturedActive(ad.featuredUntil);
     const featBadge = featActive
-      ? `<span class="badge badge-featured">⭐ Featured · ${featuredDaysLeft(ad.featuredUntil)}d left</span>`
+      ? `<span class="badge badge-featured"><i class="bi bi-star-fill"></i> Featured &mdash; ${featuredDaysLeft(ad.featuredUntil)}d left</span>`
       : "";
 
-    const price = formatPrice(ad.price, ad.priceType || "day");
-    const date = formatDate(ad.createdAt);
-    const safeName = escapeHtml(ad.title || "Untitled");
-    const safeId = ad.id;
-
     return `
-      <div class="admin-ad-item" data-id="${safeId}">
-        <img class="admin-ad-thumb" src="${escapeHtml(img)}" alt="${safeName}"
-             onerror="this.src='https://placehold.co/100x72/e2e8f0/94a3b8?text=No+Img'" />
-
+      <div class="admin-ad-item">
+        <img class="admin-ad-thumb" src="${escapeHtml(img)}" alt="${safe}"
+             onerror="this.src='https://placehold.co/100x72/e2e8f0/94a3b8?text=No+Image'" />
         <div class="admin-ad-info">
-          <div class="admin-ad-title">${safeName}</div>
+          <div class="admin-ad-title">${safe}</div>
           <div class="admin-ad-meta">
-            <span>📍 ${escapeHtml(ad.location || "N/A")}</span>
-            <span>🏷 ${escapeHtml(ad.category || "Other")}</span>
-            <span>💰 ${price}</span>
-            <span>📅 ${date}</span>
+            <span><i class="bi bi-geo-alt"></i> ${escapeHtml(ad.location || "N/A")}</span>
+            <span><i class="bi bi-tag"></i> ${escapeHtml(ad.category || "Other")}</span>
+            <span><i class="bi bi-cash-stack"></i> ${formatPrice(ad.price, ad.priceType || "day")}</span>
+            <span><i class="bi bi-calendar3"></i> ${formatDate(ad.createdAt)}</span>
           </div>
           <div class="ad-user-info">
-            👤 ${escapeHtml(ad.userName || "Unknown")} · ${escapeHtml(ad.userEmail || "")}
+            <i class="bi bi-person"></i> ${escapeHtml(ad.userName || "Unknown")} &middot; ${escapeHtml(ad.userEmail || "")}
           </div>
           <div style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:0.6rem;">
-            ${statusBadge}
-            ${featBadge}
+            ${statusBadge} ${featBadge}
           </div>
           <div class="admin-ad-actions" style="margin-top:0.75rem;">
-            ${ad.status !== "approved" ? `<button class="btn btn-success btn-sm" data-action="approve" data-id="${safeId}" data-title="${safeName}">✓ Approve</button>` : ""}
-            ${ad.status !== "rejected" ? `<button class="btn btn-outline-danger btn-sm" data-action="reject" data-id="${safeId}" data-title="${safeName}">✕ Reject</button>` : ""}
-            ${ad.status === "approved" ? `<button class="btn btn-accent btn-sm" data-action="feature" data-id="${safeId}" data-title="${safeName}">⭐ Feature</button>` : ""}
-            ${featActive ? `<button class="btn btn-ghost btn-sm" data-action="unfeature" data-id="${safeId}" data-title="${safeName}">Remove Feature</button>` : ""}
-            <button class="btn btn-ghost btn-sm" data-action="view" data-id="${safeId}" data-title="${safeName}">👁 View</button>
-            <button class="btn btn-outline-danger btn-sm" data-action="delete" data-id="${safeId}" data-title="${safeName}">🗑 Delete</button>
+            ${ad.status !== "approved" ? `<button class="btn btn-success btn-sm" data-action="approve" data-id="${ad.id}" data-title="${safe}"><i class="bi bi-check-circle"></i> Approve</button>` : ""}
+            ${ad.status !== "rejected" ? `<button class="btn btn-outline-danger btn-sm" data-action="reject" data-id="${ad.id}" data-title="${safe}"><i class="bi bi-x-circle"></i> Reject</button>` : ""}
+            ${ad.status === "approved" ? `<button class="btn btn-accent btn-sm" data-action="feature" data-id="${ad.id}" data-title="${safe}"><i class="bi bi-star"></i> Feature</button>` : ""}
+            ${featActive ? `<button class="btn btn-ghost btn-sm" data-action="unfeature" data-id="${ad.id}" data-title="${safe}">Remove Feature</button>` : ""}
+            <button class="btn btn-ghost btn-sm" data-action="view" data-id="${ad.id}" data-title="${safe}"><i class="bi bi-eye"></i> View</button>
+            <button class="btn btn-outline-danger btn-sm" data-action="delete" data-id="${ad.id}" data-title="${safe}"><i class="bi bi-trash3"></i> Delete</button>
           </div>
         </div>
       </div>
     `;
   }
 
-  // ---- HANDLE ACTIONS ----
   async function handleAction(action, id, title) {
-    switch (action) {
-      case "approve":
-        await updateStatus(id, "approved");
-        break;
-      case "reject":
-        rejectTarget = { id, title };
-        document.getElementById("reject-modal").classList.add("open");
-        document.getElementById("reject-reason").value = "";
-        break;
-      case "feature":
-        featureTarget = { id, title };
-        selectedFeatureDays = null;
-        document.querySelectorAll(".day-option").forEach(d => d.classList.remove("selected"));
-        document.getElementById("selected-days-text").textContent = "None";
-        document.getElementById("confirm-feature-btn").disabled = true;
-        document.getElementById("feature-modal").classList.add("open");
-        break;
-      case "unfeature":
-        await removeFeature(id);
-        break;
-      case "delete":
-        deleteTarget = { id, title };
-        document.getElementById("admin-delete-title").textContent = title;
-        document.getElementById("admin-delete-modal").classList.add("open");
-        break;
-      case "view":
-        window.open(`ad.html?id=${id}`, "_blank");
-        break;
+    if (action === "approve") { await updateStatus(id, "approved"); }
+    else if (action === "reject") {
+      rejectTarget = { id, title };
+      document.getElementById("reject-reason").value = "";
+      document.getElementById("reject-modal").classList.add("open");
     }
+    else if (action === "feature") {
+      featureTarget = { id, title };
+      selectedFeatureDays = null;
+      document.querySelectorAll(".day-option").forEach(d => d.classList.remove("selected"));
+      document.getElementById("selected-days-text").textContent = "None";
+      document.getElementById("confirm-feature-btn").disabled = true;
+      document.getElementById("feature-modal").classList.add("open");
+    }
+    else if (action === "unfeature") { await removeFeature(id); }
+    else if (action === "delete") {
+      deleteTarget = { id, title };
+      document.getElementById("admin-delete-title").textContent = title;
+      document.getElementById("admin-delete-modal").classList.add("open");
+    }
+    else if (action === "view") { window.open(`ad.html?id=${id}`, "_blank"); }
   }
 
   async function updateStatus(id, status) {
     try {
       await updateDoc(doc(db, "ads", id), { status, updatedAt: serverTimestamp() });
-      showToast(`Ad ${status} successfully`, "success");
-      // Update local state
+      showToast(`Listing ${status} successfully`, "success");
       const ad = allAds.find(a => a.id === id);
       if (ad) ad.status = status;
       renderList();
-      // Refresh stats from local
-      const pending = allAds.filter(a => a.status === "pending").length;
-      const approved = allAds.filter(a => a.status === "approved").length;
-      const rejected = allAds.filter(a => a.status === "rejected").length;
-      document.getElementById("stat-pending").textContent = pending;
-      document.getElementById("stat-approved").textContent = approved;
-      document.getElementById("stat-rejected").textContent = rejected;
-      document.getElementById("tc-pending").textContent = pending;
-      document.getElementById("tc-approved").textContent = approved;
-      document.getElementById("tc-rejected").textContent = rejected;
-    } catch (err) {
-      showToast("Update failed: " + err.message, "error");
-    }
+      refreshCounts();
+    } catch (err) { showToast("Update failed: " + err.message, "error"); }
   }
 
   async function removeFeature(id) {
@@ -448,12 +439,22 @@
       const ad = allAds.find(a => a.id === id);
       if (ad) { ad.featured = false; ad.featuredUntil = null; }
       renderList();
-    } catch (err) {
-      showToast("Failed: " + err.message, "error");
-    }
+    } catch (err) { showToast("Failed: " + err.message, "error"); }
   }
 
-  // ---- FEATURE MODAL ----
+  function refreshCounts() {
+    const pending  = allAds.filter(a => a.status === "pending").length;
+    const approved = allAds.filter(a => a.status === "approved").length;
+    const rejected = allAds.filter(a => a.status === "rejected").length;
+    document.getElementById("stat-pending").textContent  = pending;
+    document.getElementById("stat-approved").textContent = approved;
+    document.getElementById("stat-rejected").textContent = rejected;
+    document.getElementById("tc-pending").textContent    = pending;
+    document.getElementById("tc-approved").textContent   = approved;
+    document.getElementById("tc-rejected").textContent   = rejected;
+  }
+
+  // Feature modal
   document.querySelectorAll(".day-option").forEach(opt => {
     opt.addEventListener("click", () => {
       document.querySelectorAll(".day-option").forEach(d => d.classList.remove("selected"));
@@ -463,116 +464,84 @@
       document.getElementById("confirm-feature-btn").disabled = false;
     });
   });
-
   document.getElementById("cancel-feature-btn").addEventListener("click", () => {
-    document.getElementById("feature-modal").classList.remove("open");
-    featureTarget = null;
+    document.getElementById("feature-modal").classList.remove("open"); featureTarget = null;
   });
-
   document.getElementById("confirm-feature-btn").addEventListener("click", async () => {
     if (!featureTarget || !selectedFeatureDays) return;
     const btn = document.getElementById("confirm-feature-btn");
-    btn.disabled = true;
-    btn.textContent = "Applying...";
+    btn.disabled = true; btn.innerHTML = `<span class="spinner spinner-sm" style="display:inline-block;margin-right:0.5rem;"></span> Applying...`;
     try {
       const until = new Date();
       until.setDate(until.getDate() + selectedFeatureDays);
       await updateDoc(doc(db, "ads", featureTarget.id), {
-        featured: true,
-        featuredUntil: Timestamp.fromDate(until),
-        status: "approved",
+        featured: true, featuredUntil: Timestamp.fromDate(until), status: "approved",
       });
-      showToast(`Ad featured for ${selectedFeatureDays} days!`, "success");
+      showToast(`Listing featured for ${selectedFeatureDays} days`, "success");
       const ad = allAds.find(a => a.id === featureTarget.id);
       if (ad) { ad.featured = true; ad.featuredUntil = { toDate: () => until }; ad.status = "approved"; }
       document.getElementById("feature-modal").classList.remove("open");
-      featureTarget = null;
-      renderList();
-    } catch (err) {
-      showToast("Feature failed: " + err.message, "error");
-    } finally {
-      btn.disabled = false;
-      btn.textContent = "Apply Feature";
+      featureTarget = null; renderList();
+    } catch (err) { showToast("Feature failed: " + err.message, "error"); }
+    finally {
+      btn.disabled = false; btn.innerHTML = `<i class="bi bi-star-fill"></i> Apply Feature`;
     }
   });
 
-  // ---- REJECT MODAL ----
+  // Reject modal
   document.getElementById("cancel-reject-btn").addEventListener("click", () => {
-    document.getElementById("reject-modal").classList.remove("open");
-    rejectTarget = null;
+    document.getElementById("reject-modal").classList.remove("open"); rejectTarget = null;
   });
-
   document.getElementById("confirm-reject-btn").addEventListener("click", async () => {
     if (!rejectTarget) return;
     const btn = document.getElementById("confirm-reject-btn");
-    btn.disabled = true;
-    btn.textContent = "Rejecting...";
+    btn.disabled = true; btn.textContent = "Rejecting...";
     try {
-      const reason = document.getElementById("reject-reason").value.trim();
       await updateDoc(doc(db, "ads", rejectTarget.id), {
         status: "rejected",
-        rejectionReason: reason || "",
+        rejectionReason: document.getElementById("reject-reason").value.trim() || "",
         updatedAt: serverTimestamp(),
       });
-      showToast("Ad rejected", "success");
+      showToast("Listing rejected", "success");
       const ad = allAds.find(a => a.id === rejectTarget.id);
-      if (ad) { ad.status = "rejected"; }
+      if (ad) ad.status = "rejected";
       document.getElementById("reject-modal").classList.remove("open");
-      rejectTarget = null;
-      renderList();
-    } catch (err) {
-      showToast("Reject failed: " + err.message, "error");
-    } finally {
-      btn.disabled = false;
-      btn.textContent = "Reject Ad";
-    }
+      rejectTarget = null; renderList(); refreshCounts();
+    } catch (err) { showToast("Reject failed: " + err.message, "error"); }
+    finally { btn.disabled = false; btn.innerHTML = `<i class="bi bi-x-circle"></i> Reject`; }
   });
 
-  // ---- DELETE MODAL ----
+  // Delete modal
   document.getElementById("admin-cancel-delete-btn").addEventListener("click", () => {
-    document.getElementById("admin-delete-modal").classList.remove("open");
-    deleteTarget = null;
+    document.getElementById("admin-delete-modal").classList.remove("open"); deleteTarget = null;
   });
-
   document.getElementById("admin-confirm-delete-btn").addEventListener("click", async () => {
     if (!deleteTarget) return;
     const btn = document.getElementById("admin-confirm-delete-btn");
-    btn.disabled = true;
-    btn.textContent = "Deleting...";
+    btn.disabled = true; btn.textContent = "Deleting...";
     try {
-      // Delete storage images
       try {
-        const adSnap = await getDoc(doc(db, "ads", deleteTarget.id));
-        if (adSnap.exists()) {
-          const urls = adSnap.data().imageUrls || [];
-          await Promise.all(urls.map(async (url) => {
-            try {
-              const decodedUrl = decodeURIComponent(url);
-              const match = decodedUrl.match(/\/o\/(.+?)\?/);
-              if (match) await deleteObject(ref(storage, match[1]));
-            } catch (_) {}
+        const snap = await getDoc(doc(db, "ads", deleteTarget.id));
+        if (snap.exists()) {
+          await Promise.all((snap.data().imageUrls || []).map(async url => {
+            try { const m = decodeURIComponent(url).match(/\/o\/(.+?)\?/); if (m) await deleteObject(ref(storage, m[1])); } catch (_) {}
           }));
         }
       } catch (_) {}
-
       await deleteDoc(doc(db, "ads", deleteTarget.id));
-      showToast("Ad permanently deleted", "success");
+      showToast("Listing deleted permanently", "success");
       allAds = allAds.filter(a => a.id !== deleteTarget.id);
-      document.getElementById("admin-delete-modal").classList.remove("open");
-      deleteTarget = null;
-      renderList();
       document.getElementById("stat-total").textContent = allAds.length;
-    } catch (err) {
-      showToast("Delete failed: " + err.message, "error");
-    } finally {
-      btn.disabled = false;
-      btn.textContent = "Delete Permanently";
-    }
+      document.getElementById("tc-all").textContent = allAds.length;
+      document.getElementById("admin-delete-modal").classList.remove("open");
+      deleteTarget = null; renderList(); refreshCounts();
+    } catch (err) { showToast("Delete failed: " + err.message, "error"); }
+    finally { btn.disabled = false; btn.innerHTML = `<i class="bi bi-trash3"></i> Delete`; }
   });
 
-  // Close modals on overlay click
+  // Close modals on backdrop click
   ["feature-modal", "admin-delete-modal", "reject-modal"].forEach(id => {
-    document.getElementById(id).addEventListener("click", (e) => {
+    document.getElementById(id).addEventListener("click", e => {
       if (e.target.id === id) document.getElementById(id).classList.remove("open");
     });
   });
