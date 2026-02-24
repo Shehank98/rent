@@ -88,31 +88,47 @@ export async function signOutUser() {
 }
 
 export async function ensureUserDoc(user) {
-  const userRef = doc(db, "users", user.uid);
-  const snap = await getDoc(userRef);
-  if (!snap.exists()) {
-    await setDoc(userRef, {
-      uid: user.uid,
-      name: user.displayName || "User",
-      email: user.email || "",
-      photoURL: user.photoURL || "",
-      role: "user",
-      createdAt: serverTimestamp(),
-    });
+  try {
+    const userRef = doc(db, "users", user.uid);
+    const snap = await getDoc(userRef);
+    if (!snap.exists()) {
+      await setDoc(userRef, {
+        uid: user.uid,
+        name: user.displayName || "User",
+        email: user.email || "",
+        photoURL: user.photoURL || "",
+        role: "user",
+        createdAt: serverTimestamp(),
+      });
+      return {};
+    }
+    return snap.data() || {};
+  } catch (err) {
+    // Firestore rules may not be deployed yet — fail silently
+    console.warn("ensureUserDoc:", err.message);
+    return {};
   }
-  return snap.data() || {};
 }
 
 export async function getUserRole(uid) {
-  const snap = await getDoc(doc(db, "users", uid));
-  if (snap.exists()) return snap.data().role || "user";
-  return "user";
+  try {
+    const snap = await getDoc(doc(db, "users", uid));
+    if (snap.exists()) return snap.data().role || "user";
+    return "user";
+  } catch (_) {
+    // Rules not deployed or insufficient permissions — default to user
+    return "user";
+  }
 }
 
 export async function getUserData(uid) {
-  const snap = await getDoc(doc(db, "users", uid));
-  if (snap.exists()) return snap.data();
-  return null;
+  try {
+    const snap = await getDoc(doc(db, "users", uid));
+    if (snap.exists()) return snap.data();
+    return null;
+  } catch (_) {
+    return null;
+  }
 }
 
 // ============================================================
@@ -170,13 +186,14 @@ export function initNavbar() {
   // Auth state observer
   onAuthStateChanged(auth, async (user) => {
     if (user) {
-      if (loginBtn)    loginBtn.classList.add("hidden");
-      if (userWrap)    userWrap.classList.remove("hidden");
+      if (loginBtn)     loginBtn.classList.add("hidden");
+      if (userWrap)     userWrap.classList.remove("hidden");
       if (mobLogoutBtn) mobLogoutBtn.classList.remove("hidden");
-      if (userName)    userName.textContent = user.displayName?.split(" ")[0] || "User";
+      if (userName)     userName.textContent = user.displayName?.split(" ")[0] || "User";
       if (userAvatar && user.photoURL) userAvatar.src = user.photoURL;
-      if (dropEmail)   dropEmail.textContent = user.email || "";
+      if (dropEmail)    dropEmail.textContent = user.email || "";
 
+      // getUserRole is already try-caught — will not throw
       const role = await getUserRole(user.uid);
       if (role === "admin") {
         if (dropAdminLink) dropAdminLink.classList.remove("hidden");
@@ -184,8 +201,8 @@ export function initNavbar() {
         if (mobAdminLink)  mobAdminLink.classList.remove("hidden");
       }
     } else {
-      if (loginBtn)    loginBtn.classList.remove("hidden");
-      if (userWrap)    userWrap.classList.add("hidden");
+      if (loginBtn)     loginBtn.classList.remove("hidden");
+      if (userWrap)     userWrap.classList.add("hidden");
       if (mobLogoutBtn) mobLogoutBtn?.classList.add("hidden");
     }
   });
