@@ -1,0 +1,107 @@
+// ============================================================
+// Firestore Security Rules — RentHub Rental Marketplace
+// Deploy via: firebase deploy --only firestore:rules
+// ============================================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --------------------------------------------------------
+    // HELPER FUNCTIONS
+    // --------------------------------------------------------
+
+    // Check if the request is from an authenticated user
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    // Check if the requesting user owns a document
+    function isOwner(userId) {
+      return isAuth() && request.auth.uid == userId;
+    }
+
+    // Check if the authenticated user has admin role
+    // Reads the role field from their user document
+    function isAdmin() {
+      return isAuth() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Validate that incoming data has required ad fields
+    function validAdData() {
+      let d = request.resource.data;
+      return d.keys().hasAll(['title', 'category', 'price', 'location', 'phone', 'description', 'userId'])
+        && d.title is string && d.title.size() > 0 && d.title.size() <= 100
+        && d.category in ['Van', 'Car', 'Wedding', 'Construction', 'Party', 'Other']
+        && d.price is number && d.price >= 0
+        && d.location is string && d.location.size() > 0
+        && d.phone is string && d.phone.size() > 0
+        && d.description is string && d.description.size() > 0;
+    }
+
+    // --------------------------------------------------------
+    // USERS COLLECTION
+    // /users/{userId}
+    // --------------------------------------------------------
+    match /users/{userId} {
+      // Anyone can read user profiles (name, role etc)
+      allow read: if true;
+
+      // Only the user themselves can create their document
+      allow create: if isOwner(userId)
+        && request.resource.data.role == 'user'  // cannot self-assign admin
+        && request.resource.data.uid == userId;
+
+      // Users can update their own profile (but NOT change role)
+      allow update: if isOwner(userId)
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role'])
+        || isAdmin();  // Admins can update any user (including role assignment)
+
+      // Only admins can delete user documents
+      allow delete: if isAdmin();
+    }
+
+    // --------------------------------------------------------
+    // ADS COLLECTION
+    // /ads/{adId}
+    // --------------------------------------------------------
+    match /ads/{adId} {
+
+      // PUBLIC: Anyone can read APPROVED ads
+      allow read: if resource.data.status == 'approved'
+        || isAuth() && resource.data.userId == request.auth.uid  // owner sees all their ads
+        || isAdmin();  // admin sees all ads
+
+      // AUTHENTICATED users can create ads
+      // - status must be 'pending' on creation
+      // - featured must be false on creation
+      // - userId must match the creator
+      allow create: if isAuth()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.featured == false
+        && validAdData();
+
+      // UPDATE rules split by who is updating and what fields
+      allow update: if
+        // Owner can update their own PENDING ad (but not status/featured)
+        (isOwner(resource.data.userId)
+          && resource.data.status == 'pending'
+          && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['status', 'featured', 'featuredUntil', 'userId'])
+        )
+        // Admin can update anything
+        || isAdmin();
+
+      // DELETE: Owner can delete their own ad, or admin can delete any
+      allow delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+
+    // --------------------------------------------------------
+    // Deny all other collections by default
+    // --------------------------------------------------------
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

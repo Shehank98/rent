@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — RentHub</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+    .upload-progress {
+      height: 4px;
+      background: var(--gray-200);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+    .upload-progress-bar {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 2px;
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+    .price-row { display: grid; grid-template-columns: 1fr auto; gap: 0.75rem; }
+    .status-info { background: var(--warning-bg); border: 1px solid #fcd34d; border-radius: var(--radius); padding: 0.75rem 1rem; font-size: 0.875rem; color: #92400e; margin-bottom: 1.5rem; }
+  </style>
+</head>
+<body>
+
+<!-- ==================== NAVBAR ==================== -->
+<nav class="navbar">
+  <div class="container">
+    <a href="index.html" class="nav-brand">Rent<span>Hub</span></a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="listings.html">Browse</a>
+      <a href="dashboard.html" style="color:var(--primary);font-weight:700;">Dashboard</a>
+      <a href="admin.html" id="nav-admin-link" class="hidden">Admin</a>
+    </div>
+    <div class="nav-actions">
+      <div id="nav-user-menu" class="user-menu hidden">
+        <img id="nav-user-avatar" class="user-avatar" src="https://placehold.co/36" alt="avatar" />
+        <span id="nav-user-name" class="user-name"></span>
+      </div>
+      <button id="nav-logout-btn" class="btn btn-ghost btn-sm">Sign Out</button>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+  <nav class="mobile-nav" id="mobile-nav">
+    <a href="index.html">Home</a>
+    <a href="listings.html">Browse</a>
+    <button id="mob-logout-btn" class="btn btn-ghost btn-sm" style="width:fit-content">Sign Out</button>
+  </nav>
+</nav>
+
+<!-- ==================== DASHBOARD LAYOUT ==================== -->
+<div class="dashboard-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <img id="sidebar-avatar" class="sidebar-avatar" src="https://placehold.co/48" alt="avatar" />
+      <div class="sidebar-name" id="sidebar-name">Loading...</div>
+      <div class="sidebar-email" id="sidebar-email"></div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="#" class="active" data-tab="create" id="tab-create-link">
+        <span class="nav-icon">➕</span> Post New Ad
+      </a>
+      <a href="#" data-tab="my-ads" id="tab-myads-link">
+        <span class="nav-icon">📋</span> My Ads
+        <span class="tab-count" id="my-ads-count" style="margin-left:auto;">0</span>
+      </a>
+      <hr style="border:none;border-top:1px solid var(--gray-200);margin:0.75rem 0;" />
+      <a href="listings.html">
+        <span class="nav-icon">🔍</span> Browse Listings
+      </a>
+      <a href="index.html">
+        <span class="nav-icon">🏠</span> Home
+      </a>
+    </nav>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+
+    <!-- TAB: CREATE NEW AD -->
+    <div class="tab-pane active" id="pane-create">
+      <div class="page-header">
+        <h2>Post a New Ad</h2>
+        <p>Fill in the details below. Your ad will be reviewed before going live.</p>
+      </div>
+
+      <div class="status-info">
+        ℹ️ After submission, your ad will be reviewed by our admin team before it appears publicly. This usually takes a few hours.
+      </div>
+
+      <div class="content-card">
+        <form id="create-ad-form" novalidate>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="ad-title">Title <span>*</span></label>
+              <input type="text" class="form-control" id="ad-title" placeholder="e.g. Toyota HiAce Van for Rent" maxlength="100" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="ad-category">Category <span>*</span></label>
+              <select class="form-control" id="ad-category" required>
+                <option value="">Select a category</option>
+                <option value="Van">🚐 Van</option>
+                <option value="Car">🚗 Car</option>
+                <option value="Wedding">💍 Wedding</option>
+                <option value="Construction">🏗️ Construction</option>
+                <option value="Party">🎉 Party</option>
+                <option value="Other">📦 Other</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="ad-price">Price (R) <span>*</span></label>
+              <div class="price-row">
+                <input type="number" class="form-control" id="ad-price" placeholder="e.g. 500" min="0" step="any" required />
+                <select class="form-control" id="ad-price-type" style="width:120px;">
+                  <option value="day">Per Day</option>
+                  <option value="km">Per KM</option>
+                  <option value="week">Per Week</option>
+                  <option value="month">Per Month</option>
+                  <option value="event">Per Event</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="ad-location">Location <span>*</span></label>
+              <input type="text" class="form-control" id="ad-location" placeholder="e.g. Johannesburg, Gauteng" required />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="ad-phone">Contact Phone Number <span>*</span></label>
+            <input type="tel" class="form-control" id="ad-phone" placeholder="e.g. 0712345678" required />
+            <p class="form-hint">This number will be shown to interested renters. Include country code for WhatsApp.</p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="ad-description">Description <span>*</span></label>
+            <textarea class="form-control" id="ad-description" rows="5" placeholder="Describe your rental item in detail. Include condition, features, availability, terms, etc." required></textarea>
+          </div>
+
+          <!-- Image Upload -->
+          <div class="form-group">
+            <label class="form-label">Images (up to 8)</label>
+            <div class="upload-area" id="upload-area">
+              <div class="upload-icon">📸</div>
+              <h4>Drop images here or click to upload</h4>
+              <p>JPG, PNG, WEBP • Max 5MB per image • Up to 8 images</p>
+              <input type="file" id="image-input" accept="image/*" multiple style="display:none;" />
+            </div>
+            <div class="upload-progress" id="upload-progress" style="display:none;">
+              <div class="upload-progress-bar" id="upload-progress-bar"></div>
+            </div>
+            <div class="image-preview-grid" id="image-preview-grid"></div>
+          </div>
+
+          <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+            <button type="submit" class="btn btn-primary btn-lg" id="submit-btn">
+              📤 Submit Ad for Review
+            </button>
+            <button type="button" class="btn btn-ghost" id="clear-form-btn">Clear Form</button>
+          </div>
+
+          <div id="form-error" class="alert alert-error mt-2" style="display:none;"></div>
+        </form>
+      </div>
+    </div>
+
+    <!-- TAB: MY ADS -->
+    <div class="tab-pane" id="pane-my-ads">
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+        <div>
+          <h2>My Ads</h2>
+          <p>Manage your rental listings</p>
+        </div>
+        <button class="btn btn-primary btn-sm" data-tab="create" id="post-new-btn">+ Post New Ad</button>
+      </div>
+
+      <div id="my-ads-loading" style="text-align:center;padding:2rem;">
+        <div class="spinner" style="margin:0 auto;"></div>
+      </div>
+
+      <div id="my-ads-list" class="my-ads-list" style="display:none;"></div>
+
+      <div id="my-ads-empty" class="empty-state hidden">
+        <div class="empty-icon">📋</div>
+        <h3>No ads yet</h3>
+        <p>You haven't posted any rental ads. Create one now!</p>
+        <button class="btn btn-primary" data-tab="create" id="create-first-btn">Post Your First Ad</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ==================== DELETE CONFIRM MODAL ==================== -->
+<div class="modal-overlay" id="delete-modal">
+  <div class="modal">
+    <h3>Delete Ad</h3>
+    <p>Are you sure you want to delete <strong id="delete-ad-title"></strong>? This action cannot be undone.</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancel-delete-btn">Cancel</button>
+      <button class="btn btn-danger" id="confirm-delete-btn">Delete Ad</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import {
+    auth, db, storage,
+    onAuthStateChanged, signOut,
+    collection, doc, getDoc, getDocs, addDoc, deleteDoc,
+    query, where, orderBy, serverTimestamp,
+    ref, uploadBytes, getDownloadURL, deleteObject,
+  } from "./firebase.js";
+  import {
+    requireAuth, initNavbar, showToast, formatPrice, formatDate,
+    isFeaturedActive, featuredDaysLeft, escapeHtml, getUserRole
+  } from "./main.js";
+
+  initNavbar();
+
+  let currentUser = null;
+  let selectedFiles = [];
+  let adToDelete = null;
+
+  // Auth guard
+  requireAuth(async (user) => {
+    currentUser = user;
+    document.getElementById("sidebar-name").textContent = user.displayName || "User";
+    document.getElementById("sidebar-email").textContent = user.email || "";
+    if (user.photoURL) {
+      document.getElementById("sidebar-avatar").src = user.photoURL;
+      document.getElementById("nav-user-avatar").src = user.photoURL;
+    }
+    document.getElementById("nav-user-name").textContent = user.displayName?.split(" ")[0] || "User";
+    document.getElementById("nav-user-menu").classList.remove("hidden");
+
+    // Check admin
+    const role = await getUserRole(user.uid);
+    if (role === "admin") {
+      document.getElementById("nav-admin-link").classList.remove("hidden");
+    }
+
+    loadMyAds();
+  });
+
+  // Logout
+  document.getElementById("nav-logout-btn").addEventListener("click", async () => {
+    await signOut(auth);
+    window.location.href = "index.html";
+  });
+
+  // ---- TAB NAVIGATION ----
+  function switchTab(tab) {
+    document.querySelectorAll(".tab-pane").forEach(p => p.classList.remove("active"));
+    document.querySelectorAll(".sidebar-nav a[data-tab]").forEach(a => a.classList.remove("active"));
+    document.getElementById(`pane-${tab}`).classList.add("active");
+    document.getElementById(`tab-${tab === "create" ? "create" : "myads"}-link`).classList.add("active");
+  }
+
+  document.querySelectorAll("[data-tab]").forEach(el => {
+    el.addEventListener("click", (e) => {
+      e.preventDefault();
+      switchTab(el.dataset.tab);
+    });
+  });
+
+  // ---- IMAGE UPLOAD AREA ----
+  const uploadArea = document.getElementById("upload-area");
+  const imageInput = document.getElementById("image-input");
+  const previewGrid = document.getElementById("image-preview-grid");
+
+  uploadArea.addEventListener("click", () => imageInput.click());
+  uploadArea.addEventListener("dragover", (e) => { e.preventDefault(); uploadArea.classList.add("drag-over"); });
+  uploadArea.addEventListener("dragleave", () => uploadArea.classList.remove("drag-over"));
+  uploadArea.addEventListener("drop", (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove("drag-over");
+    handleFiles(Array.from(e.dataTransfer.files));
+  });
+
+  imageInput.addEventListener("change", () => handleFiles(Array.from(imageInput.files)));
+
+  function handleFiles(files) {
+    const MAX = 8;
+    const allowed = files.filter(f => f.type.startsWith("image/") && f.size <= 5 * 1024 * 1024);
+    const remaining = MAX - selectedFiles.length;
+    const toAdd = allowed.slice(0, remaining);
+    if (allowed.length < files.length) showToast("Some files were skipped (too large or invalid type)", "warning");
+    if (toAdd.length < allowed.length) showToast(`Maximum ${MAX} images allowed`, "warning");
+    selectedFiles = [...selectedFiles, ...toAdd];
+    renderPreviews();
+  }
+
+  function renderPreviews() {
+    previewGrid.innerHTML = "";
+    selectedFiles.forEach((file, i) => {
+      const url = URL.createObjectURL(file);
+      const item = document.createElement("div");
+      item.className = "preview-item";
+      item.innerHTML = `
+        <img src="${url}" alt="preview" />
+        <button class="preview-remove" data-idx="${i}">✕</button>
+      `;
+      previewGrid.appendChild(item);
+    });
+    previewGrid.querySelectorAll(".preview-remove").forEach(btn => {
+      btn.addEventListener("click", () => {
+        selectedFiles.splice(parseInt(btn.dataset.idx), 1);
+        renderPreviews();
+      });
+    });
+  }
+
+  // ---- CREATE AD FORM ----
+  document.getElementById("clear-form-btn").addEventListener("click", () => {
+    document.getElementById("create-ad-form").reset();
+    selectedFiles = [];
+    renderPreviews();
+    document.getElementById("form-error").style.display = "none";
+  });
+
+  document.getElementById("create-ad-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!currentUser) return;
+
+    const errEl = document.getElementById("form-error");
+    errEl.style.display = "none";
+    const submitBtn = document.getElementById("submit-btn");
+
+    const title = document.getElementById("ad-title").value.trim();
+    const category = document.getElementById("ad-category").value;
+    const price = document.getElementById("ad-price").value.trim();
+    const priceType = document.getElementById("ad-price-type").value;
+    const location = document.getElementById("ad-location").value.trim();
+    const phone = document.getElementById("ad-phone").value.trim();
+    const description = document.getElementById("ad-description").value.trim();
+
+    if (!title || !category || !price || !location || !phone || !description) {
+      errEl.textContent = "Please fill in all required fields.";
+      errEl.style.display = "flex";
+      errEl.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
+
+    try {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Uploading images...";
+
+      // Upload images
+      const imageUrls = [];
+      const tempId = Date.now().toString();
+      const progressBar = document.getElementById("upload-progress-bar");
+      const progressWrap = document.getElementById("upload-progress");
+
+      if (selectedFiles.length > 0) {
+        progressWrap.style.display = "block";
+        for (let i = 0; i < selectedFiles.length; i++) {
+          const file = selectedFiles[i];
+          const storageRef = ref(storage, `ads/${currentUser.uid}/${tempId}/image-${i}`);
+          await uploadBytes(storageRef, file);
+          const url = await getDownloadURL(storageRef);
+          imageUrls.push(url);
+          progressBar.style.width = `${((i + 1) / selectedFiles.length) * 100}%`;
+        }
+        progressWrap.style.display = "none";
+      }
+
+      submitBtn.textContent = "Saving ad...";
+
+      // Save to Firestore
+      await addDoc(collection(db, "ads"), {
+        userId: currentUser.uid,
+        userEmail: currentUser.email,
+        userName: currentUser.displayName,
+        title,
+        category,
+        price: parseFloat(price),
+        priceType,
+        location,
+        phone,
+        description,
+        imageUrls,
+        status: "pending",
+        featured: false,
+        featuredUntil: null,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+
+      showToast("Ad submitted! It will go live after admin approval.", "success", 5000);
+      document.getElementById("create-ad-form").reset();
+      selectedFiles = [];
+      renderPreviews();
+      switchTab("my-ads");
+      loadMyAds();
+    } catch (err) {
+      console.error(err);
+      errEl.textContent = "Error submitting ad: " + err.message;
+      errEl.style.display = "flex";
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "📤 Submit Ad for Review";
+      document.getElementById("upload-progress").style.display = "none";
+    }
+  });
+
+  // ---- LOAD MY ADS ----
+  async function loadMyAds() {
+    if (!currentUser) return;
+    const listEl = document.getElementById("my-ads-list");
+    const emptyEl = document.getElementById("my-ads-empty");
+    const loadingEl = document.getElementById("my-ads-loading");
+    const countEl = document.getElementById("my-ads-count");
+
+    loadingEl.style.display = "block";
+    listEl.style.display = "none";
+    emptyEl.classList.add("hidden");
+
+    try {
+      const snap = await getDocs(
+        query(collection(db, "ads"), where("userId", "==", currentUser.uid), orderBy("createdAt", "desc"))
+      );
+
+      const ads = [];
+      snap.forEach(d => ads.push({ id: d.id, ...d.data() }));
+      countEl.textContent = ads.length;
+      loadingEl.style.display = "none";
+
+      if (ads.length === 0) {
+        emptyEl.classList.remove("hidden");
+        return;
+      }
+
+      listEl.style.display = "flex";
+      listEl.innerHTML = ads.map(ad => renderMyAdItem(ad)).join("");
+
+      // Delete buttons
+      listEl.querySelectorAll(".delete-ad-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          adToDelete = { id: btn.dataset.id, title: btn.dataset.title };
+          document.getElementById("delete-ad-title").textContent = btn.dataset.title;
+          document.getElementById("delete-modal").classList.add("open");
+        });
+      });
+
+      // View buttons
+      listEl.querySelectorAll(".view-ad-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          if (btn.dataset.status === "approved") {
+            window.open(`ad.html?id=${btn.dataset.id}`, "_blank");
+          } else {
+            showToast("Ad is not yet approved and not publicly visible", "info");
+          }
+        });
+      });
+    } catch (err) {
+      console.error(err);
+      loadingEl.style.display = "none";
+      showToast("Could not load your ads: " + err.message, "error");
+    }
+  }
+
+  function renderMyAdItem(ad) {
+    const img = (ad.imageUrls && ad.imageUrls[0]) || "https://placehold.co/90x70/e2e8f0/94a3b8?text=No+Img";
+    const statusBadge = {
+      pending: `<span class="badge badge-pending">⏳ Pending Review</span>`,
+      approved: `<span class="badge badge-approved">✓ Approved</span>`,
+      rejected: `<span class="badge badge-rejected">✕ Rejected</span>`,
+    }[ad.status] || `<span class="badge badge-pending">Pending</span>`;
+
+    const featuredInfo = (ad.featured && isFeaturedActive(ad.featuredUntil))
+      ? `<span class="badge badge-featured">⭐ Featured · ${featuredDaysLeft(ad.featuredUntil)}d left</span>`
+      : "";
+
+    const priceStr = formatPrice(ad.price, ad.priceType || "day");
+    const date = formatDate(ad.createdAt);
+
+    return `
+      <div class="my-ad-item">
+        <img class="my-ad-thumb" src="${escapeHtml(img)}" alt="${escapeHtml(ad.title)}"
+             onerror="this.src='https://placehold.co/90x70/e2e8f0/94a3b8?text=No+Img'" />
+        <div class="my-ad-info">
+          <div class="my-ad-title">${escapeHtml(ad.title)}</div>
+          <div class="my-ad-meta">
+            <span>📍 ${escapeHtml(ad.location || "—")}</span>
+            <span>${escapeHtml(ad.category || "Other")}</span>
+            <span>${priceStr}</span>
+            <span>📅 ${date}</span>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:0.5rem;">
+            ${statusBadge}
+            ${featuredInfo}
+          </div>
+          <div class="my-ad-actions">
+            <button class="btn btn-outline btn-sm view-ad-btn" data-id="${ad.id}" data-status="${ad.status}">
+              👁 View
+            </button>
+            <button class="btn btn-outline-danger btn-sm delete-ad-btn" data-id="${ad.id}" data-title="${escapeHtml(ad.title)}">
+              🗑 Delete
+            </button>
+          </div>
+          ${ad.status === "rejected" ? `<p style="font-size:0.8rem;color:var(--danger);margin-top:0.4rem;">Your ad was rejected. Please review and resubmit.</p>` : ""}
+        </div>
+      </div>
+    `;
+  }
+
+  // ---- DELETE MODAL ----
+  document.getElementById("cancel-delete-btn").addEventListener("click", () => {
+    document.getElementById("delete-modal").classList.remove("open");
+    adToDelete = null;
+  });
+
+  document.getElementById("confirm-delete-btn").addEventListener("click", async () => {
+    if (!adToDelete) return;
+    const btn = document.getElementById("confirm-delete-btn");
+    btn.disabled = true;
+    btn.textContent = "Deleting...";
+    try {
+      // Delete images from Storage
+      try {
+        const adSnap = await getDoc(doc(db, "ads", adToDelete.id));
+        if (adSnap.exists()) {
+          const urls = adSnap.data().imageUrls || [];
+          await Promise.all(urls.map(async (url) => {
+            try {
+              // Extract path from URL
+              const decodedUrl = decodeURIComponent(url);
+              const match = decodedUrl.match(/\/o\/(.+?)\?/);
+              if (match) {
+                const path = match[1];
+                await deleteObject(ref(storage, path));
+              }
+            } catch (_) {}
+          }));
+        }
+      } catch (_) {}
+
+      await deleteDoc(doc(db, "ads", adToDelete.id));
+      showToast("Ad deleted successfully", "success");
+      document.getElementById("delete-modal").classList.remove("open");
+      adToDelete = null;
+      loadMyAds();
+    } catch (err) {
+      showToast("Delete failed: " + err.message, "error");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Delete Ad";
+    }
+  });
+
+  // Close modal on overlay click
+  document.getElementById("delete-modal").addEventListener("click", (e) => {
+    if (e.target === document.getElementById("delete-modal")) {
+      document.getElementById("delete-modal").classList.remove("open");
+      adToDelete = null;
+    }
+  });
+</script>
+</body>
+</html>

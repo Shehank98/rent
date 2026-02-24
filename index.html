@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RentHub — Find Anything to Rent</title>
+  <meta name="description" content="Discover vans, cars, wedding vehicles, construction equipment, party items and more. Post your rental ad today." />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ==================== NAVBAR ==================== -->
+<nav class="navbar">
+  <div class="container">
+    <a href="index.html" class="nav-brand">Rent<span>Hub</span></a>
+
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="listings.html">Browse</a>
+      <a href="index.html#categories">Categories</a>
+      <a href="dashboard.html" id="nav-dashboard-link" class="hidden">Dashboard</a>
+      <a href="admin.html" id="nav-admin-link" class="hidden">Admin</a>
+    </div>
+
+    <div class="nav-actions">
+      <button id="nav-login-btn" class="btn btn-primary btn-sm">Sign In</button>
+      <div id="nav-user-menu" class="user-menu hidden">
+        <img id="nav-user-avatar" class="user-avatar" src="https://placehold.co/36" alt="avatar" />
+        <span id="nav-user-name" class="user-name"></span>
+        <span style="color:var(--gray-400);font-size:0.75rem;">▾</span>
+      </div>
+      <button id="nav-logout-btn" class="btn btn-ghost btn-sm hidden">Sign Out</button>
+    </div>
+
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+  <nav class="mobile-nav" id="mobile-nav">
+    <a href="index.html">Home</a>
+    <a href="listings.html">Browse All</a>
+    <a href="dashboard.html" id="mob-dashboard-link" class="hidden">Dashboard</a>
+    <a href="admin.html" id="mob-admin-link" class="hidden">Admin Panel</a>
+    <button id="mob-login-btn" class="btn btn-primary btn-sm" style="width:fit-content">Sign In</button>
+    <button id="mob-logout-btn" class="btn btn-ghost btn-sm hidden" style="width:fit-content">Sign Out</button>
+  </nav>
+</nav>
+
+<!-- ==================== HERO ==================== -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-eyebrow">🚀 South Africa's #1 Rental Marketplace</div>
+    <h1>Rent <span>Anything</span>,<br>Anywhere in SA</h1>
+    <p>Find vans, cars, wedding vehicles, construction equipment, party gear and more — all in one place.</p>
+
+    <div class="hero-search" id="hero-search-form">
+      <input type="text" id="hero-search-input" placeholder="What are you looking for?" autocomplete="off" />
+      <select id="hero-category-select">
+        <option value="">All Categories</option>
+        <option value="Van">Van</option>
+        <option value="Car">Car</option>
+        <option value="Wedding">Wedding</option>
+        <option value="Construction">Construction</option>
+        <option value="Party">Party</option>
+        <option value="Other">Other</option>
+      </select>
+      <input type="text" id="hero-location-input" placeholder="Location (city, province)" autocomplete="off" />
+      <button class="btn btn-accent" id="hero-search-btn">Search</button>
+    </div>
+
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <strong id="stat-total">...</strong>
+        <span>Active Listings</span>
+      </div>
+      <div class="hero-stat">
+        <strong id="stat-categories">6</strong>
+        <span>Categories</span>
+      </div>
+      <div class="hero-stat">
+        <strong>Free</strong>
+        <span>To Post Ad</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== CATEGORIES ==================== -->
+<section class="categories-section" id="categories">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Browse by <span>Category</span></div>
+        <p class="section-subtitle">Find exactly what you need</p>
+      </div>
+    </div>
+    <div class="categories-grid">
+      <a href="listings.html?category=Van" class="category-card">
+        <div class="category-icon">🚐</div>
+        <div class="category-name">Vans</div>
+        <div class="category-count" data-cat="Van">...</div>
+      </a>
+      <a href="listings.html?category=Car" class="category-card">
+        <div class="category-icon">🚗</div>
+        <div class="category-name">Cars</div>
+        <div class="category-count" data-cat="Car">...</div>
+      </a>
+      <a href="listings.html?category=Wedding" class="category-card">
+        <div class="category-icon">💍</div>
+        <div class="category-name">Wedding</div>
+        <div class="category-count" data-cat="Wedding">...</div>
+      </a>
+      <a href="listings.html?category=Construction" class="category-card">
+        <div class="category-icon">🏗️</div>
+        <div class="category-name">Construction</div>
+        <div class="category-count" data-cat="Construction">...</div>
+      </a>
+      <a href="listings.html?category=Party" class="category-card">
+        <div class="category-icon">🎉</div>
+        <div class="category-name">Party</div>
+        <div class="category-count" data-cat="Party">...</div>
+      </a>
+      <a href="listings.html?category=Other" class="category-card">
+        <div class="category-icon">📦</div>
+        <div class="category-name">Other</div>
+        <div class="category-count" data-cat="Other">...</div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== FEATURED ADS ==================== -->
+<section class="featured-section" id="featured">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <div class="section-title">⭐ Featured <span>Listings</span></div>
+        <p class="section-subtitle">Promoted listings by our members</p>
+      </div>
+      <a href="listings.html?sort=featured" class="btn btn-outline btn-sm">View All</a>
+    </div>
+    <div class="ads-grid" id="featured-ads-grid">
+      <!-- Skeleton placeholders -->
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+    </div>
+    <div id="no-featured" class="empty-state hidden">
+      <div class="empty-icon">⭐</div>
+      <h3>No featured listings yet</h3>
+      <p>Check back soon for featured rentals</p>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== LATEST ADS ==================== -->
+<section class="latest-section" id="latest">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Latest <span>Listings</span></div>
+        <p class="section-subtitle">Fresh rentals just posted</p>
+      </div>
+      <a href="listings.html" class="btn btn-outline btn-sm">Browse All</a>
+    </div>
+    <div class="ads-grid" id="latest-ads-grid">
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+    </div>
+    <div id="no-latest" class="empty-state hidden">
+      <div class="empty-icon">📋</div>
+      <h3>No listings yet</h3>
+      <p>Be the first to post a rental ad!</p>
+      <a href="dashboard.html" class="btn btn-primary">Post an Ad</a>
+    </div>
+    <div style="text-align:center; margin-top:2rem;">
+      <a href="listings.html" class="btn btn-outline btn-lg">View All Listings</a>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== POST CTA ==================== -->
+<section style="background: linear-gradient(135deg, var(--primary-dark), var(--primary)); padding: 4rem 0;">
+  <div class="container" style="text-align:center;">
+    <h2 style="color:white; margin-bottom:1rem;">Have Something to Rent Out?</h2>
+    <p style="color:#bfdbfe; margin-bottom:2rem; font-size:1.1rem;">Post your rental ad for free and reach thousands of people.</p>
+    <a href="dashboard.html" class="btn btn-white btn-lg">Post a Free Ad</a>
+  </div>
+</section>
+
+<!-- ==================== FOOTER ==================== -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">Rent<span>Hub</span></div>
+        <p class="footer-desc">South Africa's rental marketplace. Find and list vans, cars, equipment, wedding vehicles, and more.</p>
+      </div>
+      <div>
+        <h4>Quick Links</h4>
+        <ul>
+          <li><a href="listings.html">Browse All</a></li>
+          <li><a href="dashboard.html">Post an Ad</a></li>
+          <li><a href="listings.html?category=Van">Vans</a></li>
+          <li><a href="listings.html?category=Car">Cars</a></li>
+          <li><a href="listings.html?category=Wedding">Wedding</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Categories</h4>
+        <ul>
+          <li><a href="listings.html?category=Construction">Construction</a></li>
+          <li><a href="listings.html?category=Party">Party Items</a></li>
+          <li><a href="listings.html?category=Other">Other Items</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2024 RentHub. All rights reserved.</span>
+      <span>Powered by Firebase</span>
+    </div>
+  </div>
+</footer>
+
+<script type="module">
+  import {
+    auth, db, onAuthStateChanged,
+    collection, query, where, orderBy, limit, getDocs
+  } from "./firebase.js";
+  import {
+    initNavbar, showToast, buildAdCard, isFeaturedActive, renderSkeletons, debounce
+  } from "./main.js";
+
+  initNavbar();
+
+  // Handle user menu dropdown toggle for logout
+  const userMenu = document.getElementById("nav-user-menu");
+  const logoutBtn = document.getElementById("nav-logout-btn");
+  if (userMenu && logoutBtn) {
+    userMenu.addEventListener("click", () => {
+      logoutBtn.classList.toggle("hidden");
+    });
+  }
+
+  // ---- Hero search ----
+  const searchBtn = document.getElementById("hero-search-btn");
+  searchBtn.addEventListener("click", () => {
+    const search = document.getElementById("hero-search-input").value.trim();
+    const category = document.getElementById("hero-category-select").value;
+    const location = document.getElementById("hero-location-input").value.trim();
+    const params = new URLSearchParams();
+    if (search) params.set("q", search);
+    if (category) params.set("category", category);
+    if (location) params.set("location", location);
+    window.location.href = `listings.html?${params.toString()}`;
+  });
+
+  document.getElementById("hero-search-input").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") searchBtn.click();
+  });
+
+  // ---- Load approved ads ----
+  async function loadAds() {
+    try {
+      const adsRef = collection(db, "ads");
+      const approvedQuery = query(adsRef, where("status", "==", "approved"), orderBy("createdAt", "desc"), limit(80));
+      const snapshot = await getDocs(approvedQuery);
+
+      const all = [];
+      snapshot.forEach(d => all.push({ id: d.id, ...d.data() }));
+
+      // Update stat
+      document.getElementById("stat-total").textContent = all.length + "+";
+
+      // Count per category
+      const counts = {};
+      all.forEach(ad => {
+        counts[ad.category] = (counts[ad.category] || 0) + 1;
+      });
+      document.querySelectorAll(".category-count").forEach(el => {
+        const cat = el.dataset.cat;
+        el.textContent = counts[cat] ? `${counts[cat]} listing${counts[cat] > 1 ? "s" : ""}` : "0 listings";
+      });
+
+      // Featured ads (active)
+      const now = new Date();
+      const featured = all.filter(ad => ad.featured && isFeaturedActive(ad.featuredUntil));
+      const featuredGrid = document.getElementById("featured-ads-grid");
+      if (featured.length === 0) {
+        featuredGrid.innerHTML = "";
+        document.getElementById("no-featured").classList.remove("hidden");
+      } else {
+        featuredGrid.innerHTML = featured.slice(0, 8).map(ad => buildAdCard(ad, ad.id)).join("");
+      }
+
+      // Latest ads (non-featured or all)
+      const latestGrid = document.getElementById("latest-ads-grid");
+      if (all.length === 0) {
+        latestGrid.innerHTML = "";
+        document.getElementById("no-latest").classList.remove("hidden");
+      } else {
+        latestGrid.innerHTML = all.slice(0, 8).map(ad => buildAdCard(ad, ad.id)).join("");
+      }
+    } catch (err) {
+      console.error(err);
+      document.getElementById("featured-ads-grid").innerHTML = `<div class="alert alert-warning">Could not load listings. Check your Firebase config.</div>`;
+      document.getElementById("latest-ads-grid").innerHTML = "";
+    }
+  }
+
+  loadAds();
+</script>
+</body>
+</html>

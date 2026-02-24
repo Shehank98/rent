@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Browse Listings — RentHub</title>
+  <meta name="description" content="Browse all rental listings — vans, cars, wedding vehicles, construction equipment, party items and more." />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ==================== NAVBAR ==================== -->
+<nav class="navbar">
+  <div class="container">
+    <a href="index.html" class="nav-brand">Rent<span>Hub</span></a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="listings.html" style="color:var(--primary);font-weight:700;">Browse</a>
+      <a href="dashboard.html" id="nav-dashboard-link" class="hidden">Dashboard</a>
+      <a href="admin.html" id="nav-admin-link" class="hidden">Admin</a>
+    </div>
+    <div class="nav-actions">
+      <button id="nav-login-btn" class="btn btn-primary btn-sm">Sign In</button>
+      <div id="nav-user-menu" class="user-menu hidden">
+        <img id="nav-user-avatar" class="user-avatar" src="https://placehold.co/36" alt="avatar" />
+        <span id="nav-user-name" class="user-name"></span>
+        <span style="color:var(--gray-400);font-size:0.75rem;">▾</span>
+      </div>
+      <button id="nav-logout-btn" class="btn btn-ghost btn-sm hidden">Sign Out</button>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+  <nav class="mobile-nav" id="mobile-nav">
+    <a href="index.html">Home</a>
+    <a href="listings.html">Browse All</a>
+    <a href="dashboard.html">Dashboard</a>
+    <button id="mob-login-btn" class="btn btn-primary btn-sm" style="width:fit-content">Sign In</button>
+    <button id="mob-logout-btn" class="btn btn-ghost btn-sm hidden" style="width:fit-content">Sign Out</button>
+  </nav>
+</nav>
+
+<!-- ==================== LISTINGS HERO ==================== -->
+<section class="listings-hero">
+  <div class="container">
+    <h1>Browse All Listings</h1>
+    <p>Find the perfect rental for your needs</p>
+  </div>
+</section>
+
+<!-- ==================== FILTER BAR ==================== -->
+<div class="filter-bar" id="filter-bar">
+  <div class="container">
+    <div class="filter-search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="search-input" placeholder="Search listings..." />
+    </div>
+    <select class="filter-select" id="category-filter">
+      <option value="">All Categories</option>
+      <option value="Van">🚐 Van</option>
+      <option value="Car">🚗 Car</option>
+      <option value="Wedding">💍 Wedding</option>
+      <option value="Construction">🏗️ Construction</option>
+      <option value="Party">🎉 Party</option>
+      <option value="Other">📦 Other</option>
+    </select>
+    <input type="text" class="filter-select" id="location-filter" placeholder="📍 Location..." style="min-width:160px;" />
+    <select class="filter-select" id="sort-select">
+      <option value="newest">Newest First</option>
+      <option value="featured">Featured First</option>
+      <option value="price-asc">Price: Low to High</option>
+      <option value="price-desc">Price: High to Low</option>
+    </select>
+    <span class="results-count" id="results-count">Loading...</span>
+    <button class="btn btn-ghost btn-sm" id="clear-filters-btn">Clear</button>
+  </div>
+</div>
+
+<!-- ==================== LISTINGS GRID ==================== -->
+<main class="listings-content">
+  <div class="container">
+    <div class="ads-grid" id="listings-grid">
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+    </div>
+    <div id="no-results" class="no-results hidden">
+      <div class="no-icon">🔍</div>
+      <h3>No listings found</h3>
+      <p>Try adjusting your filters or search term</p>
+      <button class="btn btn-outline" id="reset-btn">Reset Filters</button>
+    </div>
+    <div id="load-more-wrap" class="text-center mt-3 hidden">
+      <button class="btn btn-outline" id="load-more-btn">Load More</button>
+    </div>
+  </div>
+</main>
+
+<!-- ==================== FOOTER ==================== -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">Rent<span>Hub</span></div>
+        <p class="footer-desc">South Africa's rental marketplace.</p>
+      </div>
+      <div>
+        <h4>Quick Links</h4>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="dashboard.html">Post an Ad</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Categories</h4>
+        <ul>
+          <li><a href="?category=Van">Vans</a></li>
+          <li><a href="?category=Car">Cars</a></li>
+          <li><a href="?category=Wedding">Wedding</a></li>
+          <li><a href="?category=Construction">Construction</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2024 RentHub. All rights reserved.</span>
+    </div>
+  </div>
+</footer>
+
+<script type="module">
+  import {
+    db, onAuthStateChanged, auth,
+    collection, query, where, orderBy, getDocs, limit
+  } from "./firebase.js";
+  import {
+    initNavbar, buildAdCard, isFeaturedActive, debounce, escapeHtml
+  } from "./main.js";
+
+  initNavbar();
+
+  // Handle user menu dropdown toggle for logout
+  const userMenu = document.getElementById("nav-user-menu");
+  const logoutBtn = document.getElementById("nav-logout-btn");
+  if (userMenu && logoutBtn) {
+    userMenu.addEventListener("click", () => logoutBtn.classList.toggle("hidden"));
+  }
+
+  const PAGE_SIZE = 24;
+  let allAds = [];
+  let filtered = [];
+  let displayed = 0;
+
+  // ---- Read URL params ----
+  const params = new URLSearchParams(window.location.search);
+  const initSearch = params.get("q") || "";
+  const initCategory = params.get("category") || "";
+  const initLocation = params.get("location") || "";
+  const initSort = params.get("sort") || "newest";
+
+  document.getElementById("search-input").value = initSearch;
+  document.getElementById("category-filter").value = initCategory;
+  document.getElementById("location-filter").value = initLocation;
+  document.getElementById("sort-select").value = initSort;
+
+  // ---- Fetch all approved ads ----
+  async function fetchAds() {
+    const snap = await getDocs(
+      query(collection(db, "ads"), where("status", "==", "approved"), orderBy("createdAt", "desc"))
+    );
+    allAds = [];
+    snap.forEach(d => allAds.push({ id: d.id, ...d.data() }));
+    applyFilters();
+  }
+
+  // ---- Apply search/filter/sort ----
+  function applyFilters() {
+    const search = document.getElementById("search-input").value.trim().toLowerCase();
+    const category = document.getElementById("category-filter").value;
+    const location = document.getElementById("location-filter").value.trim().toLowerCase();
+    const sort = document.getElementById("sort-select").value;
+
+    filtered = allAds.filter(ad => {
+      if (category && ad.category !== category) return false;
+      if (location && !ad.location?.toLowerCase().includes(location)) return false;
+      if (search) {
+        const haystack = `${ad.title} ${ad.description} ${ad.category} ${ad.location}`.toLowerCase();
+        if (!haystack.includes(search)) return false;
+      }
+      return true;
+    });
+
+    // Sort
+    if (sort === "newest") {
+      filtered.sort((a, b) => {
+        const ta = a.createdAt?.toDate?.() || new Date(0);
+        const tb = b.createdAt?.toDate?.() || new Date(0);
+        return tb - ta;
+      });
+    } else if (sort === "featured") {
+      filtered.sort((a, b) => {
+        const af = isFeaturedActive(a.featuredUntil) ? 1 : 0;
+        const bf = isFeaturedActive(b.featuredUntil) ? 1 : 0;
+        if (bf !== af) return bf - af;
+        const ta = a.createdAt?.toDate?.() || new Date(0);
+        const tb = b.createdAt?.toDate?.() || new Date(0);
+        return tb - ta;
+      });
+    } else if (sort === "price-asc") {
+      filtered.sort((a, b) => parseFloat(a.price || 0) - parseFloat(b.price || 0));
+    } else if (sort === "price-desc") {
+      filtered.sort((a, b) => parseFloat(b.price || 0) - parseFloat(a.price || 0));
+    }
+
+    rendered = 0;
+    renderBatch(true);
+  }
+
+  let rendered = 0;
+
+  function renderBatch(reset = false) {
+    const grid = document.getElementById("listings-grid");
+    const noResults = document.getElementById("no-results");
+    const loadMoreWrap = document.getElementById("load-more-wrap");
+    const countEl = document.getElementById("results-count");
+
+    if (reset) {
+      grid.innerHTML = "";
+      rendered = 0;
+    }
+
+    if (filtered.length === 0) {
+      grid.innerHTML = "";
+      noResults.classList.remove("hidden");
+      loadMoreWrap.classList.add("hidden");
+      countEl.textContent = "0 results";
+      return;
+    }
+
+    noResults.classList.add("hidden");
+    countEl.textContent = `${filtered.length} listing${filtered.length !== 1 ? "s" : ""}`;
+
+    const batch = filtered.slice(rendered, rendered + PAGE_SIZE);
+    grid.insertAdjacentHTML("beforeend", batch.map(ad => buildAdCard(ad, ad.id)).join(""));
+    rendered += batch.length;
+
+    if (rendered < filtered.length) {
+      loadMoreWrap.classList.remove("hidden");
+    } else {
+      loadMoreWrap.classList.add("hidden");
+    }
+  }
+
+  // ---- Event listeners ----
+  const debouncedFilter = debounce(applyFilters, 300);
+  document.getElementById("search-input").addEventListener("input", debouncedFilter);
+  document.getElementById("category-filter").addEventListener("change", applyFilters);
+  document.getElementById("location-filter").addEventListener("input", debouncedFilter);
+  document.getElementById("sort-select").addEventListener("change", applyFilters);
+
+  document.getElementById("load-more-btn").addEventListener("click", () => renderBatch(false));
+
+  document.getElementById("reset-btn").addEventListener("click", () => {
+    document.getElementById("search-input").value = "";
+    document.getElementById("category-filter").value = "";
+    document.getElementById("location-filter").value = "";
+    document.getElementById("sort-select").value = "newest";
+    applyFilters();
+  });
+
+  document.getElementById("clear-filters-btn").addEventListener("click", () => {
+    document.getElementById("search-input").value = "";
+    document.getElementById("category-filter").value = "";
+    document.getElementById("location-filter").value = "";
+    document.getElementById("sort-select").value = "newest";
+    applyFilters();
+  });
+
+  fetchAds().catch(err => {
+    console.error(err);
+    document.getElementById("listings-grid").innerHTML =
+      `<div class="alert alert-warning" style="grid-column:1/-1">Could not load listings. Check your Firebase configuration.</div>`;
+    document.getElementById("results-count").textContent = "Error";
+  });
+</script>
+</body>
+</html>

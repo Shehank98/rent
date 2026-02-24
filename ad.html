@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ad Details — RentHub</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .breadcrumb { font-size: 0.85rem; color: var(--gray-500); margin-bottom: 1.5rem; }
+    .breadcrumb a { color: var(--primary); }
+    .breadcrumb span { margin: 0 0.4rem; }
+    .ad-left { min-width: 0; }
+    .report-link { font-size: 0.8rem; color: var(--gray-400); text-align: center; margin-top: 1rem; cursor: pointer; }
+    .report-link:hover { color: var(--danger); }
+    .ad-poster-info {
+      background: var(--gray-50);
+      border-radius: var(--radius);
+      padding: 0.875rem;
+      margin-top: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      border: 1px solid var(--gray-200);
+    }
+    .poster-avatar {
+      width: 42px; height: 42px; border-radius: 50%; background: var(--gray-200);
+      display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+    }
+    .similar-section { padding: 3rem 0 4rem; background: var(--gray-50); }
+    #ad-not-found { min-height: 50vh; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 1rem; }
+  </style>
+</head>
+<body>
+
+<!-- ==================== NAVBAR ==================== -->
+<nav class="navbar">
+  <div class="container">
+    <a href="index.html" class="nav-brand">Rent<span>Hub</span></a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="listings.html">Browse</a>
+      <a href="dashboard.html" id="nav-dashboard-link" class="hidden">Dashboard</a>
+      <a href="admin.html" id="nav-admin-link" class="hidden">Admin</a>
+    </div>
+    <div class="nav-actions">
+      <button id="nav-login-btn" class="btn btn-primary btn-sm">Sign In</button>
+      <div id="nav-user-menu" class="user-menu hidden">
+        <img id="nav-user-avatar" class="user-avatar" src="https://placehold.co/36" alt="avatar" />
+        <span id="nav-user-name" class="user-name"></span>
+        <span style="color:var(--gray-400);font-size:0.75rem;">▾</span>
+      </div>
+      <button id="nav-logout-btn" class="btn btn-ghost btn-sm hidden">Sign Out</button>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+  <nav class="mobile-nav" id="mobile-nav">
+    <a href="index.html">Home</a>
+    <a href="listings.html">Browse All</a>
+    <a href="dashboard.html">Dashboard</a>
+  </nav>
+</nav>
+
+<!-- ==================== LOADING STATE ==================== -->
+<div id="ad-loading" style="text-align:center;padding:4rem 0;">
+  <div class="spinner" style="margin:0 auto 1rem;"></div>
+  <p>Loading ad details...</p>
+</div>
+
+<!-- ==================== NOT FOUND ==================== -->
+<div id="ad-not-found" class="hidden container">
+  <div style="font-size:4rem;">😕</div>
+  <h2>Ad Not Found</h2>
+  <p>This listing may have been removed or doesn't exist.</p>
+  <a href="listings.html" class="btn btn-primary">Browse All Listings</a>
+</div>
+
+<!-- ==================== AD PAGE ==================== -->
+<main class="ad-page hidden" id="ad-page">
+  <div class="container">
+    <!-- LEFT COLUMN -->
+    <div class="ad-left">
+      <div class="breadcrumb">
+        <a href="index.html">Home</a>
+        <span>›</span>
+        <a href="listings.html">Browse</a>
+        <span>›</span>
+        <a href="#" id="bc-category">Category</a>
+        <span>›</span>
+        <span id="bc-title">Loading...</span>
+      </div>
+
+      <!-- IMAGE GALLERY -->
+      <div class="ad-gallery" id="ad-gallery">
+        <div class="gallery-main" id="gallery-main">
+          <!-- images injected here -->
+          <button class="gallery-nav gallery-prev" id="gallery-prev" aria-label="Previous">&#8249;</button>
+          <button class="gallery-nav gallery-next" id="gallery-next" aria-label="Next">&#8250;</button>
+          <div class="gallery-count" id="gallery-count">1 / 1</div>
+        </div>
+        <div class="gallery-dots" id="gallery-dots"></div>
+        <div class="gallery-thumbs" id="gallery-thumbs"></div>
+      </div>
+
+      <!-- AD DETAILS -->
+      <div class="ad-details-card">
+        <div class="ad-title-row">
+          <h1 id="ad-title" style="font-size:1.5rem; flex:1;"></h1>
+          <span id="ad-featured-badge" class="badge badge-featured hidden">⭐ Featured</span>
+        </div>
+        <div class="ad-main-price" id="ad-price"></div>
+
+        <div class="ad-info-list">
+          <div class="ad-info-item">
+            <span class="ad-info-label">Category</span>
+            <span class="ad-info-value" id="ad-category"></span>
+          </div>
+          <div class="ad-info-item">
+            <span class="ad-info-label">Location</span>
+            <span class="ad-info-value" id="ad-location"></span>
+          </div>
+          <div class="ad-info-item">
+            <span class="ad-info-label">Price Type</span>
+            <span class="ad-info-value" id="ad-price-type"></span>
+          </div>
+          <div class="ad-info-item">
+            <span class="ad-info-label">Posted</span>
+            <span class="ad-info-value" id="ad-date"></span>
+          </div>
+        </div>
+
+        <div class="ad-description">
+          <h4>Description</h4>
+          <p id="ad-description"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: CONTACT CARD -->
+    <div>
+      <div class="contact-card">
+        <h3>Contact Seller</h3>
+
+        <div class="ad-poster-info" id="poster-info" style="display:none;">
+          <div class="poster-avatar">👤</div>
+          <div>
+            <div style="font-weight:700;font-size:0.9rem;" id="poster-name"></div>
+            <div style="font-size:0.75rem;color:var(--gray-500);">Member</div>
+          </div>
+        </div>
+
+        <div style="margin:1rem 0;">
+          <button class="phone-reveal-btn" id="phone-btn">
+            📞 Click to Reveal Phone
+          </button>
+          <a href="#" class="whatsapp-btn" id="whatsapp-btn" target="_blank" rel="noopener">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            WhatsApp Seller
+          </a>
+        </div>
+
+        <div class="alert alert-info" style="font-size:0.82rem;margin:0;">
+          ⚠️ Always meet in a safe, public place. Never send money upfront.
+        </div>
+
+        <p class="report-link" id="report-btn">🚩 Report this listing</p>
+      </div>
+
+      <!-- BACK BUTTON -->
+      <div style="margin-top:1rem; text-align:center;">
+        <a href="listings.html" class="btn btn-ghost btn-sm">← Back to listings</a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ==================== SIMILAR ADS ==================== -->
+<section class="similar-section hidden" id="similar-section">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Similar <span>Listings</span></div>
+      </div>
+      <a href="listings.html" class="btn btn-outline btn-sm">See All</a>
+    </div>
+    <div class="ads-grid" id="similar-grid"></div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-bottom">
+      <a href="index.html" class="footer-brand" style="font-size:1.2rem;">Rent<span>Hub</span></a>
+      <span style="font-size:0.8rem;color:var(--gray-600);">&copy; 2024 RentHub. All rights reserved.</span>
+    </div>
+  </div>
+</footer>
+
+<script type="module">
+  import { db } from "./firebase.js";
+  import {
+    collection, doc, getDoc, query, where, orderBy, limit, getDocs
+  } from "./firebase.js";
+  import {
+    initNavbar, formatPrice, formatDate, isFeaturedActive, buildAdCard, escapeHtml, showToast
+  } from "./main.js";
+
+  initNavbar();
+
+  const userMenu = document.getElementById("nav-user-menu");
+  const logoutBtn = document.getElementById("nav-logout-btn");
+  if (userMenu && logoutBtn) {
+    userMenu.addEventListener("click", () => logoutBtn.classList.toggle("hidden"));
+  }
+
+  const adId = new URLSearchParams(window.location.search).get("id");
+  if (!adId) {
+    document.getElementById("ad-loading").classList.add("hidden");
+    document.getElementById("ad-not-found").classList.remove("hidden");
+  } else {
+    loadAd(adId);
+  }
+
+  let adPhone = "";
+  let adPhoneRevealed = false;
+
+  async function loadAd(id) {
+    try {
+      const snap = await getDoc(doc(db, "ads", id));
+      if (!snap.exists() || snap.data().status !== "approved") {
+        document.getElementById("ad-loading").classList.add("hidden");
+        document.getElementById("ad-not-found").classList.remove("hidden");
+        return;
+      }
+
+      const ad = snap.data();
+      adPhone = ad.phone || "";
+
+      // Set page title & meta
+      document.title = `${ad.title} — RentHub`;
+
+      // Breadcrumb
+      document.getElementById("bc-category").textContent = ad.category || "Other";
+      document.getElementById("bc-category").href = `listings.html?category=${encodeURIComponent(ad.category)}`;
+      document.getElementById("bc-title").textContent = ad.title;
+
+      // Title / price
+      document.getElementById("ad-title").textContent = ad.title;
+      document.getElementById("ad-price").textContent = formatPrice(ad.price, ad.priceType || "day");
+
+      // Featured badge
+      if (isFeaturedActive(ad.featuredUntil)) {
+        document.getElementById("ad-featured-badge").classList.remove("hidden");
+      }
+
+      // Info
+      document.getElementById("ad-category").textContent = `${getCatIcon(ad.category)} ${ad.category}`;
+      document.getElementById("ad-location").textContent = `📍 ${ad.location || "N/A"}`;
+      document.getElementById("ad-price-type").textContent = ad.priceType === "km" ? "Per KM" : "Per Day";
+      document.getElementById("ad-date").textContent = formatDate(ad.createdAt);
+
+      // Description
+      document.getElementById("ad-description").textContent = ad.description || "";
+
+      // Gallery
+      buildGallery(ad.imageUrls || []);
+
+      // Poster info
+      if (ad.userId) {
+        try {
+          const userSnap = await getDoc(doc(db, "users", ad.userId));
+          if (userSnap.exists()) {
+            const u = userSnap.data();
+            document.getElementById("poster-name").textContent = u.name || "Seller";
+            document.getElementById("poster-info").style.display = "flex";
+          }
+        } catch (_) {}
+      }
+
+      // WhatsApp
+      const waBtn = document.getElementById("whatsapp-btn");
+      waBtn.href = `https://wa.me/${formatWhatsApp(adPhone)}?text=${encodeURIComponent(`Hi, I'm interested in your rental: ${ad.title}`)}`;
+
+      // Show page
+      document.getElementById("ad-loading").classList.add("hidden");
+      document.getElementById("ad-page").classList.remove("hidden");
+
+      // Load similar
+      loadSimilar(ad.category, id);
+    } catch (err) {
+      console.error(err);
+      document.getElementById("ad-loading").classList.add("hidden");
+      document.getElementById("ad-not-found").classList.remove("hidden");
+    }
+  }
+
+  function buildGallery(images) {
+    const main = document.getElementById("gallery-main");
+    const dots = document.getElementById("gallery-dots");
+    const thumbs = document.getElementById("gallery-thumbs");
+    const countEl = document.getElementById("gallery-count");
+
+    const fallback = "https://placehold.co/800x500/e2e8f0/94a3b8?text=No+Image";
+    const imgs = images.length > 0 ? images : [fallback];
+    let current = 0;
+
+    // Build images
+    const imgEls = imgs.map((src, i) => {
+      const img = document.createElement("img");
+      img.src = src;
+      img.alt = `Image ${i + 1}`;
+      img.onerror = () => img.src = fallback;
+      if (i === 0) img.classList.add("active");
+      main.insertBefore(img, document.getElementById("gallery-prev"));
+      return img;
+    });
+
+    // Dots
+    if (imgs.length > 1) {
+      imgs.forEach((_, i) => {
+        const dot = document.createElement("button");
+        dot.className = `gallery-dot ${i === 0 ? "active" : ""}`;
+        dot.addEventListener("click", () => goTo(i));
+        dots.appendChild(dot);
+      });
+    }
+
+    // Thumbs
+    imgs.forEach((src, i) => {
+      const th = document.createElement("img");
+      th.src = src;
+      th.className = `gallery-thumb ${i === 0 ? "active" : ""}`;
+      th.onerror = () => th.src = fallback;
+      th.addEventListener("click", () => goTo(i));
+      thumbs.appendChild(th);
+    });
+
+    // Nav
+    const updateCount = () => countEl.textContent = `${current + 1} / ${imgs.length}`;
+    updateCount();
+
+    function goTo(idx) {
+      imgEls[current].classList.remove("active");
+      thumbs.children[current]?.classList.remove("active");
+      dots.children[current]?.classList.remove("active");
+      current = (idx + imgs.length) % imgs.length;
+      imgEls[current].classList.add("active");
+      thumbs.children[current]?.classList.add("active");
+      dots.children[current]?.classList.add("active");
+      updateCount();
+    }
+
+    if (imgs.length < 2) {
+      document.getElementById("gallery-prev").style.display = "none";
+      document.getElementById("gallery-next").style.display = "none";
+    }
+
+    document.getElementById("gallery-prev").addEventListener("click", () => goTo(current - 1));
+    document.getElementById("gallery-next").addEventListener("click", () => goTo(current + 1));
+
+    // Hide dots/thumbs if only one image
+    if (imgs.length <= 1) {
+      dots.style.display = "none";
+      thumbs.style.display = "none";
+      countEl.style.display = "none";
+    }
+  }
+
+  // Phone reveal
+  document.getElementById("phone-btn").addEventListener("click", () => {
+    if (!adPhone) {
+      showToast("No phone number available", "warning");
+      return;
+    }
+    const btn = document.getElementById("phone-btn");
+    if (!adPhoneRevealed) {
+      btn.textContent = `📞 ${adPhone}`;
+      btn.classList.add("revealed");
+      adPhoneRevealed = true;
+    } else {
+      window.location.href = `tel:${adPhone}`;
+    }
+  });
+
+  // Report
+  document.getElementById("report-btn").addEventListener("click", () => {
+    showToast("Thank you for reporting. We'll review this listing.", "info");
+  });
+
+  async function loadSimilar(category, excludeId) {
+    try {
+      const snap = await getDocs(
+        query(collection(db, "ads"),
+          where("status", "==", "approved"),
+          where("category", "==", category),
+          orderBy("createdAt", "desc"),
+          limit(5))
+      );
+      const similar = [];
+      snap.forEach(d => { if (d.id !== excludeId) similar.push({ id: d.id, ...d.data() }); });
+      if (similar.length > 0) {
+        document.getElementById("similar-section").classList.remove("hidden");
+        document.getElementById("similar-grid").innerHTML = similar.slice(0, 4).map(ad => buildAdCard(ad, ad.id)).join("");
+      }
+    } catch (_) {}
+  }
+
+  function formatWhatsApp(phone) {
+    if (!phone) return "";
+    let cleaned = phone.replace(/\D/g, "");
+    if (cleaned.startsWith("0")) cleaned = "27" + cleaned.slice(1);
+    return cleaned;
+  }
+
+  function getCatIcon(cat) {
+    const icons = { Van: "🚐", Car: "🚗", Wedding: "💍", Construction: "🏗️", Party: "🎉", Other: "📦" };
+    return icons[cat] || "📦";
+  }
+</script>
+</body>
+</html>
