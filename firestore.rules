@@ -82,12 +82,13 @@ service cloud.firestore {
 
       // UPDATE:
       //   - Admin can update anything (status, featured, etc.)
-      //   - Owner can update their OWN ad only while it is still pending,
-      //     and cannot change status or featured themselves
+      //   - Owner can update their OWN ad if it is pending or rejected,
+      //     editing resets status back to "pending" for re-review;
+      //     cannot change featured flag or userId
       allow update: if isAdmin()
         || (isAuth()
             && resource.data.userId == request.auth.uid
-            && resource.data.status == 'pending'
+            && (resource.data.status == 'pending' || resource.data.status == 'rejected')
             && request.resource.data.status == 'pending'
             && request.resource.data.featured == false
             && request.resource.data.userId == resource.data.userId);

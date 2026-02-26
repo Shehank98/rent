@@ -308,16 +308,19 @@ export function buildAdCard(ad, id) {
   const img = (ad.imageUrls && ad.imageUrls[0]) || "https://placehold.co/400x250/e2e8f0/94a3b8?text=No+Image";
   const price = formatPrice(ad.price, ad.priceType || "day");
   const ago = timeAgo(ad.createdAt);
+  const verifiedBadge = ad.userVerified
+    ? `<span class="card-verified-badge"><i class="bi bi-patch-check-fill"></i> Verified</span>`
+    : "";
 
   return `
     <a href="ad.html?id=${id}" class="card ${featured ? "featured-card" : ""}" style="display:block;text-decoration:none;">
+      ${featured ? `<div class="featured-ribbon"><i class="bi bi-star-fill"></i> Featured</div>` : ""}
       <div class="card-img-wrap">
         <img src="${img}" alt="${escapeHtml(ad.title)}" loading="lazy"
              onerror="this.src='https://placehold.co/400x250/e2e8f0/94a3b8?text=No+Image'">
         <div class="card-badges">
           <span class="badge badge-category">${escapeHtml(ad.category || "Other")}</span>
         </div>
-        ${featured ? `<div class="featured-badge-overlay"><i class="bi bi-star-fill"></i> Featured</div>` : ""}
       </div>
       <div class="card-body">
         <div class="card-title">${escapeHtml(ad.title)}</div>
@@ -326,6 +329,7 @@ export function buildAdCard(ad, id) {
           <span><i class="bi bi-geo-alt"></i> ${escapeHtml(ad.location || "")}</span>
           <span><i class="bi bi-clock"></i> ${ago}</span>
         </div>
+        ${verifiedBadge}
       </div>
     </a>
   `;

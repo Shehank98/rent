@@ -82,8 +82,8 @@
     <datalist id="location-list"></datalist>
 
     <select class="filter-select" id="sort-select">
-      <option value="newest">Newest First</option>
       <option value="featured">Featured First</option>
+      <option value="newest">Newest First</option>
       <option value="price-asc">Price: Low to High</option>
       <option value="price-desc">Price: High to Low</option>
     </select>
@@ -154,7 +154,7 @@
   document.getElementById("search-input").value    = params.get("q") || "";
   document.getElementById("category-filter").value = params.get("category") || "";
   document.getElementById("location-filter").value = params.get("location") || "";
-  document.getElementById("sort-select").value     = params.get("sort") || "newest";
+  document.getElementById("sort-select").value     = params.get("sort") || "featured";
 
   // ---- Fetch all approved ads ----
   async function fetchAds() {
@@ -248,12 +248,12 @@
 
   fetchAds().catch(err => {
     console.error(err);
-    document.getElementById("listings-grid").innerHTML =
-      `<div class="alert alert-warning" style="grid-column:1/-1">
-         <i class="bi bi-exclamation-triangle"></i>
-         Could not load listings. Check your Firebase configuration.
-       </div>`;
-    document.getElementById("results-count").textContent = "Error";
+    document.getElementById("listings-grid").innerHTML = "";
+    document.getElementById("results-count").textContent = "0 listings";
+    const noEl = document.getElementById("no-results");
+    noEl.querySelector("h3").textContent = "Unable to load listings";
+    noEl.querySelector("p").textContent  = "Please refresh the page to try again.";
+    noEl.classList.remove("hidden");
   });
 </script>
 </body>

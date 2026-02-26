@@ -7,15 +7,301 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
   <link rel="stylesheet" href="style.css" />
   <style>
-    .breadcrumb { font-size: 0.85rem; color: var(--gray-500); margin-bottom: 1.5rem; display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap; }
-    .breadcrumb a { color: var(--primary); }
-    .ad-left { min-width: 0; }
-    .report-link { font-size: 0.8rem; color: var(--gray-400); text-align: center; margin-top: 1rem; cursor: pointer; display:block; }
-    .report-link:hover { color: var(--danger); }
-    .ad-poster-info { background: var(--gray-50); border-radius: var(--radius); padding: 0.875rem; margin-top: 1rem; display: flex; align-items: center; gap: 0.75rem; border: 1px solid var(--gray-200); }
-    .poster-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--gray-200); display: flex; align-items: center; justify-content: center; font-size: 1rem; color: var(--gray-500); flex-shrink:0; }
-    .similar-section { padding: 3rem 0 4rem; background: var(--gray-50); }
-    #ad-not-found { min-height: 50vh; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 1rem; text-align:center; padding:2rem; }
+    /* ---- Ad page modern redesign ---- */
+    .ad-hero {
+      background: var(--gray-50);
+      border-bottom: 1px solid var(--gray-200);
+      padding: 1.5rem 0 0;
+    }
+    .ad-breadcrumb {
+      font-size: 0.83rem;
+      color: var(--gray-500);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+    .ad-breadcrumb a { color: var(--primary); text-decoration: none; }
+    .ad-breadcrumb a:hover { text-decoration: underline; }
+
+    /* Gallery */
+    .ad-gallery-modern {
+      display: grid;
+      grid-template-columns: 1fr 200px;
+      gap: 0.5rem;
+      border-radius: var(--radius);
+      overflow: hidden;
+      max-height: 420px;
+    }
+    @media (max-width: 700px) {
+      .ad-gallery-modern { grid-template-columns: 1fr; max-height: 260px; }
+      .ad-gallery-thumbs-col { display: none; }
+    }
+    .ad-gallery-main-img {
+      position: relative;
+      background: var(--gray-100);
+      overflow: hidden;
+      aspect-ratio: 16/10;
+    }
+    .ad-gallery-main-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+      cursor: zoom-in;
+    }
+    .ad-gallery-main-img img.active { display: block; }
+    .gallery-nav-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0,0,0,0.45);
+      color: white;
+      border: none;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      transition: background 0.2s;
+      z-index: 2;
+    }
+    .gallery-nav-btn:hover { background: rgba(0,0,0,0.7); }
+    .gallery-nav-btn.prev { left: 0.75rem; }
+    .gallery-nav-btn.next { right: 0.75rem; }
+    .gallery-counter {
+      position: absolute;
+      bottom: 0.6rem;
+      right: 0.75rem;
+      background: rgba(0,0,0,0.5);
+      color: white;
+      font-size: 0.75rem;
+      padding: 0.2rem 0.55rem;
+      border-radius: var(--radius-full);
+    }
+    .ad-gallery-thumbs-col {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      overflow-y: auto;
+      max-height: 420px;
+    }
+    .ad-thumb-img {
+      width: 100%;
+      aspect-ratio: 16/10;
+      object-fit: cover;
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      opacity: 0.65;
+      transition: opacity 0.2s, outline 0.2s;
+      display: block;
+    }
+    .ad-thumb-img.active, .ad-thumb-img:hover { opacity: 1; outline: 2px solid var(--primary); }
+
+    /* Content area */
+    .ad-content-grid {
+      display: grid;
+      grid-template-columns: 1fr 330px;
+      gap: 2rem;
+      padding: 2rem 0 4rem;
+    }
+    @media (max-width: 900px) {
+      .ad-content-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Left: details */
+    .ad-detail-title {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--dark-1);
+      line-height: 1.25;
+      margin-bottom: 0.5rem;
+    }
+    .ad-price-hero {
+      font-size: 1.85rem;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 1rem;
+    }
+    .ad-price-hero small {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--gray-500);
+    }
+    .ad-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .ad-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: var(--gray-100);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-full);
+      padding: 0.3rem 0.85rem;
+      font-size: 0.82rem;
+      color: var(--gray-700);
+      font-weight: 500;
+    }
+    .ad-chip i { color: var(--primary); font-size: 0.85rem; }
+    .ad-chip.feat {
+      background: #fef9c3;
+      border-color: #fde047;
+      color: #713f12;
+    }
+    .ad-chip.feat i { color: #ca8a04; }
+
+    .ad-section-heading {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--gray-500);
+      margin-bottom: 0.65rem;
+    }
+    .ad-description-text {
+      color: var(--gray-700);
+      line-height: 1.75;
+      white-space: pre-wrap;
+      font-size: 0.93rem;
+    }
+
+    /* Right: contact card */
+    .ad-contact-card {
+      background: var(--white);
+      border: 2px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      position: sticky;
+      top: 80px;
+    }
+    .seller-block {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      padding: 0.875rem;
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      margin-bottom: 1.25rem;
+    }
+    .seller-avatar {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .seller-name {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--dark-2);
+    }
+    .seller-status {
+      font-size: 0.78rem;
+      color: var(--gray-500);
+      margin-top: 0.1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .seller-status.verified { color: var(--success); }
+
+    .phone-btn-modern {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      padding: 0.85rem;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      margin-bottom: 0.65rem;
+      text-decoration: none;
+    }
+    .phone-btn-modern:hover { background: var(--primary-dark); transform: translateY(-1px); }
+    .phone-btn-modern.revealed { background: var(--success); }
+    .whatsapp-btn-modern {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      padding: 0.85rem;
+      background: #25d366;
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      text-decoration: none;
+      margin-bottom: 1rem;
+    }
+    .whatsapp-btn-modern:hover { background: #128c7e; transform: translateY(-1px); }
+
+    .safety-note {
+      display: flex;
+      gap: 0.5rem;
+      align-items: flex-start;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: var(--radius);
+      padding: 0.75rem;
+      font-size: 0.8rem;
+      color: #1e40af;
+      margin-bottom: 0.75rem;
+    }
+    .safety-note i { flex-shrink: 0; margin-top: 0.05rem; }
+
+    .report-link-modern {
+      display: block;
+      text-align: center;
+      font-size: 0.78rem;
+      color: var(--gray-400);
+      cursor: pointer;
+      padding: 0.25rem;
+      border-radius: var(--radius-sm);
+      transition: color 0.2s;
+    }
+    .report-link-modern:hover { color: var(--danger); }
+
+    .similar-section-modern {
+      background: var(--gray-50);
+      border-top: 1px solid var(--gray-200);
+      padding: 3rem 0 4rem;
+    }
+
+    #ad-not-found-wrap {
+      min-height: 55vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 1rem;
+      text-align: center;
+      padding: 2rem;
+    }
   </style>
 </head>
 <body>
@@ -68,135 +354,105 @@
 </nav>
 
 <!-- ==================== LOADING ==================== -->
-<div id="ad-loading" style="text-align:center;padding:5rem 0;">
+<div id="ad-loading" style="text-align:center;padding:6rem 0;">
   <div class="spinner" style="margin:0 auto 1rem;"></div>
-  <p style="color:var(--gray-500);">Loading listing details...</p>
+  <p style="color:var(--gray-500);">Loading listing...</p>
 </div>
 
 <!-- ==================== NOT FOUND ==================== -->
-<div id="ad-not-found" class="hidden">
+<div id="ad-not-found-wrap" class="hidden">
   <i class="bi bi-exclamation-circle" style="font-size:3.5rem;color:var(--gray-300);"></i>
   <h2>Listing Not Found</h2>
-  <p>This listing may have been removed or is no longer available.</p>
-  <a href="listings.html" class="btn btn-primary">Browse All Listings</a>
+  <p style="color:var(--gray-500);">This listing may have been removed or is no longer available.</p>
+  <a href="listings.html" class="btn btn-primary"><i class="bi bi-search"></i> Browse All Listings</a>
 </div>
 
-<!-- ==================== AD PAGE ==================== -->
-<main class="ad-page hidden" id="ad-page">
+<!-- ==================== AD HERO (gallery) ==================== -->
+<div class="ad-hero hidden" id="ad-hero">
   <div class="container">
-
-    <!-- LEFT: Gallery + Details -->
-    <div class="ad-left">
-      <div class="breadcrumb">
-        <a href="index.html">Home</a>
-        <i class="bi bi-chevron-right" style="font-size:0.7rem;"></i>
-        <a href="listings.html">Browse</a>
-        <i class="bi bi-chevron-right" style="font-size:0.7rem;"></i>
-        <a href="#" id="bc-category"></a>
-        <i class="bi bi-chevron-right" style="font-size:0.7rem;"></i>
-        <span id="bc-title"></span>
+    <div class="ad-breadcrumb" id="ad-breadcrumb"></div>
+    <div class="ad-gallery-modern" id="ad-gallery-modern">
+      <div class="ad-gallery-main-img" id="gallery-main-img">
+        <button class="gallery-nav-btn prev" id="gallery-prev"><i class="bi bi-chevron-left"></i></button>
+        <button class="gallery-nav-btn next" id="gallery-next"><i class="bi bi-chevron-right"></i></button>
+        <div class="gallery-counter" id="gallery-counter"></div>
       </div>
-
-      <!-- IMAGE GALLERY -->
-      <div class="ad-gallery" id="ad-gallery">
-        <div class="gallery-main" id="gallery-main">
-          <button class="gallery-nav gallery-prev" id="gallery-prev" aria-label="Previous">
-            <i class="bi bi-chevron-left"></i>
-          </button>
-          <button class="gallery-nav gallery-next" id="gallery-next" aria-label="Next">
-            <i class="bi bi-chevron-right"></i>
-          </button>
-          <div class="gallery-count" id="gallery-count"></div>
-        </div>
-        <div class="gallery-dots" id="gallery-dots"></div>
-        <div class="gallery-thumbs" id="gallery-thumbs"></div>
-      </div>
-
-      <!-- AD DETAILS -->
-      <div class="ad-details-card">
-        <div class="ad-title-row">
-          <h1 id="ad-title" style="font-size:1.5rem;flex:1;"></h1>
-          <span id="ad-featured-badge" class="badge badge-featured hidden">
-            <i class="bi bi-star-fill"></i> Featured
-          </span>
-        </div>
-        <div class="ad-main-price" id="ad-price"></div>
-
-        <div class="ad-info-list">
-          <div class="ad-info-item">
-            <span class="ad-info-label"><i class="bi bi-tag"></i> Category</span>
-            <span class="ad-info-value" id="ad-category"></span>
-          </div>
-          <div class="ad-info-item">
-            <span class="ad-info-label"><i class="bi bi-geo-alt"></i> Location</span>
-            <span class="ad-info-value" id="ad-location"></span>
-          </div>
-          <div class="ad-info-item">
-            <span class="ad-info-label"><i class="bi bi-clock"></i> Price Type</span>
-            <span class="ad-info-value" id="ad-price-type"></span>
-          </div>
-          <div class="ad-info-item">
-            <span class="ad-info-label"><i class="bi bi-calendar3"></i> Posted</span>
-            <span class="ad-info-value" id="ad-date"></span>
-          </div>
-        </div>
-
-        <div class="ad-description">
-          <h4>Description</h4>
-          <p id="ad-description"></p>
-        </div>
-      </div>
+      <div class="ad-gallery-thumbs-col" id="gallery-thumbs-col"></div>
     </div>
+  </div>
+</div>
 
-    <!-- RIGHT: Contact Card -->
-    <div>
-      <div class="contact-card">
-        <h3>Contact Seller</h3>
+<!-- ==================== AD CONTENT ==================== -->
+<div class="hidden" id="ad-content">
+  <div class="container">
+    <div class="ad-content-grid">
 
-        <div class="ad-poster-info" id="poster-info" style="display:none;">
-          <div class="poster-avatar"><i class="bi bi-person"></i></div>
-          <div>
-            <div style="font-weight:700;font-size:0.9rem;" id="poster-name"></div>
-            <div style="font-size:0.75rem;color:var(--gray-500);" id="poster-status">Member</div>
-          </div>
+      <!-- LEFT -->
+      <div>
+        <h1 class="ad-detail-title" id="ad-title"></h1>
+        <div class="ad-price-hero" id="ad-price-hero"></div>
+
+        <div class="ad-chips" id="ad-chips"></div>
+
+        <div style="margin-bottom:2rem;">
+          <div class="ad-section-heading"><i class="bi bi-card-text"></i> Description</div>
+          <p class="ad-description-text" id="ad-description-text"></p>
         </div>
 
-        <div style="margin:1.25rem 0;">
-          <button class="phone-reveal-btn" id="phone-btn">
-            <i class="bi bi-telephone"></i> Click to Reveal Phone Number
+        <div style="margin-top:1.5rem;">
+          <a href="listings.html" class="btn btn-ghost btn-sm">
+            <i class="bi bi-arrow-left"></i> Back to listings
+          </a>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div>
+        <div class="ad-contact-card">
+          <div style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--gray-500);margin-bottom:0.85rem;">
+            <i class="bi bi-person-circle"></i> About the Seller
+          </div>
+
+          <div class="seller-block" id="seller-block" style="display:none;">
+            <div class="seller-avatar" id="seller-avatar-initial">?</div>
+            <div>
+              <div class="seller-name" id="seller-name"></div>
+              <div class="seller-status" id="seller-status">
+                <i class="bi bi-circle-fill" style="font-size:0.5rem;color:var(--gray-400);"></i> Member
+              </div>
+            </div>
+          </div>
+
+          <button class="phone-btn-modern" id="phone-btn">
+            <i class="bi bi-telephone-fill"></i> Click to Reveal Phone
           </button>
-          <a href="#" class="whatsapp-btn" id="whatsapp-btn" target="_blank" rel="noopener noreferrer">
+
+          <a href="#" class="whatsapp-btn-modern" id="whatsapp-btn" target="_blank" rel="noopener noreferrer">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
               <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
             </svg>
             WhatsApp Seller
           </a>
-        </div>
 
-        <div class="alert alert-info" style="font-size:0.82rem;margin:0;">
-          <i class="bi bi-shield-check"></i>
-          Always meet in a public place. Do not send payments in advance.
-        </div>
+          <div class="safety-note">
+            <i class="bi bi-shield-check"></i>
+            Always meet in a public place. Never send payments in advance.
+          </div>
 
-        <a class="report-link" id="report-btn">
-          <i class="bi bi-flag"></i> Report this listing
-        </a>
+          <button class="report-link-modern" id="report-btn">
+            <i class="bi bi-flag"></i> Report this listing
+          </button>
+        </div>
       </div>
 
-      <div style="margin-top:1rem;text-align:center;">
-        <a href="listings.html" class="btn btn-ghost btn-sm">
-          <i class="bi bi-arrow-left"></i> Back to listings
-        </a>
-      </div>
     </div>
-
   </div>
-</main>
+</div>
 
 <!-- ==================== SIMILAR ADS ==================== -->
-<section class="similar-section hidden" id="similar-section">
+<section class="similar-section-modern hidden" id="similar-section">
   <div class="container">
-    <div class="section-header">
+    <div class="section-header" style="margin-bottom:1.5rem;">
       <div>
         <div class="section-title">Similar <span>Listings</span></div>
       </div>
@@ -229,7 +485,7 @@
   const adId = new URLSearchParams(window.location.search).get("id");
   if (!adId) {
     document.getElementById("ad-loading").classList.add("hidden");
-    document.getElementById("ad-not-found").classList.remove("hidden");
+    document.getElementById("ad-not-found-wrap").classList.remove("hidden");
   } else {
     loadAd(adId);
   }
@@ -242,7 +498,7 @@
       const snap = await getDoc(doc(db, "ads", id));
       if (!snap.exists() || snap.data().status !== "approved") {
         document.getElementById("ad-loading").classList.add("hidden");
-        document.getElementById("ad-not-found").classList.remove("hidden");
+        document.getElementById("ad-not-found-wrap").classList.remove("hidden");
         return;
       }
 
@@ -252,123 +508,136 @@
       document.title = `${ad.title} — RentHub Sri Lanka`;
 
       // Breadcrumb
-      document.getElementById("bc-category").textContent = ad.category || "Other";
-      document.getElementById("bc-category").href = `listings.html?category=${encodeURIComponent(ad.category)}`;
-      document.getElementById("bc-title").textContent = ad.title;
-
-      // Title / price
-      document.getElementById("ad-title").textContent = ad.title;
-      document.getElementById("ad-price").textContent = formatPrice(ad.price, ad.priceType || "day");
-
-      if (isFeaturedActive(ad.featuredUntil)) {
-        document.getElementById("ad-featured-badge").classList.remove("hidden");
-      }
-
-      // Info list
-      document.getElementById("ad-category").textContent = ad.category;
-      document.getElementById("ad-location").textContent = ad.location || "N/A";
-      const priceTypeLabels = { day:"Per Day", km:"Per KM", week:"Per Week", month:"Per Month", event:"Per Event", hour:"Per Hour" };
-      document.getElementById("ad-price-type").textContent = priceTypeLabels[ad.priceType] || "Per Day";
-      document.getElementById("ad-date").textContent = formatDate(ad.createdAt);
-      document.getElementById("ad-description").textContent = ad.description || "";
+      const bc = document.getElementById("ad-breadcrumb");
+      bc.innerHTML = `
+        <a href="index.html">Home</a>
+        <i class="bi bi-chevron-right" style="font-size:0.7rem;"></i>
+        <a href="listings.html">Browse</a>
+        <i class="bi bi-chevron-right" style="font-size:0.7rem;"></i>
+        <a href="listings.html?category=${encodeURIComponent(ad.category)}">${escapeHtml(ad.category || "Other")}</a>
+        <i class="bi bi-chevron-right" style="font-size:0.7rem;"></i>
+        <span>${escapeHtml(ad.title)}</span>
+      `;
 
       // Gallery
       buildGallery(ad.imageUrls || []);
 
-      // Poster info
+      // Title / price
+      document.getElementById("ad-title").textContent = ad.title;
+      const priceTypeLabels = { day:"Per Day", km:"Per KM", week:"Per Week", month:"Per Month", event:"Per Event", hour:"Per Hour" };
+      const priceLabel = priceTypeLabels[ad.priceType] || "Per Day";
+      const priceNum = parseFloat(ad.price);
+      document.getElementById("ad-price-hero").innerHTML =
+        `Rs. ${isNaN(priceNum) ? "—" : priceNum.toLocaleString("en-LK")} <small>/ ${priceLabel}</small>`;
+
+      // Chips
+      const featured = isFeaturedActive(ad.featuredUntil);
+      const chips = document.getElementById("ad-chips");
+      let chipsHtml = `
+        <span class="ad-chip"><i class="bi bi-tag"></i> ${escapeHtml(ad.category || "Other")}</span>
+        <span class="ad-chip"><i class="bi bi-geo-alt"></i> ${escapeHtml(ad.location || "N/A")}</span>
+        <span class="ad-chip"><i class="bi bi-calendar3"></i> ${formatDate(ad.createdAt)}</span>
+      `;
+      if (featured) {
+        chipsHtml += `<span class="ad-chip feat"><i class="bi bi-star-fill"></i> Featured Listing</span>`;
+      }
+      if (ad.userVerified) {
+        chipsHtml += `<span class="ad-chip" style="background:#f0fdf4;border-color:#bbf7d0;color:#166534;"><i class="bi bi-patch-check-fill" style="color:var(--success);"></i> Verified Seller</span>`;
+      }
+      chips.innerHTML = chipsHtml;
+
+      // Description
+      document.getElementById("ad-description-text").textContent = ad.description || "";
+
+      // Seller info
       if (ad.userId) {
         try {
           const userSnap = await getDoc(doc(db, "users", ad.userId));
           if (userSnap.exists()) {
-            const userData = userSnap.data();
-            document.getElementById("poster-name").textContent = userData.name || "Seller";
-            if (userData.verified) {
-              document.getElementById("poster-status").innerHTML =
-                `<i class="bi bi-patch-check-fill" style="color:var(--success);"></i> Verified Seller`;
-              document.getElementById("poster-status").style.color = "var(--success)";
+            const ud = userSnap.data();
+            const name = ud.name || "Seller";
+            document.getElementById("seller-name").textContent = name;
+            document.getElementById("seller-avatar-initial").textContent = name[0]?.toUpperCase() || "S";
+            const statusEl = document.getElementById("seller-status");
+            if (ud.verified) {
+              statusEl.innerHTML = `<i class="bi bi-patch-check-fill"></i> Verified Seller`;
+              statusEl.classList.add("verified");
+            } else {
+              statusEl.innerHTML = `<i class="bi bi-circle-fill" style="font-size:0.5rem;color:var(--gray-400);"></i> Member`;
             }
-            document.getElementById("poster-info").style.display = "flex";
+            document.getElementById("seller-block").style.display = "flex";
           }
         } catch (_) {}
       }
 
-      // WhatsApp — Sri Lanka format (+94)
+      // WhatsApp link
       const waNumber = formatWhatsAppLK(adPhone);
       document.getElementById("whatsapp-btn").href =
         `https://wa.me/${waNumber}?text=${encodeURIComponent(`Hi, I am interested in your rental listing: ${ad.title}`)}`;
 
       document.getElementById("ad-loading").classList.add("hidden");
-      document.getElementById("ad-page").classList.remove("hidden");
+      document.getElementById("ad-hero").classList.remove("hidden");
+      document.getElementById("ad-content").classList.remove("hidden");
 
       loadSimilar(ad.category, id);
     } catch (err) {
       console.error(err);
       document.getElementById("ad-loading").classList.add("hidden");
-      document.getElementById("ad-not-found").classList.remove("hidden");
+      document.getElementById("ad-not-found-wrap").classList.remove("hidden");
     }
   }
 
   function buildGallery(images) {
-    const main     = document.getElementById("gallery-main");
-    const dotsEl   = document.getElementById("gallery-dots");
-    const thumbsEl = document.getElementById("gallery-thumbs");
-    const countEl  = document.getElementById("gallery-count");
+    const mainEl   = document.getElementById("gallery-main-img");
+    const thumbsEl = document.getElementById("gallery-thumbs-col");
+    const counterEl = document.getElementById("gallery-counter");
     const fallback = "https://placehold.co/800x500/e2e8f0/94a3b8?text=No+Image";
-    const imgs     = images.length > 0 ? images : [fallback];
-    let current    = 0;
+    const imgs = images.length > 0 ? images : [fallback];
+    let current = 0;
 
+    // Main images
     const imgEls = imgs.map((src, i) => {
       const img = document.createElement("img");
       img.src = src;
       img.alt = `Image ${i + 1}`;
       img.onerror = () => { img.src = fallback; };
       if (i === 0) img.classList.add("active");
-      main.insertBefore(img, document.getElementById("gallery-prev"));
+      mainEl.insertBefore(img, document.getElementById("gallery-prev"));
       return img;
     });
 
-    if (imgs.length > 1) {
-      imgs.forEach((_, i) => {
-        const dot = document.createElement("button");
-        dot.className = `gallery-dot ${i === 0 ? "active" : ""}`;
-        dot.addEventListener("click", () => goTo(i));
-        dotsEl.appendChild(dot);
-      });
-    }
-
+    // Thumbnails
     imgs.forEach((src, i) => {
       const th = document.createElement("img");
       th.src = src;
-      th.className = `gallery-thumb ${i === 0 ? "active" : ""}`;
+      th.className = `ad-thumb-img ${i === 0 ? "active" : ""}`;
       th.onerror = () => { th.src = fallback; };
       th.addEventListener("click", () => goTo(i));
       thumbsEl.appendChild(th);
     });
 
-    function updateCount() { countEl.textContent = `${current + 1} / ${imgs.length}`; }
-    updateCount();
+    function updateCounter() {
+      counterEl.textContent = `${current + 1} / ${imgs.length}`;
+    }
+    updateCounter();
 
     function goTo(idx) {
       imgEls[current].classList.remove("active");
       thumbsEl.children[current]?.classList.remove("active");
-      dotsEl.children[current]?.classList.remove("active");
       current = (idx + imgs.length) % imgs.length;
       imgEls[current].classList.add("active");
       thumbsEl.children[current]?.classList.add("active");
-      dotsEl.children[current]?.classList.add("active");
-      updateCount();
-    }
-
-    if (imgs.length < 2) {
-      document.getElementById("gallery-prev").style.display = "none";
-      document.getElementById("gallery-next").style.display = "none";
-      dotsEl.style.display  = "none";
-      thumbsEl.style.display = "none";
-      countEl.style.display  = "none";
+      updateCounter();
     }
 
     document.getElementById("gallery-prev").addEventListener("click", () => goTo(current - 1));
     document.getElementById("gallery-next").addEventListener("click", () => goTo(current + 1));
+
+    if (imgs.length < 2) {
+      document.getElementById("gallery-prev").style.display = "none";
+      document.getElementById("gallery-next").style.display = "none";
+      counterEl.style.display = "none";
+    }
   }
 
   // Phone reveal
@@ -407,7 +676,6 @@
     } catch (_) {}
   }
 
-  // WhatsApp format for Sri Lanka (+94)
   function formatWhatsAppLK(phone) {
     if (!phone) return "";
     let n = phone.replace(/\D/g, "");

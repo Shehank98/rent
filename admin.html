@@ -24,6 +24,12 @@
     .user-stat-lbl { font-size:0.72rem; color:var(--gray-500); }
     .user-verify-section { margin-top:0.75rem; padding-top:0.75rem; border-top:1px solid var(--gray-100); }
     .verify-doc-img { max-height:180px; border-radius:var(--radius); border:1px solid var(--gray-200); margin-top:0.5rem; display:block; }
+    /* User ads list */
+    .user-ads-list { margin-top:0.75rem; padding-top:0.75rem; border-top:1px solid var(--gray-100); }
+    .user-ad-row { display:flex; align-items:center; gap:0.75rem; padding:0.5rem 0.6rem; border-radius:var(--radius-sm); margin-bottom:0.35rem; background:var(--gray-50); border:1px solid var(--gray-100); }
+    .user-ad-row.highlighted { background:#eff6ff; border-color:#bfdbfe; }
+    .user-ad-thumb { width:52px; height:40px; object-fit:cover; border-radius:4px; display:block; }
+    .user-ad-thumb-wrap { flex-shrink:0; }
     /* Category management */
     .cat-group-header { font-weight:700; font-size:0.85rem; color:var(--gray-700); margin:1rem 0 0.4rem; text-transform:uppercase; letter-spacing:0.05em; }
     .cat-chip-list { display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:0.5rem; }
@@ -205,7 +211,7 @@
 
       <div class="admin-search-wrap">
         <i class="bi bi-search si"></i>
-        <input type="text" id="users-search" placeholder="Search users by name or email..." />
+        <input type="text" id="users-search" placeholder="Search by name, email, or listing ID (#abc123)..." />
       </div>
 
       <div id="users-loading" style="text-align:center;padding:2.5rem;">
@@ -223,42 +229,53 @@
     <div class="admin-section" id="section-categories">
       <div class="page-header">
         <h2>Category Management</h2>
-        <p>Add custom categories that appear in the "Post New Ad" and browse filters</p>
+        <p>Add custom groups and categories that appear in "Post New Ad" and browse filters</p>
       </div>
 
-      <!-- Add category form -->
-      <div class="content-card" style="margin-bottom:1.5rem;">
-        <h4 style="margin-bottom:1rem;"><i class="bi bi-plus-circle"></i> Add Custom Category</h4>
-        <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:0.75rem;align-items:end;flex-wrap:wrap;">
-          <div class="form-group" style="margin-bottom:0;">
-            <label class="form-label" for="new-cat-name">Category Name <span>*</span></label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.5rem;">
+        <!-- Add Category card -->
+        <div class="content-card">
+          <h4 style="margin-bottom:1rem;"><i class="bi bi-tag-fill" style="color:var(--primary);"></i> Add Category</h4>
+          <div class="form-group">
+            <label class="form-label">Category Name <span>*</span></label>
             <input type="text" class="form-control" id="new-cat-name" placeholder="e.g. Electric Scooter" maxlength="60" />
           </div>
-          <div class="form-group" style="margin-bottom:0;">
-            <label class="form-label" for="new-cat-group">Group <span>*</span></label>
+          <div class="form-group">
+            <label class="form-label">Group <span>*</span></label>
             <select class="form-control" id="new-cat-group">
-              <option value="">Select a group...</option>
-              <option value="Vehicles">Vehicles</option>
-              <option value="Wedding &amp; Events">Wedding &amp; Events</option>
-              <option value="Construction">Construction</option>
-              <option value="Property">Property</option>
-              <option value="Electronics &amp; Media">Electronics &amp; Media</option>
-              <option value="Party &amp; Leisure">Party &amp; Leisure</option>
-              <option value="Clothing">Clothing</option>
-              <option value="Other">Other</option>
+              <option value="">Loading groups...</option>
             </select>
           </div>
-          <button class="btn btn-primary" id="add-cat-btn" style="white-space:nowrap;">
-            <i class="bi bi-plus-lg"></i> Add
+          <button class="btn btn-primary btn-sm" id="add-cat-btn">
+            <i class="bi bi-plus-lg"></i> Add Category
           </button>
+          <div id="cat-error" class="alert alert-error mt-2" style="display:none;"></div>
         </div>
-        <div id="cat-error" class="alert alert-error mt-2" style="display:none;"></div>
+
+        <!-- Add Group card -->
+        <div class="content-card">
+          <h4 style="margin-bottom:1rem;"><i class="bi bi-folder-plus" style="color:var(--purple);"></i> Add Group</h4>
+          <div class="form-group">
+            <label class="form-label">Group Name <span>*</span></label>
+            <input type="text" class="form-control" id="new-group-name" placeholder="e.g. Water Sports" maxlength="50" />
+            <p class="form-hint">Groups organise categories in the dropdown menus.</p>
+          </div>
+          <button class="btn btn-primary btn-sm" id="add-group-btn" style="background:var(--purple);border-color:var(--purple);">
+            <i class="bi bi-plus-lg"></i> Create Group
+          </button>
+          <div id="group-error" class="alert alert-error mt-2" style="display:none;"></div>
+        </div>
       </div>
 
-      <!-- Existing categories display -->
+      <!-- All categories display -->
       <div class="content-card">
-        <h4 style="margin-bottom:0.25rem;"><i class="bi bi-list-ul"></i> All Categories</h4>
-        <p style="font-size:0.85rem;color:var(--gray-500);margin-bottom:1rem;">Default categories are built-in. Custom categories (purple) can be deleted.</p>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;">
+          <h4><i class="bi bi-list-ul"></i> All Groups &amp; Categories</h4>
+          <button class="btn btn-ghost btn-sm" id="refresh-cats-btn"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+        </div>
+        <p style="font-size:0.85rem;color:var(--gray-500);margin-bottom:1rem;">
+          Built-in items are read-only. Custom items <span style="color:var(--purple);">(purple)</span> can be deleted.
+        </p>
         <div id="cats-loading" style="text-align:center;padding:2rem;"><div class="spinner" style="margin:0 auto;"></div></div>
         <div id="cats-display" style="display:none;"></div>
       </div>
@@ -930,9 +947,10 @@
   });
 
   // ==================== USERS SECTION ====================
-  let allUsersRaw = [], usersSearch = "";
+  let allUsersRaw = [], usersSearch = "", allAdsList = [];
+  let expandedUsers = new Set();
 
-  document.getElementById("refresh-users-btn").addEventListener("click", () => { allUsers = []; loadUsers(); });
+  document.getElementById("refresh-users-btn").addEventListener("click", () => { allUsers = []; allAdsList = []; loadUsers(); });
 
   document.getElementById("users-search").addEventListener("input", debounce(() => {
     usersSearch = document.getElementById("users-search").value.trim().toLowerCase();
@@ -951,21 +969,27 @@
         getDocs(collection(db, "ads")),
       ]);
 
-      // Build ad stats per user
+      // Build ad stats per user AND store actual ads
       const adsByUser = {};
+      allAdsList = [];
       adSnap.forEach(d => {
-        const ad = d.data();
+        const ad = { id: d.id, ...d.data() };
+        allAdsList.push(ad);
         const uid = ad.userId;
         if (!uid) return;
-        if (!adsByUser[uid]) adsByUser[uid] = { total: 0, pending: 0, approved: 0, rejected: 0 };
+        if (!adsByUser[uid]) adsByUser[uid] = { total: 0, pending: 0, approved: 0, rejected: 0, ads: [] };
         adsByUser[uid].total++;
         if (ad.status === "pending")  adsByUser[uid].pending++;
         if (ad.status === "approved") adsByUser[uid].approved++;
         if (ad.status === "rejected") adsByUser[uid].rejected++;
+        adsByUser[uid].ads.push(ad);
       });
 
       allUsersRaw = [];
-      userSnap.forEach(d => allUsersRaw.push({ id: d.id, ...d.data(), adStats: adsByUser[d.id] || { total: 0, pending: 0, approved: 0, rejected: 0 } }));
+      userSnap.forEach(d => allUsersRaw.push({
+        id: d.id, ...d.data(),
+        adStats: adsByUser[d.id] || { total: 0, pending: 0, approved: 0, rejected: 0, ads: [] },
+      }));
 
       // Sort: pending verification first, then by join date
       allUsersRaw.sort((a, b) => {
@@ -991,11 +1015,34 @@
     const emptyEl = document.getElementById("users-empty");
 
     let filtered = allUsers;
+    let listingIdMatch = null;
+
     if (usersSearch) {
-      filtered = filtered.filter(u => {
-        const hay = `${u.name} ${u.email}`.toLowerCase();
-        return hay.includes(usersSearch);
-      });
+      // Check if searching by listing ID (#abc or just the raw ID)
+      const idQuery = usersSearch.startsWith("#") ? usersSearch.slice(1) : usersSearch;
+      const matchedAd = allAdsList.find(a =>
+        a.id.toLowerCase() === idQuery ||
+        a.id.toLowerCase().startsWith(idQuery) ||
+        a.title?.toLowerCase().includes(usersSearch)
+      );
+      if (matchedAd && matchedAd.userId) {
+        listingIdMatch = { ad: matchedAd, uid: matchedAd.userId };
+        // Highlight — show the user who owns this listing
+        filtered = allUsers.filter(u => u.id === matchedAd.userId);
+        if (filtered.length === 0) {
+          // Fallback: normal name/email search
+          listingIdMatch = null;
+          filtered = allUsers.filter(u => {
+            const hay = `${u.name} ${u.email}`.toLowerCase();
+            return hay.includes(usersSearch);
+          });
+        }
+      } else {
+        filtered = allUsers.filter(u => {
+          const hay = `${u.name} ${u.email}`.toLowerCase();
+          return hay.includes(usersSearch);
+        });
+      }
     }
 
     if (filtered.length === 0) {
@@ -1004,14 +1051,58 @@
       return;
     }
     emptyEl.classList.add("hidden");
-    listEl.innerHTML = filtered.map(renderUserCard).join("");
+    listEl.innerHTML = filtered.map(u => renderUserCard(u, listingIdMatch)).join("");
 
+    // Re-attach listeners
     listEl.querySelectorAll("[data-user-action]").forEach(btn => {
       btn.addEventListener("click", () => handleUserAction(btn.dataset.userAction, btn.dataset.uid));
     });
+    listEl.querySelectorAll(".toggle-listings-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const uid = btn.dataset.uid;
+        const adsSection = document.getElementById(`user-ads-${uid}`);
+        if (expandedUsers.has(uid)) {
+          expandedUsers.delete(uid);
+          adsSection.style.display = "none";
+          btn.innerHTML = `<i class="bi bi-chevron-down"></i> Show Listings (${btn.dataset.count})`;
+        } else {
+          expandedUsers.add(uid);
+          adsSection.style.display = "block";
+          btn.innerHTML = `<i class="bi bi-chevron-up"></i> Hide Listings`;
+        }
+      });
+    });
+    // Navigate to ad
+    listEl.querySelectorAll("[data-goto-ad]").forEach(btn => {
+      btn.addEventListener("click", () => window.open(`ad.html?id=${btn.dataset.gotoAd}`, "_blank"));
+    });
+    // Jump to listing in admin ads section
+    listEl.querySelectorAll("[data-jump-ad]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const adId = btn.dataset.jumpAd;
+        document.querySelectorAll(".admin-section").forEach(s => s.classList.remove("active"));
+        document.querySelectorAll(".sidebar-nav a[data-section]").forEach(l => l.classList.remove("active"));
+        document.getElementById("section-ads").classList.add("active");
+        document.getElementById("nav-ads-link").classList.add("active");
+        document.getElementById("admin-search").value = adId;
+        currentSearch = adId.toLowerCase();
+        currentFilter = "all";
+        document.querySelectorAll(".filter-tab").forEach(b => { b.classList.remove("active"); if (b.dataset.status === "all") b.classList.add("active"); });
+        renderAdList();
+      });
+    });
+    // Expand listing if matched by ID search
+    if (listingIdMatch) {
+      const uid = listingIdMatch.uid;
+      expandedUsers.add(uid);
+      const adsSection = document.getElementById(`user-ads-${uid}`);
+      if (adsSection) adsSection.style.display = "block";
+      const btn = listEl.querySelector(`.toggle-listings-btn[data-uid="${uid}"]`);
+      if (btn) btn.innerHTML = `<i class="bi bi-chevron-up"></i> Hide Listings`;
+    }
   }
 
-  function renderUserCard(u) {
+  function renderUserCard(u, listingIdMatch = null) {
     const initial = (u.name || "?")[0].toUpperCase();
     const stats   = u.adStats;
     const vs      = u.verificationStatus || "unverified";
@@ -1066,6 +1157,38 @@
         </div>`;
     }
 
+    // Build user's ads list HTML
+    const userAds = stats.ads || [];
+    const isExpanded = expandedUsers.has(u.id);
+    let adsHtml = "";
+    if (userAds.length > 0) {
+      const statusIcon = { pending: "bi-hourglass-split", approved: "bi-check-circle-fill", rejected: "bi-x-circle-fill" };
+      const statusColor = { pending: "var(--warning)", approved: "var(--success)", rejected: "var(--danger)" };
+      adsHtml = userAds.map(ad => {
+        const isHighlighted = listingIdMatch && listingIdMatch.ad.id === ad.id;
+        return `
+          <div class="user-ad-row${isHighlighted ? " highlighted" : ""}">
+            <div class="user-ad-thumb-wrap">
+              <img src="${escapeHtml(ad.imageUrls?.[0] || "https://placehold.co/52x40/e2e8f0/94a3b8?text=")}"
+                   class="user-ad-thumb" onerror="this.src='https://placehold.co/52x40/e2e8f0/94a3b8?text='" alt="" />
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-weight:600;font-size:0.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(ad.title || "Untitled")}</div>
+              <div style="font-size:0.75rem;color:var(--gray-500);">
+                <i class="${statusIcon[ad.status] || "bi-circle"}" style="color:${statusColor[ad.status] || "var(--gray-400)"};"></i>
+                ${ad.status || "—"} &middot; ${escapeHtml(ad.category || "—")} &middot; ID: <code style="font-size:0.7rem;background:var(--gray-100);padding:0.1rem 0.3rem;border-radius:3px;">${ad.id}</code>
+              </div>
+            </div>
+            <div style="display:flex;gap:0.35rem;flex-shrink:0;">
+              ${ad.status === "approved" ? `<button class="btn btn-ghost btn-sm" data-goto-ad="${ad.id}" title="View public listing"><i class="bi bi-eye"></i></button>` : ""}
+              <button class="btn btn-ghost btn-sm" data-jump-ad="${ad.id}" title="Find in Ads section"><i class="bi bi-arrow-right-square"></i></button>
+            </div>
+          </div>`;
+      }).join("");
+    } else {
+      adsHtml = `<div style="padding:0.75rem;font-size:0.85rem;color:var(--gray-400);font-style:italic;">No ads posted yet.</div>`;
+    }
+
     return `
       <div class="user-card">
         <div class="user-card-header">
@@ -1099,7 +1222,22 @@
             <div class="user-stat-val" style="color:var(--danger);">${stats.rejected}</div>
             <div class="user-stat-lbl">Rejected</div>
           </div>
+          ${stats.total > 0 ? `
+          <div style="margin-left:auto;align-self:center;">
+            <button class="btn btn-ghost btn-sm toggle-listings-btn" data-uid="${u.id}" data-count="${stats.total}">
+              <i class="bi bi-chevron-down"></i> Show Listings (${stats.total})
+            </button>
+          </div>` : ""}
         </div>
+
+        <!-- Expandable listings -->
+        ${stats.total > 0 ? `
+        <div id="user-ads-${u.id}" class="user-ads-list" style="display:${isExpanded ? "block" : "none"};">
+          <div style="font-size:0.75rem;color:var(--gray-500);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:0.5rem 0 0.25rem;">
+            <i class="bi bi-search" style="margin-right:0.3rem;"></i>Tip: Search by listing ID above to jump directly to a listing
+          </div>
+          ${adsHtml}
+        </div>` : ""}
 
         ${verifySection}
       </div>
@@ -1135,7 +1273,12 @@
   }
 
   // ==================== CATEGORIES SECTION ====================
-  let customCats = []; // { id, name, group }
+  let customCats   = []; // { id, name, group, type:"category" }
+  let customGroups = []; // { id, name, type:"group" }
+
+  document.getElementById("refresh-cats-btn").addEventListener("click", () => {
+    customCats = []; customGroups = []; loadCategories();
+  });
 
   async function loadCategories() {
     document.getElementById("cats-loading").style.display = "block";
@@ -1143,8 +1286,13 @@
 
     try {
       const snap = await getDocs(collection(db, "categories"));
-      customCats = [];
-      snap.forEach(d => customCats.push({ id: d.id, ...d.data() }));
+      customCats = []; customGroups = [];
+      snap.forEach(d => {
+        const data = { id: d.id, ...d.data() };
+        if (data.type === "group") customGroups.push(data);
+        else customCats.push(data);
+      });
+      populateGroupSelect();
       renderCategories();
     } catch (err) {
       showToast("Could not load categories: " + err.message, "error");
@@ -1154,24 +1302,50 @@
     }
   }
 
+  function populateGroupSelect() {
+    const sel = document.getElementById("new-cat-group");
+    const defaultGroupNames = Object.keys(CATEGORY_GROUPS);
+    let html = `<option value="">Select a group...</option>`;
+    defaultGroupNames.forEach(g => {
+      html += `<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`;
+    });
+    customGroups.forEach(g => {
+      if (!defaultGroupNames.includes(g.name)) {
+        html += `<option value="${escapeHtml(g.name)}">${escapeHtml(g.name)} ✦</option>`;
+      }
+    });
+    sel.innerHTML = html;
+  }
+
   function renderCategories() {
     const displayEl = document.getElementById("cats-display");
 
-    // Build merged groups (defaults + custom)
+    // Build merged groups map
     const groups = {};
-    Object.entries(CATEGORY_GROUPS).forEach(([g, cats]) => { groups[g] = cats.map(c => ({ name: c, isCustom: false })); });
+    Object.keys(CATEGORY_GROUPS).forEach(g => { groups[g] = { cats: CATEGORY_GROUPS[g].map(c => ({ name: c, isCustom: false })), isCustomGroup: false }; });
+    // Add custom groups (empty if no cats yet)
+    customGroups.forEach(g => {
+      if (!groups[g.name]) groups[g.name] = { cats: [], isCustomGroup: true, id: g.id };
+    });
+    // Add custom categories into their groups
     customCats.forEach(c => {
-      if (!groups[c.group]) groups[c.group] = [];
-      // Avoid duplicates with defaults
-      const exists = groups[c.group].some(x => x.name === c.name);
-      if (!exists) groups[c.group].push({ name: c.name, isCustom: true, id: c.id });
+      if (!groups[c.group]) groups[c.group] = { cats: [], isCustomGroup: false };
+      const exists = groups[c.group].cats.some(x => x.name === c.name);
+      if (!exists) groups[c.group].cats.push({ name: c.name, isCustom: true, id: c.id });
     });
 
     let html = "";
-    Object.entries(groups).forEach(([group, cats]) => {
-      html += `<div class="cat-group-header">${escapeHtml(group)}</div>`;
+    Object.entries(groups).forEach(([groupName, groupData]) => {
+      const groupLabelExtra = groupData.isCustomGroup
+        ? ` <i class="bi bi-x-circle cat-chip-del" data-group-id="${groupData.id}" style="cursor:pointer;color:var(--danger);opacity:0.65;" title="Delete Group"></i>`
+        : "";
+      const groupStyle = groupData.isCustomGroup ? "color:var(--purple);" : "";
+      html += `<div class="cat-group-header" style="${groupStyle}">${escapeHtml(groupName)}${groupLabelExtra}</div>`;
       html += `<div class="cat-chip-list">`;
-      cats.forEach(cat => {
+      if (groupData.cats.length === 0) {
+        html += `<span style="font-size:0.8rem;color:var(--gray-400);font-style:italic;">No categories yet</span>`;
+      }
+      groupData.cats.forEach(cat => {
         if (cat.isCustom) {
           html += `<span class="cat-chip custom">${escapeHtml(cat.name)} <i class="bi bi-x cat-chip-del" data-cat-id="${cat.id}" title="Delete"></i></span>`;
         } else {
@@ -1183,8 +1357,11 @@
 
     displayEl.innerHTML = html;
 
-    displayEl.querySelectorAll(".cat-chip-del").forEach(btn => {
+    displayEl.querySelectorAll(".cat-chip-del[data-cat-id]").forEach(btn => {
       btn.addEventListener("click", () => deleteCategory(btn.dataset.catId));
+    });
+    displayEl.querySelectorAll(".cat-chip-del[data-group-id]").forEach(btn => {
+      btn.addEventListener("click", () => deleteGroup(btn.dataset.groupId));
     });
   }
 
@@ -1194,42 +1371,60 @@
     const errEl = document.getElementById("cat-error");
     errEl.style.display = "none";
 
-    if (!name) {
-      errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> Category name is required.`;
-      errEl.style.display = "flex"; return;
-    }
-    if (!group) {
-      errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> Please select a group.`;
-      errEl.style.display = "flex"; return;
-    }
+    if (!name) { errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> Category name is required.`; errEl.style.display = "flex"; return; }
+    if (!group) { errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> Please select a group.`; errEl.style.display = "flex"; return; }
 
-    // Check duplicate
     const defaultCats = Object.values(CATEGORY_GROUPS).flat();
     if (defaultCats.map(c => c.toLowerCase()).includes(name.toLowerCase())) {
-      errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> This category already exists as a default.`;
-      errEl.style.display = "flex"; return;
+      errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> This category already exists as a default.`; errEl.style.display = "flex"; return;
     }
     if (customCats.some(c => c.name.toLowerCase() === name.toLowerCase())) {
-      errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> This custom category already exists.`;
-      errEl.style.display = "flex"; return;
+      errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> This custom category already exists.`; errEl.style.display = "flex"; return;
     }
 
     const btn = document.getElementById("add-cat-btn");
     btn.disabled = true; btn.textContent = "Adding...";
     try {
-      const ref2 = await addDoc(collection(db, "categories"), {
-        name, group, createdAt: serverTimestamp(),
-      });
-      customCats.push({ id: ref2.id, name, group });
+      const ref2 = await addDoc(collection(db, "categories"), { name, group, type: "category", createdAt: serverTimestamp() });
+      customCats.push({ id: ref2.id, name, group, type: "category" });
       document.getElementById("new-cat-name").value = "";
       document.getElementById("new-cat-group").value = "";
       showToast(`Category "${name}" added`, "success");
       renderCategories();
     } catch (err) {
-      errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> Error: ${err.message}`;
-      errEl.style.display = "flex";
+      errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> Error: ${err.message}`; errEl.style.display = "flex";
     } finally {
-      btn.disabled = false; btn.innerHTML = `<i class="bi bi-plus-lg"></i> Add`;
+      btn.disabled = false; btn.innerHTML = `<i class="bi bi-plus-lg"></i> Add Category`;
+    }
+  });
+
+  document.getElementById("add-group-btn").addEventListener("click", async () => {
+    const name  = document.getElementById("new-group-name").value.trim();
+    const errEl = document.getElementById("group-error");
+    errEl.style.display = "none";
+
+    if (!name) { errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> Group name is required.`; errEl.style.display = "flex"; return; }
+    const defaultGroups = Object.keys(CATEGORY_GROUPS);
+    if (defaultGroups.map(g => g.toLowerCase()).includes(name.toLowerCase())) {
+      errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> This group already exists as a default.`; errEl.style.display = "flex"; return;
+    }
+    if (customGroups.some(g => g.name.toLowerCase() === name.toLowerCase())) {
+      errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> This custom group already exists.`; errEl.style.display = "flex"; return;
+    }
+
+    const btn = document.getElementById("add-group-btn");
+    btn.disabled = true; btn.textContent = "Creating...";
+    try {
+      const ref2 = await addDoc(collection(db, "categories"), { name, type: "group", createdAt: serverTimestamp() });
+      customGroups.push({ id: ref2.id, name, type: "group" });
+      document.getElementById("new-group-name").value = "";
+      showToast(`Group "${name}" created`, "success");
+      populateGroupSelect();
+      renderCategories();
+    } catch (err) {
+      errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> Error: ${err.message}`; errEl.style.display = "flex";
+    } finally {
+      btn.disabled = false; btn.innerHTML = `<i class="bi bi-plus-lg"></i> Create Group`;
     }
   });
 
@@ -1239,6 +1434,21 @@
       await deleteDoc(doc(db, "categories", catId));
       customCats = customCats.filter(c => c.id !== catId);
       showToast("Category deleted", "success");
+      renderCategories();
+    } catch (err) { showToast("Delete failed: " + err.message, "error"); }
+  }
+
+  async function deleteGroup(groupId) {
+    const grp = customGroups.find(g => g.id === groupId);
+    if (!grp) return;
+    const hasCats = customCats.some(c => c.group === grp.name);
+    if (hasCats && !confirm(`Group "${grp.name}" has categories in it. Delete the group anyway? Categories will remain but may appear ungrouped.`)) return;
+    if (!hasCats && !confirm(`Delete group "${grp.name}"?`)) return;
+    try {
+      await deleteDoc(doc(db, "categories", groupId));
+      customGroups = customGroups.filter(g => g.id !== groupId);
+      showToast("Group deleted", "success");
+      populateGroupSelect();
       renderCategories();
     } catch (err) { showToast("Delete failed: " + err.message, "error"); }
   }

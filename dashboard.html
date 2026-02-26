@@ -286,6 +286,84 @@
   </div>
 </div>
 
+<!-- ==================== EDIT MODAL ==================== -->
+<div class="modal-overlay" id="edit-listing-modal">
+  <div class="modal" style="max-width:640px;width:95vw;max-height:88vh;overflow-y:auto;">
+    <h3><i class="bi bi-pencil-square"></i> Edit Listing</h3>
+    <p style="font-size:0.85rem;color:var(--gray-500);margin-bottom:1.25rem;">
+      Editing will resubmit your listing for admin review.
+    </p>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Title <span>*</span></label>
+        <input type="text" class="form-control" id="edit-ad-title" maxlength="100" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category <span>*</span></label>
+        <select class="form-control" id="edit-ad-category"></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Price (Rs.) <span>*</span></label>
+        <div class="price-input-group">
+          <input type="number" class="form-control" id="edit-ad-price" min="0" step="any" />
+          <select class="form-control" id="edit-ad-price-type">
+            <option value="day">Per Day</option>
+            <option value="hour">Per Hour</option>
+            <option value="km">Per KM</option>
+            <option value="week">Per Week</option>
+            <option value="month">Per Month</option>
+            <option value="event">Per Event</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Location <span>*</span></label>
+        <input type="text" class="form-control" id="edit-ad-location" list="edit-location-dl" />
+        <datalist id="edit-location-dl"></datalist>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Contact Phone <span>*</span></label>
+      <input type="tel" class="form-control" id="edit-ad-phone" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description <span>*</span></label>
+      <textarea class="form-control" id="edit-ad-description" rows="4"></textarea>
+    </div>
+
+    <!-- Existing images -->
+    <div class="form-group">
+      <label class="form-label">Current Images <span style="font-weight:400;color:var(--gray-500);">(click × to remove)</span></label>
+      <div id="edit-existing-images" class="image-preview-grid"></div>
+    </div>
+
+    <!-- New image upload -->
+    <div class="form-group">
+      <label class="form-label">Add More Images <span style="font-weight:400;color:var(--gray-500);">(up to 8 total)</span></label>
+      <div class="upload-area" id="edit-upload-area" style="padding:1rem;">
+        <i class="bi bi-cloud-upload" style="font-size:1.75rem;color:var(--gray-400);"></i>
+        <p style="margin:0.25rem 0 0;font-size:0.85rem;">Click to add images</p>
+        <input type="file" id="edit-image-input" accept="image/*" multiple style="display:none;" />
+      </div>
+      <div class="image-preview-grid" id="edit-new-previews"></div>
+    </div>
+
+    <div class="upload-progress" id="edit-upload-progress" style="display:none;">
+      <div class="upload-progress-bar" id="edit-upload-progress-bar"></div>
+    </div>
+
+    <div id="edit-listing-error" class="alert alert-error mt-2" style="display:none;"></div>
+    <div class="modal-actions" style="margin-top:1rem;">
+      <button class="btn btn-ghost" id="cancel-edit-listing-btn">Cancel</button>
+      <button class="btn btn-primary" id="confirm-edit-listing-btn">
+        <i class="bi bi-check2-circle"></i> Save &amp; Resubmit
+      </button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
   import {
     auth, db, storage,
@@ -527,6 +605,13 @@
           else showToast("This listing is not yet approved and not publicly visible.", "info");
         });
       });
+
+      listEl.querySelectorAll(".edit-ad-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const ad = ads.find(a => a.id === btn.dataset.id);
+          if (ad) openEditListing(ad);
+        });
+      });
     } catch (err) {
       loadingEl.style.display = "none";
       showToast("Could not load your ads: " + err.message, "error");
@@ -565,6 +650,10 @@
             <button class="btn btn-outline btn-sm view-ad-btn" data-id="${ad.id}" data-status="${ad.status}">
               <i class="bi bi-eye"></i> View
             </button>
+            ${(ad.status === "pending" || ad.status === "rejected") ? `
+            <button class="btn btn-outline btn-sm edit-ad-btn" data-id="${ad.id}">
+              <i class="bi bi-pencil"></i> Edit
+            </button>` : ""}
             <button class="btn btn-outline-danger btn-sm delete-ad-btn" data-id="${ad.id}" data-title="${escapeHtml(ad.title)}">
               <i class="bi bi-trash3"></i> Delete
             </button>
@@ -720,6 +809,175 @@
     verifyPreviewWrap.style.display = "none";
     verifyUploadArea.style.display = "block";
     verifyFileInput.value = "";
+  });
+
+  // ================================================================
+  // EDIT LISTING
+  // ================================================================
+  let editAdTarget = null;
+  let editRemovedUrls = []; // URLs to delete from Storage on save
+  let editNewFiles   = []; // new File objects to upload
+
+  buildLocationDatalist(document.getElementById("edit-location-dl"));
+  document.getElementById("edit-upload-area").addEventListener("click", () =>
+    document.getElementById("edit-image-input").click());
+  document.getElementById("edit-image-input").addEventListener("change", () => {
+    const files = Array.from(document.getElementById("edit-image-input").files);
+    const existingCount = (editAdTarget?.imageUrls?.length || 0) - editRemovedUrls.length;
+    const total = existingCount + editNewFiles.length;
+    const toAdd = files.filter(f => f.type.startsWith("image/") && f.size <= 5 * 1024 * 1024)
+                       .slice(0, 8 - total);
+    editNewFiles = [...editNewFiles, ...toAdd];
+    renderEditNewPreviews();
+  });
+
+  function renderEditNewPreviews() {
+    const grid = document.getElementById("edit-new-previews");
+    grid.innerHTML = "";
+    editNewFiles.forEach((file, i) => {
+      const url  = URL.createObjectURL(file);
+      const item = document.createElement("div");
+      item.className = "preview-item";
+      item.innerHTML = `<img src="${url}" alt="new" /><button class="preview-remove" data-idx="${i}"><i class="bi bi-x"></i></button>`;
+      grid.appendChild(item);
+    });
+    grid.querySelectorAll(".preview-remove").forEach(btn => {
+      btn.addEventListener("click", () => {
+        editNewFiles.splice(parseInt(btn.dataset.idx), 1);
+        renderEditNewPreviews();
+      });
+    });
+  }
+
+  function renderEditExistingImages(imageUrls) {
+    const grid = document.getElementById("edit-existing-images");
+    grid.innerHTML = "";
+    (imageUrls || []).forEach((url, i) => {
+      if (editRemovedUrls.includes(url)) return;
+      const item = document.createElement("div");
+      item.className = "preview-item";
+      item.innerHTML = `<img src="${escapeHtml(url)}" alt="img ${i}" /><button class="preview-remove existing-remove" data-url="${escapeHtml(url)}"><i class="bi bi-x"></i></button>`;
+      grid.appendChild(item);
+    });
+    grid.querySelectorAll(".existing-remove").forEach(btn => {
+      btn.addEventListener("click", () => {
+        editRemovedUrls.push(btn.dataset.url);
+        renderEditExistingImages(editAdTarget.imageUrls);
+      });
+    });
+    if ((imageUrls || []).filter(u => !editRemovedUrls.includes(u)).length === 0) {
+      grid.innerHTML = `<span style="font-size:0.85rem;color:var(--gray-400);font-style:italic;">No current images</span>`;
+    }
+  }
+
+  async function openEditListing(ad) {
+    editAdTarget   = ad;
+    editRemovedUrls = [];
+    editNewFiles   = [];
+
+    document.getElementById("edit-ad-title").value       = ad.title || "";
+    document.getElementById("edit-ad-price").value       = ad.price || "";
+    document.getElementById("edit-ad-price-type").value  = ad.priceType || "day";
+    document.getElementById("edit-ad-location").value    = ad.location || "";
+    document.getElementById("edit-ad-phone").value       = ad.phone || "";
+    document.getElementById("edit-ad-description").value = ad.description || "";
+    document.getElementById("edit-listing-error").style.display = "none";
+    document.getElementById("edit-image-input").value = "";
+
+    await buildCategorySelectAsync(document.getElementById("edit-ad-category"));
+    document.getElementById("edit-ad-category").value = ad.category || "";
+
+    renderEditExistingImages(ad.imageUrls);
+    renderEditNewPreviews();
+    document.getElementById("edit-listing-modal").classList.add("open");
+  }
+
+  document.getElementById("cancel-edit-listing-btn").addEventListener("click", () => {
+    document.getElementById("edit-listing-modal").classList.remove("open");
+    editAdTarget = null;
+  });
+  document.getElementById("edit-listing-modal").addEventListener("click", e => {
+    if (e.target.id === "edit-listing-modal") {
+      document.getElementById("edit-listing-modal").classList.remove("open");
+      editAdTarget = null;
+    }
+  });
+
+  document.getElementById("confirm-edit-listing-btn").addEventListener("click", async () => {
+    if (!editAdTarget || !currentUser) return;
+
+    const errEl = document.getElementById("edit-listing-error");
+    const btn   = document.getElementById("confirm-edit-listing-btn");
+    errEl.style.display = "none";
+
+    const title       = document.getElementById("edit-ad-title").value.trim();
+    const category    = document.getElementById("edit-ad-category").value;
+    const price       = document.getElementById("edit-ad-price").value.trim();
+    const priceType   = document.getElementById("edit-ad-price-type").value;
+    const location    = document.getElementById("edit-ad-location").value.trim();
+    const phone       = document.getElementById("edit-ad-phone").value.trim();
+    const description = document.getElementById("edit-ad-description").value.trim();
+
+    if (!title || !category || !price || !location || !phone || !description) {
+      errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> Please fill in all required fields.`;
+      errEl.style.display = "flex";
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner spinner-sm" style="display:inline-block;margin-right:0.5rem;"></span> Saving...`;
+
+    const progWrap = document.getElementById("edit-upload-progress");
+    const progBar  = document.getElementById("edit-upload-progress-bar");
+
+    try {
+      // 1. Delete removed images from Storage
+      await Promise.all(editRemovedUrls.map(async url => {
+        try {
+          const match = decodeURIComponent(url).match(/\/o\/(.+?)\?/);
+          if (match) await deleteObject(ref(storage, match[1]));
+        } catch (_) {}
+      }));
+
+      // 2. Upload new images
+      const newUrls = [];
+      if (editNewFiles.length > 0) {
+        progWrap.style.display = "block";
+        for (let i = 0; i < editNewFiles.length; i++) {
+          const storageRef = ref(storage, `ads/${currentUser.uid}/${editAdTarget.id}/image-edit-${Date.now()}-${i}`);
+          await uploadBytes(storageRef, editNewFiles[i]);
+          newUrls.push(await getDownloadURL(storageRef));
+          progBar.style.width = `${((i + 1) / editNewFiles.length) * 100}%`;
+        }
+        progWrap.style.display = "none";
+      }
+
+      // 3. Build final imageUrls list
+      const keptUrls   = (editAdTarget.imageUrls || []).filter(u => !editRemovedUrls.includes(u));
+      const finalUrls  = [...keptUrls, ...newUrls];
+
+      // 4. Update Firestore — reset status to pending for review
+      await updateDoc(doc(db, "ads", editAdTarget.id), {
+        title, category, price: parseFloat(price), priceType,
+        location, phone, description,
+        imageUrls: finalUrls,
+        status: "pending",
+        updatedAt: serverTimestamp(),
+      });
+
+      showToast("Listing updated and resubmitted for review.", "success", 5000);
+      document.getElementById("edit-listing-modal").classList.remove("open");
+      editAdTarget = null;
+      loadMyAds();
+    } catch (err) {
+      console.error(err);
+      errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> Error: ${err.message}`;
+      errEl.style.display = "flex";
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = `<i class="bi bi-check2-circle"></i> Save &amp; Resubmit`;
+      progWrap.style.display = "none";
+    }
   });
 
   document.getElementById("verify-submit-btn").addEventListener("click", async () => {
