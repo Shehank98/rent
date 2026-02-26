@@ -133,6 +133,10 @@
       <a href="#" id="nav-cats-link" data-section="categories">
         <span class="nav-icon"><i class="bi bi-tags"></i></span> Categories
       </a>
+      <a href="#" id="nav-reports-link" data-section="reports">
+        <span class="nav-icon"><i class="bi bi-flag"></i></span> Reports
+        <span class="tab-count" id="nav-reports-badge" style="margin-left:auto;background:var(--danger);color:white;border-radius:var(--radius-full);padding:0 0.4rem;font-size:0.7rem;display:none;"></span>
+      </a>
       <hr style="border:none;border-top:1px solid var(--gray-200);margin:0.75rem 0;" />
       <a href="listings.html">
         <span class="nav-icon"><i class="bi bi-eye"></i></span> Public Listings
@@ -289,6 +293,29 @@
         </p>
         <div id="cats-loading" style="text-align:center;padding:2rem;"><div class="spinner" style="margin:0 auto;"></div></div>
         <div id="cats-display" style="display:none;"></div>
+      </div>
+    </div>
+
+    <!-- ============ SECTION: REPORTS ============ -->
+    <div class="admin-section" id="section-reports">
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+        <div>
+          <h2>Reports</h2>
+          <p>Listings flagged by users. Review and take action.</p>
+        </div>
+        <button class="btn btn-outline btn-sm" id="refresh-reports-btn">
+          <i class="bi bi-arrow-clockwise"></i> Refresh
+        </button>
+      </div>
+      <div id="reports-loading" style="text-align:center;padding:2.5rem;display:none;">
+        <div class="spinner" style="margin:0 auto;"></div>
+        <div style="margin-top:0.75rem;color:var(--gray-500);">Loading reports...</div>
+      </div>
+      <div id="reports-list"></div>
+      <div id="reports-empty" class="empty-state hidden">
+        <i class="bi bi-flag" style="font-size:2.5rem;color:var(--gray-300);"></i>
+        <h3>No reports yet</h3>
+        <p>When users flag listings, they will appear here.</p>
       </div>
     </div>
 
@@ -455,6 +482,29 @@
   </div>
 </div>
 
+<!-- ==================== MESSAGE MODAL ==================== -->
+<div class="modal-overlay" id="msg-modal">
+  <div class="modal" style="max-width:520px;">
+    <h3><i class="bi bi-envelope-plus"></i> Message to Listing Owner</h3>
+    <p id="msg-modal-desc" style="font-size:0.85rem;color:var(--gray-500);margin-bottom:1rem;"></p>
+    <div class="form-group" style="margin-bottom:0.75rem;">
+      <label class="form-label">Subject <span>*</span></label>
+      <input type="text" class="form-control" id="msg-subject" placeholder="e.g. About your listing..." maxlength="100" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Message <span>*</span></label>
+      <textarea class="form-control" id="msg-body" rows="5" placeholder="Write your message here..."></textarea>
+    </div>
+    <div id="msg-error" class="alert alert-error" style="display:none;margin-bottom:0.75rem;"></div>
+    <div class="modal-actions" style="margin-top:1rem;">
+      <button class="btn btn-ghost" id="cancel-msg-btn">Cancel</button>
+      <button class="btn btn-primary" id="confirm-msg-btn">
+        <i class="bi bi-send"></i> Send Message
+      </button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
   import {
     auth, db, storage,
@@ -472,10 +522,13 @@
 
   let allAds = [], allUsers = [], allAdsByUser = {};
   let currentFilter = "all", currentSearch = "";
-  let featureTarget = null, deleteTarget = null, rejectTarget = null, editTarget = null, previewTarget = null;
+  let featureTarget = null, deleteTarget = null, rejectTarget = null, editTarget = null, previewTarget = null, msgTarget = null;
   let selectedFeatureDays = null;
+  let allReportsByAd = {}; // adId -> [ {reason, createdAt, reporterUid}, ... ]
+  let adminUser = null;
 
   requireAdmin(async (user) => {
+    adminUser = user;
     document.getElementById("sidebar-name").textContent  = user.displayName || "Admin";
     document.getElementById("sidebar-email").textContent = user.email || "";
     if (user.photoURL) {
@@ -504,6 +557,7 @@
       link.classList.add("active");
       if (sec === "users" && allUsers.length === 0) loadUsers();
       if (sec === "categories") loadCategories();
+      if (sec === "reports") loadReports();
     });
   });
 
@@ -532,9 +586,24 @@
     document.getElementById("admin-ad-list").style.display = "none";
     document.getElementById("admin-empty").classList.add("hidden");
     try {
-      const snap = await getDocs(query(collection(db, "ads"), orderBy("createdAt", "desc")));
+      const [adSnap, reportSnap] = await Promise.all([
+        getDocs(query(collection(db, "ads"), orderBy("createdAt", "desc"))),
+        getDocs(collection(db, "reports")),
+      ]);
       allAds = [];
-      snap.forEach(d => allAds.push({ id: d.id, ...d.data() }));
+      adSnap.forEach(d => allAds.push({ id: d.id, ...d.data() }));
+      // Build report counts per ad
+      allReportsByAd = {};
+      reportSnap.forEach(d => {
+        const r = { id: d.id, ...d.data() };
+        if (!allReportsByAd[r.adId]) allReportsByAd[r.adId] = [];
+        allReportsByAd[r.adId].push(r);
+      });
+      // Update reports badge in sidebar
+      const totalReported = Object.keys(allReportsByAd).length;
+      const badge = document.getElementById("nav-reports-badge");
+      if (totalReported > 0) { badge.textContent = totalReported; badge.style.display = "inline-block"; }
+      else { badge.style.display = "none"; }
       updateAdStats();
       renderAdList();
     } catch (err) {
@@ -668,6 +737,7 @@
           </div>
           <div style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:0.6rem;">
             ${statusBadge} ${featBadge}
+            ${(allReportsByAd[ad.id]?.length || 0) > 0 ? `<span class="badge badge-rejected" style="cursor:pointer;" data-action="view-reports" data-id="${ad.id}" data-title="${safe}" title="View reports"><i class="bi bi-flag-fill"></i> ${allReportsByAd[ad.id].length} Report${allReportsByAd[ad.id].length > 1 ? "s" : ""}</span>` : ""}
           </div>
           <div class="admin-ad-actions" style="margin-top:0.75rem;">
             <button class="btn btn-outline btn-sm" data-action="preview" data-id="${ad.id}" data-title="${safe}">
@@ -675,6 +745,9 @@
             </button>
             <button class="btn btn-outline btn-sm" data-action="edit" data-id="${ad.id}" data-title="${safe}">
               <i class="bi bi-pencil"></i> Edit
+            </button>
+            <button class="btn btn-outline btn-sm" data-action="message" data-id="${ad.id}" data-title="${safe}" title="Send message to owner">
+              <i class="bi bi-envelope"></i> Message
             </button>
             ${ad.status !== "approved" ? `<button class="btn btn-success btn-sm" data-action="approve" data-id="${ad.id}" data-title="${safe}"><i class="bi bi-check-circle"></i> Approve</button>` : ""}
             ${ad.status !== "rejected" ? `<button class="btn btn-outline-danger btn-sm" data-action="reject" data-id="${ad.id}" data-title="${safe}"><i class="bi bi-x-circle"></i> Reject</button>` : ""}
@@ -713,6 +786,15 @@
       openPreview(id);
     } else if (action === "edit") {
       openEdit(id);
+    } else if (action === "message") {
+      openMessageModal(id);
+    } else if (action === "view-reports") {
+      // Switch to reports section and scroll to this listing
+      document.querySelectorAll(".admin-section").forEach(s => s.classList.remove("active"));
+      document.querySelectorAll(".sidebar-nav a[data-section]").forEach(l => l.classList.remove("active"));
+      document.getElementById("section-reports").classList.add("active");
+      document.getElementById("nav-reports-link").classList.add("active");
+      loadReports(id);
     }
   }
 
@@ -933,15 +1015,18 @@
     if (!rejectTarget) return;
     const btn = document.getElementById("confirm-reject-btn");
     btn.disabled = true; btn.textContent = "Rejecting...";
+    const reason = document.getElementById("reject-reason").value.trim();
     try {
       await updateDoc(doc(db, "ads", rejectTarget.id), {
         status: "rejected",
-        rejectionReason: document.getElementById("reject-reason").value.trim() || "",
+        rejectionReason: reason || "",
         updatedAt: serverTimestamp(),
       });
       showToast("Listing rejected", "success");
       const ad = allAds.find(a => a.id === rejectTarget.id);
       if (ad) ad.status = "rejected";
+      // Auto-send message to owner with rejection reason if provided
+      if (reason && ad) await sendRejectionMessage(ad, reason);
       document.getElementById("reject-modal").classList.remove("open");
       rejectTarget = null; renderAdList(); updateAdStats();
     } catch (err) { showToast("Reject failed: " + err.message, "error"); }
@@ -975,11 +1060,191 @@
   });
 
   // Close modals on backdrop click
-  ["feature-modal", "admin-delete-modal", "reject-modal", "preview-modal", "edit-modal"].forEach(id => {
+  ["feature-modal", "admin-delete-modal", "reject-modal", "preview-modal", "edit-modal", "msg-modal"].forEach(id => {
     document.getElementById(id).addEventListener("click", e => {
       if (e.target.id === id) { document.getElementById(id).classList.remove("open"); }
     });
   });
+
+  // ==================== MESSAGE MODAL ====================
+  async function openMessageModal(adId, prefillSubject = "", prefillBody = "") {
+    const ad = allAds.find(a => a.id === adId);
+    if (!ad) return;
+    msgTarget = ad;
+    document.getElementById("msg-modal-desc").textContent =
+      `To: ${ad.userName || "Owner"} (${ad.userEmail || ""}) — Listing: "${ad.title}"`;
+    document.getElementById("msg-subject").value = prefillSubject;
+    document.getElementById("msg-body").value = prefillBody;
+    document.getElementById("msg-error").style.display = "none";
+    document.getElementById("msg-modal").classList.add("open");
+  }
+
+  document.getElementById("cancel-msg-btn").addEventListener("click", () => {
+    document.getElementById("msg-modal").classList.remove("open");
+    msgTarget = null;
+  });
+
+  document.getElementById("confirm-msg-btn").addEventListener("click", async () => {
+    if (!msgTarget) return;
+    const btn = document.getElementById("confirm-msg-btn");
+    const errEl = document.getElementById("msg-error");
+    const subject = document.getElementById("msg-subject").value.trim();
+    const body    = document.getElementById("msg-body").value.trim();
+    if (!subject || !body) {
+      errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> Subject and message are required.`;
+      errEl.style.display = "flex";
+      return;
+    }
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner spinner-sm" style="display:inline-block;margin-right:0.4rem;"></span> Sending...`;
+    try {
+      await addDoc(collection(db, "messages"), {
+        toUid:         msgTarget.userId,
+        toName:        msgTarget.userName || "",
+        toEmail:       msgTarget.userEmail || "",
+        fromAdminUid:  adminUser?.uid || "",
+        fromAdminName: adminUser?.displayName || "Admin",
+        adId:          msgTarget.id,
+        adTitle:       msgTarget.title || "",
+        subject,
+        message: body,
+        read:    false,
+        createdAt: serverTimestamp(),
+      });
+      showToast("Message sent to " + (msgTarget.userName || "owner"), "success");
+      document.getElementById("msg-modal").classList.remove("open");
+      msgTarget = null;
+    } catch (err) {
+      errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> Failed: ${err.message}`;
+      errEl.style.display = "flex";
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = `<i class="bi bi-send"></i> Send Message`;
+    }
+  });
+
+  async function sendRejectionMessage(ad, reason) {
+    if (!ad || !reason || !ad.userId) return;
+    try {
+      await addDoc(collection(db, "messages"), {
+        toUid:         ad.userId,
+        toName:        ad.userName || "",
+        toEmail:       ad.userEmail || "",
+        fromAdminUid:  adminUser?.uid || "",
+        fromAdminName: adminUser?.displayName || "Admin",
+        adId:          ad.id,
+        adTitle:       ad.title || "",
+        subject:       `Your listing has been rejected`,
+        message:       `Your listing "${ad.title}" has been rejected.\n\nReason: ${reason}`,
+        read:    false,
+        createdAt: serverTimestamp(),
+      });
+    } catch (_) {}
+  }
+
+  // ==================== REPORTS SECTION ====================
+  let allReportsFlat = [];
+
+  document.getElementById("refresh-reports-btn").addEventListener("click", () => loadReports());
+
+  async function loadReports(highlightAdId = null) {
+    const listEl   = document.getElementById("reports-list");
+    const emptyEl  = document.getElementById("reports-empty");
+    const loadEl   = document.getElementById("reports-loading");
+    listEl.innerHTML = "";
+    emptyEl.classList.add("hidden");
+    loadEl.style.display = "block";
+    try {
+      const snap = await getDocs(query(collection(db, "reports"), orderBy("createdAt", "desc")));
+      allReportsFlat = [];
+      snap.forEach(d => allReportsFlat.push({ id: d.id, ...d.data() }));
+
+      // Rebuild allReportsByAd
+      allReportsByAd = {};
+      allReportsFlat.forEach(r => {
+        if (!allReportsByAd[r.adId]) allReportsByAd[r.adId] = [];
+        allReportsByAd[r.adId].push(r);
+      });
+      const badge = document.getElementById("nav-reports-badge");
+      const count = Object.keys(allReportsByAd).length;
+      if (count > 0) { badge.textContent = count; badge.style.display = "inline-block"; }
+      else badge.style.display = "none";
+
+      loadEl.style.display = "none";
+      if (allReportsFlat.length === 0) { emptyEl.classList.remove("hidden"); return; }
+
+      // Group by adId and render
+      const grouped = allReportsByAd;
+      listEl.innerHTML = Object.entries(grouped).map(([adId, reports]) => {
+        const ad = allAds.find(a => a.id === adId);
+        const adTitle  = reports[0].adTitle || ad?.title || adId;
+        const adImg    = ad?.imageUrls?.[0] || "https://placehold.co/80x56/e2e8f0/94a3b8?text=No+Img";
+        const isHighlighted = highlightAdId === adId;
+        return `<div class="content-card" id="report-group-${adId}" style="${isHighlighted ? "border:2px solid var(--danger);" : ""}margin-bottom:1rem;">
+          <div style="display:flex;align-items:flex-start;gap:1rem;flex-wrap:wrap;">
+            <img src="${escapeHtml(adImg)}" onerror="this.src='https://placehold.co/80x56/e2e8f0/94a3b8?text=No+Img'"
+                 style="width:80px;height:56px;object-fit:cover;border-radius:var(--radius-sm);flex-shrink:0;" />
+            <div style="flex:1;min-width:0;">
+              <div style="font-weight:700;font-size:0.95rem;margin-bottom:0.25rem;">${escapeHtml(adTitle)}</div>
+              <div style="font-size:0.78rem;color:var(--gray-500);margin-bottom:0.5rem;">
+                ID: <code style="font-size:0.72rem;">${adId}</code>
+                ${ad ? ` &middot; Status: <strong>${ad.status}</strong>` : " &middot; <em>Listing may be deleted</em>"}
+              </div>
+              <span class="badge badge-rejected"><i class="bi bi-flag-fill"></i> ${reports.length} Report${reports.length > 1 ? "s" : ""}</span>
+            </div>
+            <div style="display:flex;gap:0.5rem;flex-shrink:0;flex-wrap:wrap;">
+              ${ad ? `<button class="btn btn-ghost btn-sm" onclick="window.open('ad.html?id=${adId}','_blank')"><i class="bi bi-eye"></i> View</button>` : ""}
+              ${ad ? `<button class="btn btn-outline btn-sm report-msg-btn" data-ad-id="${adId}"><i class="bi bi-envelope"></i> Message</button>` : ""}
+              ${ad ? `<button class="btn btn-outline-danger btn-sm report-del-btn" data-ad-id="${adId}" data-ad-title="${escapeHtml(adTitle)}"><i class="bi bi-trash3"></i> Delete Listing</button>` : ""}
+            </div>
+          </div>
+          <div style="margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid var(--gray-100);">
+            ${reports.map(r => `
+              <div style="font-size:0.83rem;padding:0.5rem 0.6rem;background:var(--gray-50);border-radius:var(--radius-sm);margin-bottom:0.35rem;border:1px solid var(--gray-100);">
+                <span style="color:var(--gray-400);font-size:0.75rem;">${r.createdAt?.toDate ? r.createdAt.toDate().toLocaleDateString("en-LK",{day:"numeric",month:"short",year:"numeric"}) : ""}</span>
+                <span style="margin-left:0.5rem;color:var(--gray-700);">${escapeHtml(r.reason || "(no reason given)")}</span>
+                <button class="btn btn-ghost btn-sm" style="float:right;font-size:0.72rem;padding:0.1rem 0.4rem;" data-dismiss-report="${r.id}">Dismiss</button>
+              </div>
+            `).join("")}
+          </div>
+        </div>`;
+      }).join("");
+
+      // Bind actions
+      listEl.querySelectorAll(".report-del-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const aid = btn.dataset.adId;
+          const atitle = btn.dataset.adTitle;
+          deleteTarget = { id: aid, title: atitle };
+          document.getElementById("admin-delete-title").textContent = atitle;
+          document.getElementById("admin-delete-modal").classList.add("open");
+        });
+      });
+      listEl.querySelectorAll(".report-msg-btn").forEach(btn => {
+        btn.addEventListener("click", () => openMessageModal(btn.dataset.adId));
+      });
+      listEl.querySelectorAll("[data-dismiss-report]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const rid = btn.dataset.dismissReport;
+          try {
+            await deleteDoc(doc(db, "reports", rid));
+            showToast("Report dismissed", "success");
+            loadReports();
+          } catch (err) { showToast("Failed: " + err.message, "error"); }
+        });
+      });
+
+      // Scroll to highlight
+      if (highlightAdId) {
+        setTimeout(() => {
+          document.getElementById(`report-group-${highlightAdId}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 100);
+      }
+    } catch (err) {
+      loadEl.style.display = "none";
+      showToast("Could not load reports: " + err.message, "error");
+    }
+  }
 
   // ==================== USERS SECTION ====================
   let allUsersRaw = [], usersSearch = "", allAdsList = [];

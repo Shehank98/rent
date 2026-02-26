@@ -91,6 +91,10 @@
         <span class="nav-icon"><i class="bi bi-patch-check"></i></span> Verify Account
         <span id="verify-nav-badge" style="margin-left:auto;font-size:0.7rem;"></span>
       </a>
+      <a href="#" data-tab="messages" id="tab-messages-link">
+        <span class="nav-icon"><i class="bi bi-envelope"></i></span> Messages
+        <span id="msg-unread-badge" style="margin-left:auto;background:var(--danger);color:white;border-radius:var(--radius-full);padding:0 0.4rem;font-size:0.7rem;display:none;"></span>
+      </a>
       <hr style="border:none;border-top:1px solid var(--gray-200);margin:0.75rem 0;" />
       <a href="listings.html">
         <span class="nav-icon"><i class="bi bi-search"></i></span> Browse Listings
@@ -279,6 +283,24 @@
       </div>
     </div>
 
+    <!-- TAB: MESSAGES -->
+    <div class="tab-pane" id="pane-messages">
+      <div class="page-header">
+        <h2>Messages</h2>
+        <p>Messages from the RentHub admin team about your listings.</p>
+      </div>
+      <div id="msg-loading" style="text-align:center;padding:2.5rem;">
+        <div class="spinner" style="margin:0 auto;"></div>
+        <div style="margin-top:0.75rem;color:var(--gray-500);">Loading messages...</div>
+      </div>
+      <div id="msg-list"></div>
+      <div id="msg-empty" class="empty-state hidden">
+        <i class="bi bi-envelope-open" style="font-size:2.5rem;color:var(--gray-300);"></i>
+        <h3>No messages yet</h3>
+        <p>You'll see messages here when the admin contacts you about a listing.</p>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -380,7 +402,7 @@
     auth, db, storage,
     onAuthStateChanged, signOut,
     collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
-    query, where, serverTimestamp,
+    query, where, orderBy, serverTimestamp,
     ref, uploadBytes, getDownloadURL, deleteObject,
   } from "./firebase.js";
   import {
@@ -425,6 +447,7 @@
     if (editId) switchTab("my-ads");
     loadMyAds();
     loadVerificationStatus();
+    loadUnreadCount();
   });
 
   // ---- TAB SWITCHING ----
@@ -432,10 +455,11 @@
     document.querySelectorAll(".tab-pane").forEach(p => p.classList.remove("active"));
     document.querySelectorAll(".sidebar-nav a[data-tab]").forEach(a => a.classList.remove("active"));
     const pane = document.getElementById(`pane-${tab}`);
-    const idMap = { create: "tab-create-link", "my-ads": "tab-myads-link", verify: "tab-verify-link" };
+    const idMap = { create: "tab-create-link", "my-ads": "tab-myads-link", verify: "tab-verify-link", messages: "tab-messages-link" };
     const link = document.getElementById(idMap[tab]);
     if (pane) pane.classList.add("active");
     if (link) link.classList.add("active");
+    if (tab === "messages") loadMessages();
   }
 
   document.querySelectorAll("[data-tab]").forEach(el => {
@@ -1070,6 +1094,95 @@
       btn.innerHTML = `<i class="bi bi-patch-check"></i> Submit for Verification`;
     }
   });
+
+  // ==================== MESSAGES ====================
+  let messagesLoaded = false;
+
+  async function loadUnreadCount() {
+    if (!currentUser) return;
+    try {
+      const snap = await getDocs(query(
+        collection(db, "messages"),
+        where("toUid", "==", currentUser.uid),
+        where("read", "==", false),
+      ));
+      const badge = document.getElementById("msg-unread-badge");
+      if (snap.size > 0) { badge.textContent = snap.size; badge.style.display = "inline-block"; }
+      else badge.style.display = "none";
+    } catch (_) {}
+  }
+
+  async function loadMessages() {
+    if (!currentUser) return;
+    const listEl  = document.getElementById("msg-list");
+    const loadEl  = document.getElementById("msg-loading");
+    const emptyEl = document.getElementById("msg-empty");
+    listEl.innerHTML = "";
+    emptyEl.classList.add("hidden");
+    loadEl.style.display = "block";
+    try {
+      const snap = await getDocs(query(
+        collection(db, "messages"),
+        where("toUid", "==", currentUser.uid),
+        orderBy("createdAt", "desc"),
+      ));
+      loadEl.style.display = "none";
+      if (snap.empty) { emptyEl.classList.remove("hidden"); return; }
+
+      const msgs = [];
+      snap.forEach(d => msgs.push({ id: d.id, ...d.data() }));
+
+      listEl.innerHTML = msgs.map(m => {
+        const isUnread = !m.read;
+        const date = m.createdAt?.toDate
+          ? m.createdAt.toDate().toLocaleDateString("en-LK", { day: "numeric", month: "short", year: "numeric" })
+          : "";
+        return `<div class="content-card msg-card" id="msg-${m.id}" style="${isUnread ? "border-left:3px solid var(--primary);" : ""}margin-bottom:0.75rem;">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.3rem;">
+                ${isUnread ? `<span style="width:8px;height:8px;border-radius:50%;background:var(--primary);flex-shrink:0;display:inline-block;"></span>` : ""}
+                <strong style="font-size:0.95rem;">${escapeHtml(m.subject || "Message from Admin")}</strong>
+              </div>
+              <div style="font-size:0.78rem;color:var(--gray-500);margin-bottom:0.6rem;">
+                From: <strong>${escapeHtml(m.fromAdminName || "Admin")}</strong>
+                ${m.adTitle ? ` &middot; Listing: <em>${escapeHtml(m.adTitle)}</em>` : ""}
+                ${date ? ` &middot; ${date}` : ""}
+              </div>
+              <div style="font-size:0.88rem;color:var(--gray-700);white-space:pre-wrap;">${escapeHtml(m.message || "")}</div>
+            </div>
+          </div>
+          ${isUnread ? `<div style="margin-top:0.75rem;text-align:right;"><button class="btn btn-ghost btn-sm mark-read-btn" data-msg-id="${m.id}"><i class="bi bi-check2-all"></i> Mark as read</button></div>` : ""}
+        </div>`;
+      }).join("");
+
+      // Mark as read buttons
+      listEl.querySelectorAll(".mark-read-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const mid = btn.dataset.msgId;
+          try {
+            await updateDoc(doc(db, "messages", mid), { read: true });
+            const card = document.getElementById(`msg-${mid}`);
+            if (card) {
+              card.style.borderLeft = "";
+              btn.parentElement.remove();
+              card.querySelector("span[style*='border-radius:50%']")?.remove();
+            }
+            loadUnreadCount();
+          } catch (err) { showToast("Could not update: " + err.message, "error"); }
+        });
+      });
+
+      // Reset unread badge
+      document.getElementById("msg-unread-badge").style.display = "none";
+    } catch (err) {
+      loadEl.style.display = "none";
+      showToast("Could not load messages: " + err.message, "error");
+    }
+  }
+
+  // Load unread count on page load (after auth)
+  // Called inside requireAuth callback below (after currentUser is set)
 
   // ---- MOBILE SIDEBAR ----
   const mobToggle  = document.getElementById("mob-sidebar-toggle");

@@ -82,15 +82,14 @@ service cloud.firestore {
 
       // UPDATE:
       //   - Admin can update anything (status, featured, etc.)
-      //   - Owner can update their OWN ad if it is pending or rejected,
-      //     editing resets status back to "pending" for re-review;
+      //   - Owner can update their OWN ad (any status - pending, rejected, or approved),
+      //     editing always resets status back to "pending" for re-review;
       //     cannot change featured flag or userId
       allow update: if isAdmin()
         || (isAuth()
             && resource.data.userId == request.auth.uid
-            && (resource.data.status == 'pending' || resource.data.status == 'rejected')
             && request.resource.data.status == 'pending'
-            && request.resource.data.featured == false
+            && request.resource.data.featured == resource.data.featured
             && request.resource.data.userId == resource.data.userId);
 
       // DELETE: owner or admin
@@ -105,6 +104,36 @@ service cloud.firestore {
     match /categories/{catId} {
       allow read: if true;
       allow write: if isAdmin();
+    }
+
+    // --------------------------------------------------------
+    // MESSAGES COLLECTION  /messages/{msgId}
+    // Admin sends messages to listing owners; owners read their own
+    // --------------------------------------------------------
+    match /messages/{msgId} {
+      allow create: if isAdmin();
+      allow read:   if isAdmin()
+        || (isAuth() && resource.data.toUid == request.auth.uid);
+      // Owner can only update the 'read' flag on their own message
+      allow update: if isAuth()
+        && resource.data.toUid == request.auth.uid
+        && request.resource.data.read == true
+        && request.resource.data.toUid == resource.data.toUid
+        && request.resource.data.message == resource.data.message;
+      allow delete: if isAdmin();
+    }
+
+    // --------------------------------------------------------
+    // REPORTS COLLECTION  /reports/{reportId}
+    // Authenticated users submit reports; only admin can read/delete
+    // --------------------------------------------------------
+    match /reports/{reportId} {
+      allow create: if isAuth()
+        && request.resource.data.reporterUid == request.auth.uid
+        && request.resource.data.adId is string
+        && request.resource.data.reason is string;
+      allow read:   if isAdmin();
+      allow delete: if isAdmin();
     }
 
     // --------------------------------------------------------
