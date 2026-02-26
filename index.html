@@ -128,19 +128,15 @@
     </div>
 
     <!-- Inline filters -->
-    <div style="display:flex;flex-wrap:wrap;gap:0.6rem;margin-bottom:1.5rem;align-items:center;">
-      <div style="position:relative;flex:1;min-width:180px;max-width:280px;">
-        <i class="bi bi-search" style="position:absolute;left:0.75rem;top:50%;transform:translateY(-50%);color:var(--gray-400);pointer-events:none;"></i>
-        <input type="text" id="home-search" placeholder="Search listings..." autocomplete="off"
-               style="width:100%;padding:0.55rem 0.75rem 0.55rem 2.25rem;border:1.5px solid var(--gray-200);border-radius:var(--radius);font-size:0.88rem;outline:none;font-family:inherit;"
-               onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--gray-200)'" />
+    <div class="home-filter-bar">
+      <div class="home-filter-search-wrap">
+        <i class="bi bi-search home-filter-icon"></i>
+        <input type="text" id="home-search" placeholder="Search listings..." autocomplete="off" class="home-filter-input" />
       </div>
-      <select id="home-cat-filter"
-              style="padding:0.55rem 0.75rem;border:1.5px solid var(--gray-200);border-radius:var(--radius);font-size:0.88rem;outline:none;font-family:inherit;background:white;cursor:pointer;color:var(--gray-700);">
+      <select id="home-cat-filter" class="home-filter-select">
         <option value="">All Categories</option>
       </select>
-      <select id="home-loc-filter"
-              style="padding:0.55rem 0.75rem;border:1.5px solid var(--gray-200);border-radius:var(--radius);font-size:0.88rem;outline:none;font-family:inherit;background:white;cursor:pointer;color:var(--gray-700);">
+      <select id="home-loc-filter" class="home-filter-select">
         <option value="">All Locations</option>
       </select>
       <button id="home-filter-reset" class="btn btn-ghost btn-sm" style="display:none;">
