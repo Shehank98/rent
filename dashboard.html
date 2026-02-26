@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My Dashboard — RentHub Sri Lanka</title>
+  <title>My Dashboard - RentHub Sri Lanka</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
   <link rel="stylesheet" href="style.css" />
@@ -127,7 +127,7 @@
             <div class="form-group">
               <label class="form-label" for="ad-title">Title <span>*</span></label>
               <input type="text" class="form-control" id="ad-title"
-                     placeholder="e.g. Toyota HiAce Van for Rent — Colombo" maxlength="100" required />
+                     placeholder="e.g. Toyota HiAce Van for Rent - Colombo" maxlength="100" required />
             </div>
             <div class="form-group">
               <label class="form-label" for="ad-category">Category <span>*</span></label>
@@ -172,7 +172,7 @@
           <div class="form-group">
             <label class="form-label" for="ad-description">Description <span>*</span></label>
             <textarea class="form-control" id="ad-description" rows="5"
-                      placeholder="Describe your rental item in detail — condition, features, availability, terms, etc."
+                      placeholder="Describe your rental item in detail - condition, features, availability, terms, etc."
                       required></textarea>
           </div>
 
@@ -256,7 +256,7 @@
           <div class="upload-area" id="verify-upload-area">
             <i class="bi bi-id-card" style="font-size:2.25rem;color:var(--gray-400);"></i>
             <h4 style="margin-top:0.5rem;">Drop ID image here or click to browse</h4>
-            <p>JPG or PNG — Max 10 MB</p>
+            <p>JPG or PNG - Max 10 MB</p>
             <input type="file" id="verify-file-input" accept="image/*" style="display:none;" />
           </div>
           <div id="verify-preview-wrap" style="display:none;margin-top:1rem;">
@@ -458,7 +458,7 @@
     const MAX = 8;
     const valid = files.filter(f => f.type.startsWith("image/") && f.size <= 5 * 1024 * 1024);
     const toAdd = valid.slice(0, MAX - selectedFiles.length);
-    if (valid.length < files.length) showToast("Some files were skipped — max 5 MB per image", "warning");
+    if (valid.length < files.length) showToast("Some files were skipped - max 5 MB per image", "warning");
     if (toAdd.length < valid.length) showToast(`Maximum ${MAX} images allowed`, "warning");
     selectedFiles = [...selectedFiles, ...toAdd];
     renderPreviews();
@@ -656,7 +656,7 @@
     }[ad.status] || `<span class="badge badge-pending">Pending</span>`;
 
     const featInfo = (ad.featured && isFeaturedActive(ad.featuredUntil))
-      ? `<span class="badge badge-featured"><i class="bi bi-star-fill"></i> Featured &mdash; ${featuredDaysLeft(ad.featuredUntil)}d remaining</span>`
+      ? `<span class="badge badge-featured"><i class="bi bi-star-fill"></i> Featured - ${featuredDaysLeft(ad.featuredUntil)}d remaining</span>`
       : "";
 
     return `
@@ -666,7 +666,7 @@
         <div class="my-ad-info">
           <div class="my-ad-title">${escapeHtml(ad.title)}</div>
           <div class="my-ad-meta">
-            <span><i class="bi bi-geo-alt"></i> ${escapeHtml(ad.location || "—")}</span>
+            <span><i class="bi bi-geo-alt"></i> ${escapeHtml(ad.location || "-")}</span>
             <span><i class="bi bi-tag"></i> ${escapeHtml(ad.category || "Other")}</span>
             <span><i class="bi bi-cash-stack"></i> ${formatPrice(ad.price, ad.priceType || "day")}</span>
             <span><i class="bi bi-calendar3"></i> ${formatDate(ad.createdAt)}</span>
@@ -992,7 +992,7 @@
       const keptUrls   = (editAdTarget.imageUrls || []).filter(u => !editRemovedUrls.includes(u));
       const finalUrls  = [...keptUrls, ...newUrls];
 
-      // 4. Update Firestore — reset status to pending for review
+      // 4. Update Firestore - reset status to pending for review
       await updateDoc(doc(db, "ads", editAdTarget.id), {
         title, category, price: parseFloat(price), priceType,
         location, phone, description,

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Panel — RentHub Sri Lanka</title>
+  <title>Admin Panel - RentHub Sri Lanka</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
   <link rel="stylesheet" href="style.css" />
@@ -42,7 +42,7 @@
     .cat-chip.custom { background:var(--purple-bg); border-color:#c4b5fd; color:var(--purple); }
     .cat-chip-del { cursor:pointer; color:var(--danger); opacity:0.7; font-size:0.9rem; }
     .cat-chip-del:hover { opacity:1; }
-    /* Preview modal — wider */
+    /* Preview modal - wider */
     .modal.modal-lg { max-width:780px; width:95vw; max-height:85vh; overflow-y:auto; }
     .preview-images { display:flex; gap:0.5rem; overflow-x:auto; margin-bottom:1rem; }
     .preview-images img { height:160px; width:auto; border-radius:var(--radius-sm); object-fit:cover; flex-shrink:0; }
@@ -165,19 +165,19 @@
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-icon blue"><i class="bi bi-card-list" style="font-size:1.3rem;color:var(--primary);"></i></div>
-          <div><div class="stat-value" id="stat-total">—</div><div class="stat-label">Total Ads</div></div>
+          <div><div class="stat-value" id="stat-total">-</div><div class="stat-label">Total Ads</div></div>
         </div>
         <div class="stat-card">
           <div class="stat-icon yellow"><i class="bi bi-hourglass-split" style="font-size:1.3rem;color:var(--warning);"></i></div>
-          <div><div class="stat-value" id="stat-pending">—</div><div class="stat-label">Pending Review</div></div>
+          <div><div class="stat-value" id="stat-pending">-</div><div class="stat-label">Pending Review</div></div>
         </div>
         <div class="stat-card">
           <div class="stat-icon green"><i class="bi bi-check-circle" style="font-size:1.3rem;color:var(--success);"></i></div>
-          <div><div class="stat-value" id="stat-approved">—</div><div class="stat-label">Approved</div></div>
+          <div><div class="stat-value" id="stat-approved">-</div><div class="stat-label">Approved</div></div>
         </div>
         <div class="stat-card">
           <div class="stat-icon red"><i class="bi bi-x-circle" style="font-size:1.3rem;color:var(--danger);"></i></div>
-          <div><div class="stat-value" id="stat-rejected">—</div><div class="stat-label">Rejected</div></div>
+          <div><div class="stat-value" id="stat-rejected">-</div><div class="stat-label">Rejected</div></div>
         </div>
       </div>
 
@@ -361,27 +361,27 @@
     <div class="preview-info-grid">
       <div class="preview-info-item">
         <label><i class="bi bi-tag"></i> Category</label>
-        <p id="preview-category">—</p>
+        <p id="preview-category">-</p>
       </div>
       <div class="preview-info-item">
         <label><i class="bi bi-geo-alt"></i> Location</label>
-        <p id="preview-location">—</p>
+        <p id="preview-location">-</p>
       </div>
       <div class="preview-info-item">
         <label><i class="bi bi-cash-stack"></i> Price</label>
-        <p id="preview-price">—</p>
+        <p id="preview-price">-</p>
       </div>
       <div class="preview-info-item">
         <label><i class="bi bi-telephone"></i> Phone</label>
-        <p id="preview-phone">—</p>
+        <p id="preview-phone">-</p>
       </div>
       <div class="preview-info-item">
         <label><i class="bi bi-calendar3"></i> Posted</label>
-        <p id="preview-date">—</p>
+        <p id="preview-date">-</p>
       </div>
       <div class="preview-info-item">
         <label><i class="bi bi-circle-half"></i> Status</label>
-        <p id="preview-status">—</p>
+        <p id="preview-status">-</p>
       </div>
     </div>
     <!-- Description -->
@@ -624,7 +624,7 @@
     }[ad.status] || "";
 
     const featBadge = featActive
-      ? `<span class="badge badge-featured"><i class="bi bi-star-fill"></i> Featured &mdash; ${featuredDaysLeft(ad.featuredUntil)}d left</span>`
+      ? `<span class="badge badge-featured"><i class="bi bi-star-fill"></i> Featured - ${featuredDaysLeft(ad.featuredUntil)}d left</span>`
       : "";
 
     return `
@@ -730,12 +730,12 @@
     previewTarget = ad;
 
     document.getElementById("preview-title").textContent = ad.title || "Ad Preview";
-    document.getElementById("preview-category").textContent = ad.category || "—";
-    document.getElementById("preview-location").textContent = ad.location || "—";
+    document.getElementById("preview-category").textContent = ad.category || "-";
+    document.getElementById("preview-location").textContent = ad.location || "-";
     document.getElementById("preview-price").textContent = formatPrice(ad.price, ad.priceType || "day");
-    document.getElementById("preview-phone").textContent = ad.phone || "—";
+    document.getElementById("preview-phone").textContent = ad.phone || "-";
     document.getElementById("preview-date").textContent = formatDate(ad.createdAt);
-    document.getElementById("preview-desc").textContent = ad.description || "—";
+    document.getElementById("preview-desc").textContent = ad.description || "-";
 
     const statusMap = {
       pending:  `<span class="badge badge-pending">Pending</span>`,
@@ -1046,7 +1046,7 @@
       );
       if (matchedAd && matchedAd.userId) {
         listingIdMatch = { ad: matchedAd, uid: matchedAd.userId };
-        // Highlight — show the user who owns this listing
+        // Highlight - show the user who owns this listing
         filtered = allUsers.filter(u => u.id === matchedAd.userId);
         if (filtered.length === 0) {
           // Fallback: normal name/email search
@@ -1195,7 +1195,7 @@
               <div style="font-weight:600;font-size:0.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(ad.title || "Untitled")}</div>
               <div style="font-size:0.75rem;color:var(--gray-500);">
                 <i class="${statusIcon[ad.status] || "bi-circle"}" style="color:${statusColor[ad.status] || "var(--gray-400)"};"></i>
-                ${ad.status || "—"} &middot; ${escapeHtml(ad.category || "—")} &middot; ID: <code style="font-size:0.7rem;background:var(--gray-100);padding:0.1rem 0.3rem;border-radius:3px;">${ad.id}</code>
+                ${ad.status || "-"} &middot; ${escapeHtml(ad.category || "-")} &middot; ID: <code style="font-size:0.7rem;background:var(--gray-100);padding:0.1rem 0.3rem;border-radius:3px;">${ad.id}</code>
               </div>
             </div>
             <div style="display:flex;gap:0.35rem;flex-shrink:0;">
