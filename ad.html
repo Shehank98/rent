@@ -157,7 +157,7 @@
           <div class="poster-avatar"><i class="bi bi-person"></i></div>
           <div>
             <div style="font-weight:700;font-size:0.9rem;" id="poster-name"></div>
-            <div style="font-size:0.75rem;color:var(--gray-500);">Verified Member</div>
+            <div style="font-size:0.75rem;color:var(--gray-500);" id="poster-status">Member</div>
           </div>
         </div>
 
@@ -217,7 +217,7 @@
 
 <script type="module">
   import {
-    db, collection, doc, getDoc, query, where, orderBy, limit, getDocs,
+    db, collection, doc, getDoc, query, where, limit, getDocs,
   } from "./firebase.js";
   import {
     initNavbar, formatPrice, formatDate, isFeaturedActive,
@@ -280,7 +280,13 @@
         try {
           const userSnap = await getDoc(doc(db, "users", ad.userId));
           if (userSnap.exists()) {
-            document.getElementById("poster-name").textContent = userSnap.data().name || "Seller";
+            const userData = userSnap.data();
+            document.getElementById("poster-name").textContent = userData.name || "Seller";
+            if (userData.verified) {
+              document.getElementById("poster-status").innerHTML =
+                `<i class="bi bi-patch-check-fill" style="color:var(--success);"></i> Verified Seller`;
+              document.getElementById("poster-status").style.color = "var(--success)";
+            }
             document.getElementById("poster-info").style.display = "flex";
           }
         } catch (_) {}
@@ -389,14 +395,14 @@
         query(collection(db, "ads"),
           where("status", "==", "approved"),
           where("category", "==", category),
-          orderBy("createdAt", "desc"),
-          limit(5))
+          limit(8))
       );
       const similar = [];
       snap.forEach(d => { if (d.id !== excludeId) similar.push({ id: d.id, ...d.data() }); });
-      if (similar.length > 0) {
+      const toShow = similar.slice(0, 4);
+      if (toShow.length > 0) {
         document.getElementById("similar-section").classList.remove("hidden");
-        document.getElementById("similar-grid").innerHTML = similar.slice(0, 4).map(ad => buildAdCard(ad, ad.id)).join("");
+        document.getElementById("similar-grid").innerHTML = toShow.map(ad => buildAdCard(ad, ad.id)).join("");
       }
     } catch (_) {}
   }

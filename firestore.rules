@@ -46,11 +46,12 @@ service cloud.firestore {
         && request.resource.data.role == 'user'
         && request.resource.data.uid == userId;
 
-      // User can update their own doc but CANNOT change their role
-      // Admin can update any user (including role assignment)
+      // User can update their own doc but CANNOT change their role or verified status
+      // Admin can update any user (including role and verified assignment)
       allow update: if isAdmin()
         || (isOwner(userId)
-            && request.resource.data.role == resource.data.role);
+            && request.resource.data.role == resource.data.role
+            && request.resource.data.get('verified', false) == resource.data.get('verified', false));
 
       // Only admin can delete a user document
       allow delete: if isAdmin();
@@ -94,6 +95,15 @@ service cloud.firestore {
       // DELETE: owner or admin
       allow delete: if isAuth()
         && (resource.data.userId == request.auth.uid || isAdmin());
+    }
+
+    // --------------------------------------------------------
+    // CATEGORIES COLLECTION  /categories/{catId}
+    // Public can read; only admin can write
+    // --------------------------------------------------------
+    match /categories/{catId} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
     // --------------------------------------------------------

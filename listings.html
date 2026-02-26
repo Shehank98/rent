@@ -135,7 +135,7 @@
 <script type="module">
   import {
     db, auth, onAuthStateChanged,
-    collection, query, where, orderBy, getDocs,
+    collection, query, where, getDocs,
   } from "./firebase.js";
   import {
     initNavbar, buildAdCard, isFeaturedActive, debounce,
@@ -159,7 +159,7 @@
   // ---- Fetch all approved ads ----
   async function fetchAds() {
     const snap = await getDocs(
-      query(collection(db, "ads"), where("status", "==", "approved"), orderBy("createdAt", "desc"))
+      query(collection(db, "ads"), where("status", "==", "approved"))
     );
     allAds = [];
     snap.forEach(d => allAds.push({ id: d.id, ...d.data() }));

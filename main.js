@@ -5,7 +5,7 @@
 import {
   auth, db, googleProvider,
   signInWithPopup, signOut, onAuthStateChanged,
-  collection, doc, getDoc, setDoc, serverTimestamp,
+  collection, doc, getDoc, getDocs, setDoc, serverTimestamp,
 } from "./firebase.js";
 
 // ============================================================
@@ -404,7 +404,7 @@ export const CATEGORY_ICONS = {
   "Other":                 "bi-box2",
 };
 
-/** Populate a <select> element with grouped category options */
+/** Populate a <select> element with grouped category options (synchronous, defaults only) */
 export function buildCategorySelect(selectEl, includeAll = false) {
   let html = includeAll
     ? `<option value="">All Categories</option>`
@@ -415,6 +415,39 @@ export function buildCategorySelect(selectEl, includeAll = false) {
     html += `</optgroup>`;
   });
   selectEl.innerHTML = html;
+}
+
+/**
+ * Populate a <select> with default + custom Firestore categories (async).
+ * Preserves current value if still valid after rebuild.
+ */
+export async function buildCategorySelectAsync(selectEl, includeAll = false) {
+  const groups = {};
+  // Copy defaults
+  Object.entries(CATEGORY_GROUPS).forEach(([g, cats]) => { groups[g] = [...cats]; });
+  // Merge custom categories from Firestore
+  try {
+    const snap = await getDocs(collection(db, "categories"));
+    snap.forEach(d => {
+      const { name, group } = d.data();
+      if (name && group) {
+        if (!groups[group]) groups[group] = [];
+        if (!groups[group].includes(name)) groups[group].push(name);
+      }
+    });
+  } catch (_) {}
+
+  const prev = selectEl.value;
+  let html = includeAll
+    ? `<option value="">All Categories</option>`
+    : `<option value="">Select a category</option>`;
+  Object.entries(groups).forEach(([group, cats]) => {
+    html += `<optgroup label="${escapeHtml(group)}">`;
+    cats.forEach(cat => { html += `<option value="${escapeHtml(cat)}">${escapeHtml(cat)}</option>`; });
+    html += `</optgroup>`;
+  });
+  selectEl.innerHTML = html;
+  if (prev) selectEl.value = prev;
 }
 
 // ============================================================

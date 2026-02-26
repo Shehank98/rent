@@ -14,6 +14,9 @@
     .price-input-group { display: grid; grid-template-columns: 1fr 150px; gap: 0.75rem; }
     .submission-note { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius); padding: 0.875rem 1rem; font-size: 0.875rem; color: #1e40af; margin-bottom: 1.5rem; display:flex; gap:0.6rem; align-items:flex-start; }
     .submission-note i { margin-top:0.1rem; flex-shrink:0; }
+    .verify-status-box { display:flex; align-items:center; gap:1rem; padding:1.25rem; border-radius:var(--radius); border:1px solid var(--gray-200); background:var(--gray-50); }
+    .verify-status-box i { font-size:2rem; flex-shrink:0; }
+    .verify-doc-preview { max-height:200px; border-radius:var(--radius); border:1px solid var(--gray-200); margin-top:0.75rem; display:block; }
   </style>
 </head>
 <body>
@@ -70,6 +73,7 @@
       <img id="sidebar-avatar" class="sidebar-avatar" src="https://placehold.co/48" alt="avatar" />
       <div class="sidebar-name" id="sidebar-name">Loading...</div>
       <div class="sidebar-email" id="sidebar-email"></div>
+      <div id="sidebar-verify-badge" style="margin-top:0.35rem;"></div>
     </div>
     <nav class="sidebar-nav">
       <a href="#" class="active" data-tab="create" id="tab-create-link">
@@ -78,6 +82,10 @@
       <a href="#" data-tab="my-ads" id="tab-myads-link">
         <span class="nav-icon"><i class="bi bi-card-list"></i></span> My Ads
         <span class="tab-count" id="my-ads-count" style="margin-left:auto;">0</span>
+      </a>
+      <a href="#" data-tab="verify" id="tab-verify-link">
+        <span class="nav-icon"><i class="bi bi-patch-check"></i></span> Verify Account
+        <span id="verify-nav-badge" style="margin-left:auto;font-size:0.7rem;"></span>
       </a>
       <hr style="border:none;border-top:1px solid var(--gray-200);margin:0.75rem 0;" />
       <a href="listings.html">
@@ -215,6 +223,54 @@
       </div>
     </div>
 
+    <!-- TAB: VERIFY ACCOUNT -->
+    <div class="tab-pane" id="pane-verify">
+      <div class="page-header">
+        <h2>Account Verification</h2>
+        <p>Upload a government-issued ID to verify your account. A verified badge will appear on your listings.</p>
+      </div>
+
+      <!-- Status card (filled dynamically) -->
+      <div class="content-card" id="verify-status-card" style="margin-bottom:1.5rem;">
+        <div class="spinner" style="margin:1rem auto;"></div>
+      </div>
+
+      <!-- Upload section (hidden once verified/pending) -->
+      <div class="content-card" id="verify-upload-section" style="display:none;">
+        <h4 style="margin-bottom:0.5rem;"><i class="bi bi-upload"></i> Submit Your ID Document</h4>
+        <p style="margin-bottom:1.25rem;color:var(--gray-600);font-size:0.9rem;">
+          Upload a clear photo of your <strong>National ID Card</strong>, <strong>Passport</strong>, or <strong>Driving Licence</strong>.
+          Your document is only visible to the admin team and will not be shared publicly.
+        </p>
+
+        <div class="form-group">
+          <label class="form-label">ID Document Image <span>*</span></label>
+          <div class="upload-area" id="verify-upload-area">
+            <i class="bi bi-id-card" style="font-size:2.25rem;color:var(--gray-400);"></i>
+            <h4 style="margin-top:0.5rem;">Drop ID image here or click to browse</h4>
+            <p>JPG or PNG — Max 10 MB</p>
+            <input type="file" id="verify-file-input" accept="image/*" style="display:none;" />
+          </div>
+          <div id="verify-preview-wrap" style="display:none;margin-top:1rem;">
+            <img id="verify-preview-img" class="verify-doc-preview" alt="ID preview" />
+            <button class="btn btn-ghost btn-sm" id="verify-remove-btn" style="margin-top:0.5rem;">
+              <i class="bi bi-x-circle"></i> Remove
+            </button>
+          </div>
+        </div>
+
+        <div class="upload-progress" id="verify-progress" style="display:none;">
+          <div class="upload-progress-bar" id="verify-progress-bar"></div>
+        </div>
+
+        <div id="verify-error" class="alert alert-error mt-2" style="display:none;"></div>
+
+        <button class="btn btn-primary" id="verify-submit-btn">
+          <i class="bi bi-patch-check"></i> Submit for Verification
+        </button>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -234,14 +290,14 @@
   import {
     auth, db, storage,
     onAuthStateChanged, signOut,
-    collection, doc, getDoc, getDocs, addDoc, deleteDoc,
-    query, where, orderBy, serverTimestamp,
+    collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
+    query, where, serverTimestamp,
     ref, uploadBytes, getDownloadURL, deleteObject,
   } from "./firebase.js";
   import {
     requireAuth, initNavbar, showToast, formatPrice, formatDate,
     isFeaturedActive, featuredDaysLeft, escapeHtml, getUserRole,
-    buildCategorySelect, buildLocationDatalist,
+    buildCategorySelectAsync, buildLocationDatalist,
   } from "./main.js";
 
   initNavbar();
@@ -249,9 +305,9 @@
   let currentUser = null;
   let selectedFiles = [];
   let adToDelete = null;
+  let verifyFile = null;
 
-  // Populate selects / datalists
-  buildCategorySelect(document.getElementById("ad-category"));
+  // Populate location datalist (sync is fine)
   buildLocationDatalist(document.getElementById("location-datalist"));
 
   // Auth guard
@@ -273,7 +329,11 @@
       document.getElementById("dropdown-admin-link").classList.remove("hidden");
     }
 
+    // Load categories async (includes custom ones)
+    await buildCategorySelectAsync(document.getElementById("ad-category"));
+
     loadMyAds();
+    loadVerificationStatus();
   });
 
   // ---- TAB SWITCHING ----
@@ -281,7 +341,8 @@
     document.querySelectorAll(".tab-pane").forEach(p => p.classList.remove("active"));
     document.querySelectorAll(".sidebar-nav a[data-tab]").forEach(a => a.classList.remove("active"));
     const pane = document.getElementById(`pane-${tab}`);
-    const link = document.getElementById(tab === "create" ? "tab-create-link" : "tab-myads-link");
+    const idMap = { create: "tab-create-link", "my-ads": "tab-myads-link", verify: "tab-verify-link" };
+    const link = document.getElementById(idMap[tab]);
     if (pane) pane.classList.add("active");
     if (link) link.classList.add("active");
   }
@@ -391,12 +452,17 @@
 
       submitBtn.innerHTML = `<span class="spinner spinner-sm" style="display:inline-block;margin-right:0.5rem;"></span> Saving listing...`;
 
+      // Check current verification status to store in ad
+      const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+      const userVerified = userDoc.exists() && userDoc.data().verified === true;
+
       await addDoc(collection(db, "ads"), {
         userId:    currentUser.uid,
         userEmail: currentUser.email,
         userName:  currentUser.displayName,
         title, category, price: parseFloat(price), priceType,
         location, phone, description, imageUrls,
+        userVerified,
         status: "pending", featured: false, featuredUntil: null,
         createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
       });
@@ -432,10 +498,12 @@
 
     try {
       const snap = await getDocs(
-        query(collection(db, "ads"), where("userId", "==", currentUser.uid), orderBy("createdAt", "desc"))
+        query(collection(db, "ads"), where("userId", "==", currentUser.uid))
       );
       const ads = [];
       snap.forEach(d => ads.push({ id: d.id, ...d.data() }));
+      // Sort newest first client-side
+      ads.sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
 
       countEl.textContent     = ads.length;
       loadingEl.style.display = "none";
@@ -546,6 +614,152 @@
     if (e.target.id === "delete-modal") {
       document.getElementById("delete-modal").classList.remove("open");
       adToDelete = null;
+    }
+  });
+
+  // ================================================================
+  // VERIFICATION
+  // ================================================================
+
+  async function loadVerificationStatus() {
+    if (!currentUser) return;
+    const statusCard    = document.getElementById("verify-status-card");
+    const uploadSection = document.getElementById("verify-upload-section");
+    const navBadge      = document.getElementById("verify-nav-badge");
+    const sidebarBadge  = document.getElementById("sidebar-verify-badge");
+
+    try {
+      const userDoc  = await getDoc(doc(db, "users", currentUser.uid));
+      const userData = userDoc.exists() ? userDoc.data() : {};
+      const status   = userData.verificationStatus || "unverified";
+
+      if (status === "verified") {
+        statusCard.innerHTML = `
+          <div class="verify-status-box" style="border-color:var(--success-bg);">
+            <i class="bi bi-patch-check-fill" style="color:var(--success);"></i>
+            <div>
+              <div style="font-weight:700;color:var(--success);font-size:1rem;">Account Verified</div>
+              <div style="color:var(--gray-600);font-size:0.88rem;margin-top:0.2rem;">
+                Your identity has been verified. A <strong>Verified Seller</strong> badge is shown on your listing pages.
+              </div>
+            </div>
+          </div>`;
+        uploadSection.style.display = "none";
+        navBadge.innerHTML = `<span class="badge badge-approved" style="font-size:0.65rem;padding:0.15rem 0.45rem;"><i class="bi bi-patch-check-fill"></i></span>`;
+        sidebarBadge.innerHTML = `<span class="badge badge-approved" style="font-size:0.72rem;"><i class="bi bi-patch-check-fill"></i> Verified</span>`;
+
+      } else if (status === "pending") {
+        statusCard.innerHTML = `
+          <div class="verify-status-box" style="border-color:var(--warning-bg);">
+            <i class="bi bi-hourglass-split" style="color:var(--warning);"></i>
+            <div>
+              <div style="font-weight:700;color:var(--warning);font-size:1rem;">Verification Pending</div>
+              <div style="color:var(--gray-600);font-size:0.88rem;margin-top:0.2rem;">
+                Your ID document has been submitted and is being reviewed by the admin team.
+              </div>
+              ${userData.verificationDocUrl
+                ? `<a href="${escapeHtml(userData.verificationDocUrl)}" target="_blank" rel="noopener noreferrer"
+                      class="btn btn-outline btn-sm" style="margin-top:0.75rem;">
+                      <i class="bi bi-image"></i> View Submitted Document
+                   </a>`
+                : ""}
+            </div>
+          </div>`;
+        uploadSection.style.display = "none";
+        navBadge.innerHTML = `<span class="badge badge-pending" style="font-size:0.65rem;padding:0.15rem 0.45rem;">Pending</span>`;
+
+      } else {
+        statusCard.innerHTML = `
+          <div class="verify-status-box">
+            <i class="bi bi-person-x" style="color:var(--gray-400);"></i>
+            <div>
+              <div style="font-weight:700;color:var(--gray-700);font-size:1rem;">Not Verified</div>
+              <div style="color:var(--gray-600);font-size:0.88rem;margin-top:0.2rem;">
+                Upload a government-issued ID below to apply for verification. Once approved, a verified badge will appear on your ads.
+              </div>
+            </div>
+          </div>`;
+        uploadSection.style.display = "block";
+      }
+    } catch (err) {
+      statusCard.innerHTML = `<p style="color:var(--danger);padding:1rem;">Could not load verification status.</p>`;
+    }
+  }
+
+  // Verification file selection
+  const verifyUploadArea = document.getElementById("verify-upload-area");
+  const verifyFileInput  = document.getElementById("verify-file-input");
+  const verifyPreviewWrap = document.getElementById("verify-preview-wrap");
+  const verifyPreviewImg  = document.getElementById("verify-preview-img");
+
+  verifyUploadArea.addEventListener("click", () => verifyFileInput.click());
+  verifyUploadArea.addEventListener("dragover", (e) => { e.preventDefault(); verifyUploadArea.classList.add("drag-over"); });
+  verifyUploadArea.addEventListener("dragleave", () => verifyUploadArea.classList.remove("drag-over"));
+  verifyUploadArea.addEventListener("drop", (e) => {
+    e.preventDefault();
+    verifyUploadArea.classList.remove("drag-over");
+    const file = e.dataTransfer.files[0];
+    if (file) setVerifyFile(file);
+  });
+  verifyFileInput.addEventListener("change", () => {
+    if (verifyFileInput.files[0]) setVerifyFile(verifyFileInput.files[0]);
+  });
+
+  function setVerifyFile(file) {
+    if (!file.type.startsWith("image/")) { showToast("Please upload an image file", "warning"); return; }
+    if (file.size > 10 * 1024 * 1024) { showToast("File must be under 10 MB", "warning"); return; }
+    verifyFile = file;
+    verifyPreviewImg.src = URL.createObjectURL(file);
+    verifyPreviewWrap.style.display = "block";
+    verifyUploadArea.style.display = "none";
+  }
+
+  document.getElementById("verify-remove-btn").addEventListener("click", () => {
+    verifyFile = null;
+    verifyPreviewImg.src = "";
+    verifyPreviewWrap.style.display = "none";
+    verifyUploadArea.style.display = "block";
+    verifyFileInput.value = "";
+  });
+
+  document.getElementById("verify-submit-btn").addEventListener("click", async () => {
+    if (!currentUser) return;
+    if (!verifyFile) { showToast("Please select an ID document image first", "warning"); return; }
+
+    const errEl  = document.getElementById("verify-error");
+    const btn    = document.getElementById("verify-submit-btn");
+    const progWrap = document.getElementById("verify-progress");
+    const progBar  = document.getElementById("verify-progress-bar");
+
+    errEl.style.display = "none";
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner spinner-sm" style="display:inline-block;margin-right:0.5rem;"></span> Uploading...`;
+    progWrap.style.display = "block";
+    progBar.style.width = "50%";
+
+    try {
+      const storageRef = ref(storage, `verifications/${currentUser.uid}/id-document`);
+      await uploadBytes(storageRef, verifyFile);
+      const docUrl = await getDownloadURL(storageRef);
+      progBar.style.width = "100%";
+
+      await updateDoc(doc(db, "users", currentUser.uid), {
+        verificationStatus: "pending",
+        verificationDocUrl: docUrl,
+        verificationSubmittedAt: serverTimestamp(),
+      });
+
+      showToast("Verification document submitted! The admin team will review it shortly.", "success", 5000);
+      progWrap.style.display = "none";
+      loadVerificationStatus();
+    } catch (err) {
+      console.error(err);
+      errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> Upload failed: ${err.message}`;
+      errEl.style.display = "flex";
+      progWrap.style.display = "none";
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = `<i class="bi bi-patch-check"></i> Submit for Verification`;
     }
   });
 </script>

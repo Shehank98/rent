@@ -25,5 +25,26 @@ service firebase.storage {
         && (request.auth.uid == userId
             || firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin');
     }
+
+    // --------------------------------------------------------
+    // Verification documents: verifications/{userId}/id-document
+    // --------------------------------------------------------
+    match /verifications/{userId}/{allPaths=**} {
+      // Owner or admin can read verification docs
+      allow read: if request.auth != null
+        && (request.auth.uid == userId
+            || firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin');
+
+      // Only the authenticated owner can upload their verification doc
+      allow write: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.size < 10 * 1024 * 1024  // 10MB max
+        && request.resource.contentType.matches('image/.*');
+
+      // Owner or admin can delete
+      allow delete: if request.auth != null
+        && (request.auth.uid == userId
+            || firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin');
+    }
   }
 }

@@ -12,6 +12,36 @@
     .admin-search-wrap input:focus { border-color:var(--primary); }
     .admin-search-wrap .si { position:absolute; left:0.875rem; top:50%; transform:translateY(-50%); color:var(--gray-400); }
     .ad-user-info { font-size:0.78rem; color:var(--gray-500); margin-top:0.3rem; }
+    .admin-section { display:none; }
+    .admin-section.active { display:block; }
+    /* User cards */
+    .user-card { background:var(--white); border:1px solid var(--gray-200); border-radius:var(--radius); padding:1.25rem; margin-bottom:1rem; }
+    .user-card-header { display:flex; align-items:center; gap:1rem; flex-wrap:wrap; }
+    .user-avatar-circle { width:44px; height:44px; border-radius:50%; background:var(--primary); color:white; display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:700; flex-shrink:0; }
+    .user-stats-row { display:flex; gap:1rem; flex-wrap:wrap; margin-top:0.75rem; padding-top:0.75rem; border-top:1px solid var(--gray-100); }
+    .user-stat { text-align:center; min-width:60px; }
+    .user-stat-val { font-size:1.2rem; font-weight:700; color:var(--dark-2); }
+    .user-stat-lbl { font-size:0.72rem; color:var(--gray-500); }
+    .user-verify-section { margin-top:0.75rem; padding-top:0.75rem; border-top:1px solid var(--gray-100); }
+    .verify-doc-img { max-height:180px; border-radius:var(--radius); border:1px solid var(--gray-200); margin-top:0.5rem; display:block; }
+    /* Category management */
+    .cat-group-header { font-weight:700; font-size:0.85rem; color:var(--gray-700); margin:1rem 0 0.4rem; text-transform:uppercase; letter-spacing:0.05em; }
+    .cat-chip-list { display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:0.5rem; }
+    .cat-chip { background:var(--gray-100); border:1px solid var(--gray-200); border-radius:var(--radius-full); padding:0.25rem 0.75rem; font-size:0.82rem; color:var(--gray-700); display:inline-flex; align-items:center; gap:0.4rem; }
+    .cat-chip.custom { background:var(--purple-bg); border-color:#c4b5fd; color:var(--purple); }
+    .cat-chip-del { cursor:pointer; color:var(--danger); opacity:0.7; font-size:0.9rem; }
+    .cat-chip-del:hover { opacity:1; }
+    /* Preview modal — wider */
+    .modal.modal-lg { max-width:780px; width:95vw; max-height:85vh; overflow-y:auto; }
+    .preview-images { display:flex; gap:0.5rem; overflow-x:auto; margin-bottom:1rem; }
+    .preview-images img { height:160px; width:auto; border-radius:var(--radius-sm); object-fit:cover; flex-shrink:0; }
+    .preview-info-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem 1.5rem; margin-bottom:1rem; }
+    @media(max-width:600px) { .preview-info-grid { grid-template-columns:1fr; } }
+    .preview-info-item label { font-size:0.75rem; color:var(--gray-500); font-weight:600; text-transform:uppercase; letter-spacing:0.04em; }
+    .preview-info-item p { color:var(--dark-2); margin-top:0.1rem; }
+    /* Edit modal */
+    .modal.modal-md { max-width:600px; width:95vw; max-height:85vh; overflow-y:auto; }
+    .price-row { display:grid; grid-template-columns:1fr 140px; gap:0.75rem; }
   </style>
 </head>
 <body>
@@ -78,9 +108,18 @@
       </span>
     </div>
     <nav class="sidebar-nav">
-      <a href="#" class="active">
+      <a href="#" class="active" id="nav-ads-link" data-section="ads">
         <span class="nav-icon"><i class="bi bi-card-list"></i></span> Manage Ads
+        <span class="tab-count" id="nav-pending-badge" style="margin-left:auto;background:var(--warning);color:white;border-radius:var(--radius-full);padding:0 0.4rem;font-size:0.7rem;"></span>
       </a>
+      <a href="#" id="nav-users-link" data-section="users">
+        <span class="nav-icon"><i class="bi bi-people"></i></span> Users
+        <span class="tab-count" id="nav-verify-badge" style="margin-left:auto;background:var(--warning);color:white;border-radius:var(--radius-full);padding:0 0.4rem;font-size:0.7rem;"></span>
+      </a>
+      <a href="#" id="nav-cats-link" data-section="categories">
+        <span class="nav-icon"><i class="bi bi-tags"></i></span> Categories
+      </a>
+      <hr style="border:none;border-top:1px solid var(--gray-200);margin:0.75rem 0;" />
       <a href="listings.html">
         <span class="nav-icon"><i class="bi bi-eye"></i></span> Public Listings
       </a>
@@ -92,72 +131,137 @@
 
   <!-- MAIN CONTENT -->
   <main class="main-content">
-    <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
-      <div>
-        <h2>Ad Management</h2>
-        <p>Review, approve, reject and feature rental listings</p>
+
+    <!-- ============ SECTION: ADS ============ -->
+    <div class="admin-section active" id="section-ads">
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+        <div>
+          <h2>Ad Management</h2>
+          <p>Review, approve, reject, edit and feature rental listings</p>
+        </div>
+        <button class="btn btn-outline btn-sm" id="refresh-btn">
+          <i class="bi bi-arrow-clockwise"></i> Refresh
+        </button>
       </div>
-      <button class="btn btn-outline btn-sm" id="refresh-btn">
-        <i class="bi bi-arrow-clockwise"></i> Refresh
-      </button>
+
+      <!-- STATS -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon blue"><i class="bi bi-card-list" style="font-size:1.3rem;color:var(--primary);"></i></div>
+          <div><div class="stat-value" id="stat-total">—</div><div class="stat-label">Total Ads</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon yellow"><i class="bi bi-hourglass-split" style="font-size:1.3rem;color:var(--warning);"></i></div>
+          <div><div class="stat-value" id="stat-pending">—</div><div class="stat-label">Pending Review</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green"><i class="bi bi-check-circle" style="font-size:1.3rem;color:var(--success);"></i></div>
+          <div><div class="stat-value" id="stat-approved">—</div><div class="stat-label">Approved</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon red"><i class="bi bi-x-circle" style="font-size:1.3rem;color:var(--danger);"></i></div>
+          <div><div class="stat-value" id="stat-rejected">—</div><div class="stat-label">Rejected</div></div>
+        </div>
+      </div>
+
+      <!-- FILTER TABS -->
+      <div class="filter-tabs">
+        <button class="filter-tab active" data-status="all">All <span class="tab-count" id="tc-all">0</span></button>
+        <button class="filter-tab" data-status="pending">Pending <span class="tab-count" id="tc-pending">0</span></button>
+        <button class="filter-tab" data-status="approved">Approved <span class="tab-count" id="tc-approved">0</span></button>
+        <button class="filter-tab" data-status="rejected">Rejected <span class="tab-count" id="tc-rejected">0</span></button>
+        <button class="filter-tab" data-status="featured">Featured <span class="tab-count" id="tc-featured">0</span></button>
+      </div>
+
+      <!-- SEARCH -->
+      <div class="admin-search-wrap">
+        <i class="bi bi-search si"></i>
+        <input type="text" id="admin-search" placeholder="Search by title, user, location..." />
+      </div>
+
+      <!-- ADS LIST -->
+      <div id="admin-loading" style="text-align:center;padding:2.5rem;">
+        <div class="spinner" style="margin:0 auto;"></div>
+      </div>
+      <div class="admin-ad-list" id="admin-ad-list" style="display:none;"></div>
+      <div id="admin-empty" class="empty-state hidden">
+        <i class="bi bi-clipboard2-x" style="font-size:3rem;color:var(--gray-300);"></i>
+        <h3>No ads found</h3>
+        <p>No listings match your current filter.</p>
+      </div>
     </div>
 
-    <!-- STATS -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-icon blue"><i class="bi bi-card-list" style="font-size:1.3rem;color:var(--primary);"></i></div>
-        <div><div class="stat-value" id="stat-total">—</div><div class="stat-label">Total Ads</div></div>
+    <!-- ============ SECTION: USERS ============ -->
+    <div class="admin-section" id="section-users">
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+        <div>
+          <h2>User Management</h2>
+          <p>View user details, ad statistics and manage identity verifications</p>
+        </div>
+        <button class="btn btn-outline btn-sm" id="refresh-users-btn">
+          <i class="bi bi-arrow-clockwise"></i> Refresh
+        </button>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon yellow"><i class="bi bi-hourglass-split" style="font-size:1.3rem;color:var(--warning);"></i></div>
-        <div><div class="stat-value" id="stat-pending">—</div><div class="stat-label">Pending Review</div></div>
+
+      <div class="admin-search-wrap">
+        <i class="bi bi-search si"></i>
+        <input type="text" id="users-search" placeholder="Search users by name or email..." />
       </div>
-      <div class="stat-card">
-        <div class="stat-icon green"><i class="bi bi-check-circle" style="font-size:1.3rem;color:var(--success);"></i></div>
-        <div><div class="stat-value" id="stat-approved">—</div><div class="stat-label">Approved</div></div>
+
+      <div id="users-loading" style="text-align:center;padding:2.5rem;">
+        <div class="spinner" style="margin:0 auto;"></div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon red"><i class="bi bi-x-circle" style="font-size:1.3rem;color:var(--danger);"></i></div>
-        <div><div class="stat-value" id="stat-rejected">—</div><div class="stat-label">Rejected</div></div>
+      <div id="users-list"></div>
+      <div id="users-empty" class="empty-state hidden">
+        <i class="bi bi-people" style="font-size:3rem;color:var(--gray-300);"></i>
+        <h3>No users found</h3>
+        <p>No registered users yet.</p>
       </div>
     </div>
 
-    <!-- FILTER TABS -->
-    <div class="filter-tabs">
-      <button class="filter-tab active" data-status="all">
-        All <span class="tab-count" id="tc-all">0</span>
-      </button>
-      <button class="filter-tab" data-status="pending">
-        Pending <span class="tab-count" id="tc-pending">0</span>
-      </button>
-      <button class="filter-tab" data-status="approved">
-        Approved <span class="tab-count" id="tc-approved">0</span>
-      </button>
-      <button class="filter-tab" data-status="rejected">
-        Rejected <span class="tab-count" id="tc-rejected">0</span>
-      </button>
-      <button class="filter-tab" data-status="featured">
-        Featured <span class="tab-count" id="tc-featured">0</span>
-      </button>
-    </div>
+    <!-- ============ SECTION: CATEGORIES ============ -->
+    <div class="admin-section" id="section-categories">
+      <div class="page-header">
+        <h2>Category Management</h2>
+        <p>Add custom categories that appear in the "Post New Ad" and browse filters</p>
+      </div>
 
-    <!-- SEARCH -->
-    <div class="admin-search-wrap">
-      <i class="bi bi-search si"></i>
-      <input type="text" id="admin-search" placeholder="Search by title, user, location..." />
-    </div>
+      <!-- Add category form -->
+      <div class="content-card" style="margin-bottom:1.5rem;">
+        <h4 style="margin-bottom:1rem;"><i class="bi bi-plus-circle"></i> Add Custom Category</h4>
+        <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:0.75rem;align-items:end;flex-wrap:wrap;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label" for="new-cat-name">Category Name <span>*</span></label>
+            <input type="text" class="form-control" id="new-cat-name" placeholder="e.g. Electric Scooter" maxlength="60" />
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label" for="new-cat-group">Group <span>*</span></label>
+            <select class="form-control" id="new-cat-group">
+              <option value="">Select a group...</option>
+              <option value="Vehicles">Vehicles</option>
+              <option value="Wedding &amp; Events">Wedding &amp; Events</option>
+              <option value="Construction">Construction</option>
+              <option value="Property">Property</option>
+              <option value="Electronics &amp; Media">Electronics &amp; Media</option>
+              <option value="Party &amp; Leisure">Party &amp; Leisure</option>
+              <option value="Clothing">Clothing</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" id="add-cat-btn" style="white-space:nowrap;">
+            <i class="bi bi-plus-lg"></i> Add
+          </button>
+        </div>
+        <div id="cat-error" class="alert alert-error mt-2" style="display:none;"></div>
+      </div>
 
-    <!-- ADS LIST -->
-    <div id="admin-loading" style="text-align:center;padding:2.5rem;">
-      <div class="spinner" style="margin:0 auto;"></div>
-    </div>
-
-    <div class="admin-ad-list" id="admin-ad-list" style="display:none;"></div>
-
-    <div id="admin-empty" class="empty-state hidden">
-      <i class="bi bi-clipboard2-x" style="font-size:3rem;color:var(--gray-300);"></i>
-      <h3>No ads found</h3>
-      <p>No listings match your current filter.</p>
+      <!-- Existing categories display -->
+      <div class="content-card">
+        <h4 style="margin-bottom:0.25rem;"><i class="bi bi-list-ul"></i> All Categories</h4>
+        <p style="font-size:0.85rem;color:var(--gray-500);margin-bottom:1rem;">Default categories are built-in. Custom categories (purple) can be deleted.</p>
+        <div id="cats-loading" style="text-align:center;padding:2rem;"><div class="spinner" style="margin:0 auto;"></div></div>
+        <div id="cats-display" style="display:none;"></div>
+      </div>
     </div>
 
   </main>
@@ -216,42 +320,168 @@
   </div>
 </div>
 
+<!-- ==================== PREVIEW MODAL ==================== -->
+<div class="modal-overlay" id="preview-modal">
+  <div class="modal modal-lg">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;gap:1rem;flex-wrap:wrap;">
+      <h3 style="margin:0;" id="preview-title">Ad Preview</h3>
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap;" id="preview-action-btns"></div>
+    </div>
+    <!-- Images -->
+    <div class="preview-images" id="preview-images"></div>
+    <!-- Info grid -->
+    <div class="preview-info-grid">
+      <div class="preview-info-item">
+        <label><i class="bi bi-tag"></i> Category</label>
+        <p id="preview-category">—</p>
+      </div>
+      <div class="preview-info-item">
+        <label><i class="bi bi-geo-alt"></i> Location</label>
+        <p id="preview-location">—</p>
+      </div>
+      <div class="preview-info-item">
+        <label><i class="bi bi-cash-stack"></i> Price</label>
+        <p id="preview-price">—</p>
+      </div>
+      <div class="preview-info-item">
+        <label><i class="bi bi-telephone"></i> Phone</label>
+        <p id="preview-phone">—</p>
+      </div>
+      <div class="preview-info-item">
+        <label><i class="bi bi-calendar3"></i> Posted</label>
+        <p id="preview-date">—</p>
+      </div>
+      <div class="preview-info-item">
+        <label><i class="bi bi-circle-half"></i> Status</label>
+        <p id="preview-status">—</p>
+      </div>
+    </div>
+    <!-- Description -->
+    <div style="margin-bottom:1rem;">
+      <label class="preview-info-item"><label style="font-size:0.75rem;color:var(--gray-500);font-weight:600;text-transform:uppercase;letter-spacing:0.04em;"><i class="bi bi-card-text"></i> Description</label></label>
+      <p id="preview-desc" style="margin-top:0.35rem;white-space:pre-wrap;color:var(--dark-2);"></p>
+    </div>
+    <!-- Poster info -->
+    <div style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);padding:0.875rem;">
+      <div style="font-size:0.78rem;color:var(--gray-500);font-weight:600;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.4rem;"><i class="bi bi-person"></i> Posted By</div>
+      <div id="preview-user-name" style="font-weight:700;font-size:0.95rem;"></div>
+      <div id="preview-user-email" style="font-size:0.82rem;color:var(--gray-500);"></div>
+      <div id="preview-user-verified" style="margin-top:0.3rem;font-size:0.82rem;"></div>
+    </div>
+    <div class="modal-actions" style="margin-top:1.25rem;">
+      <button class="btn btn-ghost" id="close-preview-btn">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== EDIT MODAL ==================== -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal modal-md">
+    <h3><i class="bi bi-pencil-square"></i> Edit Ad Details</h3>
+    <div style="margin-top:1rem;">
+      <div class="form-group">
+        <label class="form-label">Title <span>*</span></label>
+        <input type="text" class="form-control" id="edit-title" maxlength="100" />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Category <span>*</span></label>
+          <select class="form-control" id="edit-category"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Location <span>*</span></label>
+          <input type="text" class="form-control" id="edit-location" list="edit-location-list" />
+          <datalist id="edit-location-list"></datalist>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Price (Rs.) <span>*</span></label>
+        <div class="price-row">
+          <input type="number" class="form-control" id="edit-price" min="0" step="any" />
+          <select class="form-control" id="edit-price-type">
+            <option value="day">Per Day</option>
+            <option value="hour">Per Hour</option>
+            <option value="km">Per KM</option>
+            <option value="week">Per Week</option>
+            <option value="month">Per Month</option>
+            <option value="event">Per Event</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contact Phone</label>
+        <input type="tel" class="form-control" id="edit-phone" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description <span>*</span></label>
+        <textarea class="form-control" id="edit-description" rows="5"></textarea>
+      </div>
+      <div id="edit-error" class="alert alert-error" style="display:none;margin-bottom:0.75rem;"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancel-edit-btn">Cancel</button>
+      <button class="btn btn-primary" id="confirm-edit-btn">
+        <i class="bi bi-check2-circle"></i> Save Changes
+      </button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
   import {
     auth, db, storage,
     onAuthStateChanged, signOut,
-    collection, doc, getDoc, getDocs, updateDoc, deleteDoc,
-    query, orderBy, serverTimestamp, Timestamp,
+    collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
+    query, where, orderBy, serverTimestamp, Timestamp,
     ref, deleteObject,
   } from "./firebase.js";
   import {
     requireAdmin, showToast, formatPrice, formatDate,
     isFeaturedActive, featuredDaysLeft, escapeHtml, debounce,
+    CATEGORY_GROUPS, buildCategorySelect, buildCategorySelectAsync,
+    buildLocationDatalist,
   } from "./main.js";
 
-  let allAds = [], currentFilter = "all", currentSearch = "";
-  let featureTarget = null, deleteTarget = null, rejectTarget = null;
+  let allAds = [], allUsers = [], allAdsByUser = {};
+  let currentFilter = "all", currentSearch = "";
+  let featureTarget = null, deleteTarget = null, rejectTarget = null, editTarget = null, previewTarget = null;
   let selectedFeatureDays = null;
 
   requireAdmin(async (user) => {
     document.getElementById("sidebar-name").textContent  = user.displayName || "Admin";
     document.getElementById("sidebar-email").textContent = user.email || "";
     if (user.photoURL) {
-      document.getElementById("sidebar-avatar").src   = user.photoURL;
-      document.getElementById("nav-user-avatar").src  = user.photoURL;
+      document.getElementById("sidebar-avatar").src  = user.photoURL;
+      document.getElementById("nav-user-avatar").src = user.photoURL;
     }
     document.getElementById("nav-user-name").textContent = user.displayName?.split(" ")[0] || "Admin";
     document.getElementById("nav-user-wrap").classList.remove("hidden");
     document.getElementById("dropdown-user-email").textContent = user.email || "";
+
+    // Build edit category select + location datalist
+    await buildCategorySelectAsync(document.getElementById("edit-category"));
+    buildLocationDatalist(document.getElementById("edit-location-list"));
+
     loadAds();
   });
 
-  // Hamburger
-  document.getElementById("hamburger")?.addEventListener("click", () =>
-    document.getElementById("mobile-nav").classList.toggle("open")
-  );
+  // ==================== SECTION SWITCHING ====================
+  document.querySelectorAll(".sidebar-nav a[data-section]").forEach(link => {
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      const sec = link.dataset.section;
+      document.querySelectorAll(".admin-section").forEach(s => s.classList.remove("active"));
+      document.querySelectorAll(".sidebar-nav a[data-section]").forEach(l => l.classList.remove("active"));
+      document.getElementById(`section-${sec}`).classList.add("active");
+      link.classList.add("active");
+      if (sec === "users" && allUsers.length === 0) loadUsers();
+      if (sec === "categories") loadCategories();
+    });
+  });
 
-  // Dropdown toggle
+  // Hamburger / dropdown
+  document.getElementById("hamburger")?.addEventListener("click", () =>
+    document.getElementById("mobile-nav").classList.toggle("open"));
   const userBtn = document.getElementById("nav-user-btn");
   const userDropdown = document.getElementById("nav-user-dropdown");
   const userWrap = document.getElementById("nav-user-wrap");
@@ -259,7 +489,6 @@
     userBtn.addEventListener("click", (e) => { e.stopPropagation(); userDropdown.classList.toggle("open"); });
     document.addEventListener("click", (e) => { if (!userWrap?.contains(e.target)) userDropdown?.classList.remove("open"); });
   }
-
   document.getElementById("nav-logout-btn").addEventListener("click", async () => {
     await signOut(auth); window.location.href = "index.html";
   });
@@ -267,9 +496,9 @@
     await signOut(auth); window.location.href = "index.html";
   });
 
+  // ==================== ADS SECTION ====================
   document.getElementById("refresh-btn").addEventListener("click", loadAds);
 
-  // ---- LOAD ALL ADS ----
   async function loadAds() {
     document.getElementById("admin-loading").style.display = "block";
     document.getElementById("admin-ad-list").style.display = "none";
@@ -278,23 +507,8 @@
       const snap = await getDocs(query(collection(db, "ads"), orderBy("createdAt", "desc")));
       allAds = [];
       snap.forEach(d => allAds.push({ id: d.id, ...d.data() }));
-
-      const pending  = allAds.filter(a => a.status === "pending").length;
-      const approved = allAds.filter(a => a.status === "approved").length;
-      const rejected = allAds.filter(a => a.status === "rejected").length;
-      const featured = allAds.filter(a => a.featured && isFeaturedActive(a.featuredUntil)).length;
-
-      document.getElementById("stat-total").textContent    = allAds.length;
-      document.getElementById("stat-pending").textContent  = pending;
-      document.getElementById("stat-approved").textContent = approved;
-      document.getElementById("stat-rejected").textContent = rejected;
-      document.getElementById("tc-all").textContent        = allAds.length;
-      document.getElementById("tc-pending").textContent    = pending;
-      document.getElementById("tc-approved").textContent   = approved;
-      document.getElementById("tc-rejected").textContent   = rejected;
-      document.getElementById("tc-featured").textContent   = featured;
-
-      renderList();
+      updateAdStats();
+      renderAdList();
     } catch (err) {
       console.error(err);
       showToast("Could not load ads: " + err.message, "error");
@@ -303,22 +517,41 @@
     }
   }
 
-  // ---- FILTER TABS ----
+  function updateAdStats() {
+    const pending  = allAds.filter(a => a.status === "pending").length;
+    const approved = allAds.filter(a => a.status === "approved").length;
+    const rejected = allAds.filter(a => a.status === "rejected").length;
+    const featured = allAds.filter(a => a.featured && isFeaturedActive(a.featuredUntil)).length;
+
+    document.getElementById("stat-total").textContent    = allAds.length;
+    document.getElementById("stat-pending").textContent  = pending;
+    document.getElementById("stat-approved").textContent = approved;
+    document.getElementById("stat-rejected").textContent = rejected;
+    document.getElementById("tc-all").textContent        = allAds.length;
+    document.getElementById("tc-pending").textContent    = pending;
+    document.getElementById("tc-approved").textContent   = approved;
+    document.getElementById("tc-rejected").textContent   = rejected;
+    document.getElementById("tc-featured").textContent   = featured;
+
+    document.getElementById("nav-pending-badge").textContent = pending > 0 ? pending : "";
+  }
+
+  // Filter tabs
   document.querySelectorAll(".filter-tab").forEach(btn => {
     btn.addEventListener("click", () => {
       document.querySelectorAll(".filter-tab").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       currentFilter = btn.dataset.status;
-      renderList();
+      renderAdList();
     });
   });
 
   document.getElementById("admin-search").addEventListener("input", debounce(() => {
     currentSearch = document.getElementById("admin-search").value.trim().toLowerCase();
-    renderList();
+    renderAdList();
   }, 300));
 
-  function renderList() {
+  function renderAdList() {
     const listEl  = document.getElementById("admin-ad-list");
     const emptyEl = document.getElementById("admin-empty");
 
@@ -347,7 +580,7 @@
     listEl.innerHTML = filtered.map(renderAdminItem).join("");
 
     listEl.querySelectorAll("[data-action]").forEach(btn => {
-      btn.addEventListener("click", () => handleAction(btn.dataset.action, btn.dataset.id, btn.dataset.title));
+      btn.addEventListener("click", () => handleAdAction(btn.dataset.action, btn.dataset.id, btn.dataset.title));
     });
   }
 
@@ -385,50 +618,60 @@
             ${statusBadge} ${featBadge}
           </div>
           <div class="admin-ad-actions" style="margin-top:0.75rem;">
+            <button class="btn btn-outline btn-sm" data-action="preview" data-id="${ad.id}" data-title="${safe}">
+              <i class="bi bi-eye"></i> Preview
+            </button>
+            <button class="btn btn-outline btn-sm" data-action="edit" data-id="${ad.id}" data-title="${safe}">
+              <i class="bi bi-pencil"></i> Edit
+            </button>
             ${ad.status !== "approved" ? `<button class="btn btn-success btn-sm" data-action="approve" data-id="${ad.id}" data-title="${safe}"><i class="bi bi-check-circle"></i> Approve</button>` : ""}
             ${ad.status !== "rejected" ? `<button class="btn btn-outline-danger btn-sm" data-action="reject" data-id="${ad.id}" data-title="${safe}"><i class="bi bi-x-circle"></i> Reject</button>` : ""}
-            ${ad.status === "approved" ? `<button class="btn btn-accent btn-sm" data-action="feature" data-id="${ad.id}" data-title="${safe}"><i class="bi bi-star"></i> Feature</button>` : ""}
+            ${ad.status === "approved" && !featActive ? `<button class="btn btn-accent btn-sm" data-action="feature" data-id="${ad.id}" data-title="${safe}"><i class="bi bi-star"></i> Feature</button>` : ""}
             ${featActive ? `<button class="btn btn-ghost btn-sm" data-action="unfeature" data-id="${ad.id}" data-title="${safe}">Remove Feature</button>` : ""}
-            <button class="btn btn-ghost btn-sm" data-action="view" data-id="${ad.id}" data-title="${safe}"><i class="bi bi-eye"></i> View</button>
-            <button class="btn btn-outline-danger btn-sm" data-action="delete" data-id="${ad.id}" data-title="${safe}"><i class="bi bi-trash3"></i> Delete</button>
+            <button class="btn btn-outline-danger btn-sm" data-action="delete" data-id="${ad.id}" data-title="${safe}">
+              <i class="bi bi-trash3"></i> Delete
+            </button>
           </div>
         </div>
       </div>
     `;
   }
 
-  async function handleAction(action, id, title) {
-    if (action === "approve") { await updateStatus(id, "approved"); }
-    else if (action === "reject") {
+  async function handleAdAction(action, id, title) {
+    if (action === "approve") {
+      await updateAdStatus(id, "approved");
+    } else if (action === "reject") {
       rejectTarget = { id, title };
       document.getElementById("reject-reason").value = "";
       document.getElementById("reject-modal").classList.add("open");
-    }
-    else if (action === "feature") {
+    } else if (action === "feature") {
       featureTarget = { id, title };
       selectedFeatureDays = null;
       document.querySelectorAll(".day-option").forEach(d => d.classList.remove("selected"));
       document.getElementById("selected-days-text").textContent = "None";
       document.getElementById("confirm-feature-btn").disabled = true;
       document.getElementById("feature-modal").classList.add("open");
-    }
-    else if (action === "unfeature") { await removeFeature(id); }
-    else if (action === "delete") {
+    } else if (action === "unfeature") {
+      await removeFeature(id);
+    } else if (action === "delete") {
       deleteTarget = { id, title };
       document.getElementById("admin-delete-title").textContent = title;
       document.getElementById("admin-delete-modal").classList.add("open");
+    } else if (action === "preview") {
+      openPreview(id);
+    } else if (action === "edit") {
+      openEdit(id);
     }
-    else if (action === "view") { window.open(`ad.html?id=${id}`, "_blank"); }
   }
 
-  async function updateStatus(id, status) {
+  async function updateAdStatus(id, status) {
     try {
       await updateDoc(doc(db, "ads", id), { status, updatedAt: serverTimestamp() });
       showToast(`Listing ${status} successfully`, "success");
       const ad = allAds.find(a => a.id === id);
       if (ad) ad.status = status;
-      renderList();
-      refreshCounts();
+      renderAdList();
+      updateAdStats();
     } catch (err) { showToast("Update failed: " + err.message, "error"); }
   }
 
@@ -438,21 +681,165 @@
       showToast("Featured status removed", "success");
       const ad = allAds.find(a => a.id === id);
       if (ad) { ad.featured = false; ad.featuredUntil = null; }
-      renderList();
+      renderAdList();
+      updateAdStats();
     } catch (err) { showToast("Failed: " + err.message, "error"); }
   }
 
-  function refreshCounts() {
-    const pending  = allAds.filter(a => a.status === "pending").length;
-    const approved = allAds.filter(a => a.status === "approved").length;
-    const rejected = allAds.filter(a => a.status === "rejected").length;
-    document.getElementById("stat-pending").textContent  = pending;
-    document.getElementById("stat-approved").textContent = approved;
-    document.getElementById("stat-rejected").textContent = rejected;
-    document.getElementById("tc-pending").textContent    = pending;
-    document.getElementById("tc-approved").textContent   = approved;
-    document.getElementById("tc-rejected").textContent   = rejected;
+  // ---- PREVIEW MODAL ----
+  async function openPreview(id) {
+    const ad = allAds.find(a => a.id === id);
+    if (!ad) return;
+
+    previewTarget = ad;
+
+    document.getElementById("preview-title").textContent = ad.title || "Ad Preview";
+    document.getElementById("preview-category").textContent = ad.category || "—";
+    document.getElementById("preview-location").textContent = ad.location || "—";
+    document.getElementById("preview-price").textContent = formatPrice(ad.price, ad.priceType || "day");
+    document.getElementById("preview-phone").textContent = ad.phone || "—";
+    document.getElementById("preview-date").textContent = formatDate(ad.createdAt);
+    document.getElementById("preview-desc").textContent = ad.description || "—";
+
+    const statusMap = {
+      pending:  `<span class="badge badge-pending">Pending</span>`,
+      approved: `<span class="badge badge-approved">Approved</span>`,
+      rejected: `<span class="badge badge-rejected">Rejected</span>`,
+    };
+    document.getElementById("preview-status").innerHTML = statusMap[ad.status] || ad.status;
+
+    // Images
+    const imgsEl = document.getElementById("preview-images");
+    if (ad.imageUrls && ad.imageUrls.length > 0) {
+      imgsEl.innerHTML = ad.imageUrls.map(url =>
+        `<img src="${escapeHtml(url)}" onerror="this.style.display='none'" alt="ad image" />`
+      ).join("");
+      imgsEl.style.display = "flex";
+    } else {
+      imgsEl.innerHTML = `<div style="padding:2rem;text-align:center;color:var(--gray-400);width:100%;"><i class="bi bi-image" style="font-size:2.5rem;"></i><p>No images</p></div>`;
+    }
+
+    // Poster info
+    document.getElementById("preview-user-name").textContent = ad.userName || "Unknown";
+    document.getElementById("preview-user-email").textContent = ad.userEmail || "";
+    document.getElementById("preview-user-verified").innerHTML = "";
+    if (ad.userId) {
+      try {
+        const uSnap = await getDoc(doc(db, "users", ad.userId));
+        if (uSnap.exists()) {
+          const ud = uSnap.data();
+          if (ud.verified) {
+            document.getElementById("preview-user-verified").innerHTML =
+              `<span class="badge badge-approved" style="font-size:0.72rem;"><i class="bi bi-patch-check-fill"></i> Verified Seller</span>`;
+          }
+        }
+      } catch (_) {}
+    }
+
+    // Action buttons in preview
+    const btnsEl = document.getElementById("preview-action-btns");
+    btnsEl.innerHTML = "";
+    if (ad.status !== "approved") {
+      const apBtn = document.createElement("button");
+      apBtn.className = "btn btn-success btn-sm";
+      apBtn.innerHTML = `<i class="bi bi-check-circle"></i> Approve`;
+      apBtn.addEventListener("click", async () => {
+        await updateAdStatus(ad.id, "approved");
+        ad.status = "approved";
+        document.getElementById("preview-status").innerHTML = statusMap["approved"];
+        btnsEl.innerHTML = "";
+      });
+      btnsEl.appendChild(apBtn);
+    }
+    if (ad.status !== "rejected") {
+      const rjBtn = document.createElement("button");
+      rjBtn.className = "btn btn-outline-danger btn-sm";
+      rjBtn.innerHTML = `<i class="bi bi-x-circle"></i> Reject`;
+      rjBtn.addEventListener("click", () => {
+        document.getElementById("preview-modal").classList.remove("open");
+        rejectTarget = { id: ad.id, title: ad.title };
+        document.getElementById("reject-reason").value = "";
+        document.getElementById("reject-modal").classList.add("open");
+      });
+      btnsEl.appendChild(rjBtn);
+    }
+
+    document.getElementById("preview-modal").classList.add("open");
   }
+
+  document.getElementById("close-preview-btn").addEventListener("click", () => {
+    document.getElementById("preview-modal").classList.remove("open");
+    previewTarget = null;
+  });
+
+  // ---- EDIT MODAL ----
+  async function openEdit(id) {
+    const ad = allAds.find(a => a.id === id);
+    if (!ad) return;
+    editTarget = ad;
+
+    document.getElementById("edit-title").value       = ad.title || "";
+    document.getElementById("edit-location").value    = ad.location || "";
+    document.getElementById("edit-price").value       = ad.price || "";
+    document.getElementById("edit-price-type").value  = ad.priceType || "day";
+    document.getElementById("edit-phone").value       = ad.phone || "";
+    document.getElementById("edit-description").value = ad.description || "";
+    document.getElementById("edit-error").style.display = "none";
+
+    // Rebuild category select with current value
+    await buildCategorySelectAsync(document.getElementById("edit-category"));
+    document.getElementById("edit-category").value = ad.category || "";
+
+    document.getElementById("edit-modal").classList.add("open");
+  }
+
+  document.getElementById("cancel-edit-btn").addEventListener("click", () => {
+    document.getElementById("edit-modal").classList.remove("open");
+    editTarget = null;
+  });
+
+  document.getElementById("confirm-edit-btn").addEventListener("click", async () => {
+    if (!editTarget) return;
+    const btn    = document.getElementById("confirm-edit-btn");
+    const errEl  = document.getElementById("edit-error");
+    errEl.style.display = "none";
+
+    const title       = document.getElementById("edit-title").value.trim();
+    const category    = document.getElementById("edit-category").value;
+    const location    = document.getElementById("edit-location").value.trim();
+    const price       = parseFloat(document.getElementById("edit-price").value) || 0;
+    const priceType   = document.getElementById("edit-price-type").value;
+    const phone       = document.getElementById("edit-phone").value.trim();
+    const description = document.getElementById("edit-description").value.trim();
+
+    if (!title || !category || !location || !description) {
+      errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> Title, category, location and description are required.`;
+      errEl.style.display = "flex";
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner spinner-sm" style="display:inline-block;margin-right:0.5rem;"></span> Saving...`;
+
+    try {
+      await updateDoc(doc(db, "ads", editTarget.id), {
+        title, category, location, price, priceType, phone, description,
+        updatedAt: serverTimestamp(),
+      });
+      // Update local copy
+      Object.assign(editTarget, { title, category, location, price, priceType, phone, description });
+      showToast("Ad details updated successfully", "success");
+      document.getElementById("edit-modal").classList.remove("open");
+      editTarget = null;
+      renderAdList();
+    } catch (err) {
+      errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> Save failed: ${err.message}`;
+      errEl.style.display = "flex";
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = `<i class="bi bi-check2-circle"></i> Save Changes`;
+    }
+  });
 
   // Feature modal
   document.querySelectorAll(".day-option").forEach(opt => {
@@ -481,11 +868,9 @@
       const ad = allAds.find(a => a.id === featureTarget.id);
       if (ad) { ad.featured = true; ad.featuredUntil = { toDate: () => until }; ad.status = "approved"; }
       document.getElementById("feature-modal").classList.remove("open");
-      featureTarget = null; renderList();
+      featureTarget = null; renderAdList(); updateAdStats();
     } catch (err) { showToast("Feature failed: " + err.message, "error"); }
-    finally {
-      btn.disabled = false; btn.innerHTML = `<i class="bi bi-star-fill"></i> Apply Feature`;
-    }
+    finally { btn.disabled = false; btn.innerHTML = `<i class="bi bi-star-fill"></i> Apply Feature`; }
   });
 
   // Reject modal
@@ -506,7 +891,7 @@
       const ad = allAds.find(a => a.id === rejectTarget.id);
       if (ad) ad.status = "rejected";
       document.getElementById("reject-modal").classList.remove("open");
-      rejectTarget = null; renderList(); refreshCounts();
+      rejectTarget = null; renderAdList(); updateAdStats();
     } catch (err) { showToast("Reject failed: " + err.message, "error"); }
     finally { btn.disabled = false; btn.innerHTML = `<i class="bi bi-x-circle"></i> Reject`; }
   });
@@ -531,20 +916,332 @@
       await deleteDoc(doc(db, "ads", deleteTarget.id));
       showToast("Listing deleted permanently", "success");
       allAds = allAds.filter(a => a.id !== deleteTarget.id);
-      document.getElementById("stat-total").textContent = allAds.length;
-      document.getElementById("tc-all").textContent = allAds.length;
       document.getElementById("admin-delete-modal").classList.remove("open");
-      deleteTarget = null; renderList(); refreshCounts();
+      deleteTarget = null; renderAdList(); updateAdStats();
     } catch (err) { showToast("Delete failed: " + err.message, "error"); }
     finally { btn.disabled = false; btn.innerHTML = `<i class="bi bi-trash3"></i> Delete`; }
   });
 
   // Close modals on backdrop click
-  ["feature-modal", "admin-delete-modal", "reject-modal"].forEach(id => {
+  ["feature-modal", "admin-delete-modal", "reject-modal", "preview-modal", "edit-modal"].forEach(id => {
     document.getElementById(id).addEventListener("click", e => {
-      if (e.target.id === id) document.getElementById(id).classList.remove("open");
+      if (e.target.id === id) { document.getElementById(id).classList.remove("open"); }
     });
   });
+
+  // ==================== USERS SECTION ====================
+  let allUsersRaw = [], usersSearch = "";
+
+  document.getElementById("refresh-users-btn").addEventListener("click", () => { allUsers = []; loadUsers(); });
+
+  document.getElementById("users-search").addEventListener("input", debounce(() => {
+    usersSearch = document.getElementById("users-search").value.trim().toLowerCase();
+    renderUserList();
+  }, 300));
+
+  async function loadUsers() {
+    document.getElementById("users-loading").style.display = "block";
+    document.getElementById("users-list").innerHTML = "";
+    document.getElementById("users-empty").classList.add("hidden");
+
+    try {
+      // Load users and all ads in parallel
+      const [userSnap, adSnap] = await Promise.all([
+        getDocs(collection(db, "users")),
+        getDocs(collection(db, "ads")),
+      ]);
+
+      // Build ad stats per user
+      const adsByUser = {};
+      adSnap.forEach(d => {
+        const ad = d.data();
+        const uid = ad.userId;
+        if (!uid) return;
+        if (!adsByUser[uid]) adsByUser[uid] = { total: 0, pending: 0, approved: 0, rejected: 0 };
+        adsByUser[uid].total++;
+        if (ad.status === "pending")  adsByUser[uid].pending++;
+        if (ad.status === "approved") adsByUser[uid].approved++;
+        if (ad.status === "rejected") adsByUser[uid].rejected++;
+      });
+
+      allUsersRaw = [];
+      userSnap.forEach(d => allUsersRaw.push({ id: d.id, ...d.data(), adStats: adsByUser[d.id] || { total: 0, pending: 0, approved: 0, rejected: 0 } }));
+
+      // Sort: pending verification first, then by join date
+      allUsersRaw.sort((a, b) => {
+        if (a.verificationStatus === "pending" && b.verificationStatus !== "pending") return -1;
+        if (b.verificationStatus === "pending" && a.verificationStatus !== "pending") return 1;
+        return (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0);
+      });
+
+      const pendingVerify = allUsersRaw.filter(u => u.verificationStatus === "pending").length;
+      document.getElementById("nav-verify-badge").textContent = pendingVerify > 0 ? pendingVerify : "";
+
+      allUsers = allUsersRaw;
+      document.getElementById("users-loading").style.display = "none";
+      renderUserList();
+    } catch (err) {
+      document.getElementById("users-loading").style.display = "none";
+      showToast("Could not load users: " + err.message, "error");
+    }
+  }
+
+  function renderUserList() {
+    const listEl  = document.getElementById("users-list");
+    const emptyEl = document.getElementById("users-empty");
+
+    let filtered = allUsers;
+    if (usersSearch) {
+      filtered = filtered.filter(u => {
+        const hay = `${u.name} ${u.email}`.toLowerCase();
+        return hay.includes(usersSearch);
+      });
+    }
+
+    if (filtered.length === 0) {
+      listEl.innerHTML = "";
+      emptyEl.classList.remove("hidden");
+      return;
+    }
+    emptyEl.classList.add("hidden");
+    listEl.innerHTML = filtered.map(renderUserCard).join("");
+
+    listEl.querySelectorAll("[data-user-action]").forEach(btn => {
+      btn.addEventListener("click", () => handleUserAction(btn.dataset.userAction, btn.dataset.uid));
+    });
+  }
+
+  function renderUserCard(u) {
+    const initial = (u.name || "?")[0].toUpperCase();
+    const stats   = u.adStats;
+    const vs      = u.verificationStatus || "unverified";
+
+    const verifyBadge = vs === "verified"
+      ? `<span class="badge badge-approved" style="font-size:0.72rem;"><i class="bi bi-patch-check-fill"></i> Verified</span>`
+      : vs === "pending"
+        ? `<span class="badge badge-pending" style="font-size:0.72rem;"><i class="bi bi-hourglass-split"></i> Pending Verification</span>`
+        : `<span class="badge" style="font-size:0.72rem;background:var(--gray-200);color:var(--gray-600);">Unverified</span>`;
+
+    const roleBadge = u.role === "admin"
+      ? `<span class="badge badge-rejected" style="font-size:0.72rem;"><i class="bi bi-shield-fill"></i> Admin</span>`
+      : "";
+
+    let verifySection = "";
+    if (vs === "pending" && u.verificationDocUrl) {
+      verifySection = `
+        <div class="user-verify-section">
+          <div style="font-weight:600;font-size:0.85rem;color:var(--warning);margin-bottom:0.5rem;">
+            <i class="bi bi-hourglass-split"></i> Identity Verification Pending
+          </div>
+          <a href="${escapeHtml(u.verificationDocUrl)}" target="_blank" rel="noopener noreferrer">
+            <img src="${escapeHtml(u.verificationDocUrl)}" class="verify-doc-img"
+                 alt="ID document" onerror="this.style.display='none'" />
+          </a>
+          <div style="display:flex;gap:0.5rem;margin-top:0.75rem;flex-wrap:wrap;">
+            <button class="btn btn-success btn-sm" data-user-action="verify" data-uid="${u.id}">
+              <i class="bi bi-patch-check-fill"></i> Approve Verification
+            </button>
+            <button class="btn btn-outline-danger btn-sm" data-user-action="unverify" data-uid="${u.id}">
+              <i class="bi bi-x-circle"></i> Reject
+            </button>
+          </div>
+        </div>`;
+    } else if (vs === "verified") {
+      verifySection = `
+        <div class="user-verify-section">
+          <div style="font-size:0.85rem;color:var(--success);margin-bottom:0.5rem;">
+            <i class="bi bi-patch-check-fill"></i> Account is verified
+          </div>
+          ${u.verificationDocUrl
+            ? `<a href="${escapeHtml(u.verificationDocUrl)}" target="_blank" rel="noopener noreferrer"
+                  class="btn btn-ghost btn-sm" style="margin-bottom:0.5rem;">
+                  <i class="bi bi-image"></i> View ID Document
+               </a>`
+            : ""}
+          <div>
+            <button class="btn btn-ghost btn-sm" data-user-action="unverify" data-uid="${u.id}">
+              <i class="bi bi-x-circle"></i> Revoke Verification
+            </button>
+          </div>
+        </div>`;
+    }
+
+    return `
+      <div class="user-card">
+        <div class="user-card-header">
+          <div class="user-avatar-circle">${escapeHtml(initial)}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:700;font-size:0.95rem;">${escapeHtml(u.name || "Unknown")}</div>
+            <div style="font-size:0.82rem;color:var(--gray-500);">${escapeHtml(u.email || "")}</div>
+            <div style="font-size:0.78rem;color:var(--gray-400);margin-top:0.1rem;">
+              Joined: ${formatDate(u.createdAt)}
+            </div>
+          </div>
+          <div style="display:flex;gap:0.4rem;flex-wrap:wrap;align-items:flex-start;">
+            ${verifyBadge} ${roleBadge}
+          </div>
+        </div>
+
+        <div class="user-stats-row">
+          <div class="user-stat">
+            <div class="user-stat-val">${stats.total}</div>
+            <div class="user-stat-lbl">Total Ads</div>
+          </div>
+          <div class="user-stat">
+            <div class="user-stat-val" style="color:var(--success);">${stats.approved}</div>
+            <div class="user-stat-lbl">Approved</div>
+          </div>
+          <div class="user-stat">
+            <div class="user-stat-val" style="color:var(--warning);">${stats.pending}</div>
+            <div class="user-stat-lbl">Pending</div>
+          </div>
+          <div class="user-stat">
+            <div class="user-stat-val" style="color:var(--danger);">${stats.rejected}</div>
+            <div class="user-stat-lbl">Rejected</div>
+          </div>
+        </div>
+
+        ${verifySection}
+      </div>
+    `;
+  }
+
+  async function handleUserAction(action, uid) {
+    try {
+      if (action === "verify") {
+        await updateDoc(doc(db, "users", uid), {
+          verified: true,
+          verificationStatus: "verified",
+          verifiedAt: serverTimestamp(),
+        });
+        showToast("User verification approved", "success");
+      } else if (action === "unverify") {
+        await updateDoc(doc(db, "users", uid), {
+          verified: false,
+          verificationStatus: "unverified",
+        });
+        showToast("User verification revoked", "success");
+      }
+      // Refresh user in local list
+      const idx = allUsers.findIndex(u => u.id === uid);
+      if (idx !== -1) {
+        const snap = await getDoc(doc(db, "users", uid));
+        if (snap.exists()) allUsers[idx] = { ...allUsers[idx], ...snap.data() };
+      }
+      const pendingCount = allUsers.filter(u => u.verificationStatus === "pending").length;
+      document.getElementById("nav-verify-badge").textContent = pendingCount > 0 ? pendingCount : "";
+      renderUserList();
+    } catch (err) { showToast("Action failed: " + err.message, "error"); }
+  }
+
+  // ==================== CATEGORIES SECTION ====================
+  let customCats = []; // { id, name, group }
+
+  async function loadCategories() {
+    document.getElementById("cats-loading").style.display = "block";
+    document.getElementById("cats-display").style.display = "none";
+
+    try {
+      const snap = await getDocs(collection(db, "categories"));
+      customCats = [];
+      snap.forEach(d => customCats.push({ id: d.id, ...d.data() }));
+      renderCategories();
+    } catch (err) {
+      showToast("Could not load categories: " + err.message, "error");
+    } finally {
+      document.getElementById("cats-loading").style.display = "none";
+      document.getElementById("cats-display").style.display = "block";
+    }
+  }
+
+  function renderCategories() {
+    const displayEl = document.getElementById("cats-display");
+
+    // Build merged groups (defaults + custom)
+    const groups = {};
+    Object.entries(CATEGORY_GROUPS).forEach(([g, cats]) => { groups[g] = cats.map(c => ({ name: c, isCustom: false })); });
+    customCats.forEach(c => {
+      if (!groups[c.group]) groups[c.group] = [];
+      // Avoid duplicates with defaults
+      const exists = groups[c.group].some(x => x.name === c.name);
+      if (!exists) groups[c.group].push({ name: c.name, isCustom: true, id: c.id });
+    });
+
+    let html = "";
+    Object.entries(groups).forEach(([group, cats]) => {
+      html += `<div class="cat-group-header">${escapeHtml(group)}</div>`;
+      html += `<div class="cat-chip-list">`;
+      cats.forEach(cat => {
+        if (cat.isCustom) {
+          html += `<span class="cat-chip custom">${escapeHtml(cat.name)} <i class="bi bi-x cat-chip-del" data-cat-id="${cat.id}" title="Delete"></i></span>`;
+        } else {
+          html += `<span class="cat-chip">${escapeHtml(cat.name)}</span>`;
+        }
+      });
+      html += `</div>`;
+    });
+
+    displayEl.innerHTML = html;
+
+    displayEl.querySelectorAll(".cat-chip-del").forEach(btn => {
+      btn.addEventListener("click", () => deleteCategory(btn.dataset.catId));
+    });
+  }
+
+  document.getElementById("add-cat-btn").addEventListener("click", async () => {
+    const name  = document.getElementById("new-cat-name").value.trim();
+    const group = document.getElementById("new-cat-group").value;
+    const errEl = document.getElementById("cat-error");
+    errEl.style.display = "none";
+
+    if (!name) {
+      errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> Category name is required.`;
+      errEl.style.display = "flex"; return;
+    }
+    if (!group) {
+      errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> Please select a group.`;
+      errEl.style.display = "flex"; return;
+    }
+
+    // Check duplicate
+    const defaultCats = Object.values(CATEGORY_GROUPS).flat();
+    if (defaultCats.map(c => c.toLowerCase()).includes(name.toLowerCase())) {
+      errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> This category already exists as a default.`;
+      errEl.style.display = "flex"; return;
+    }
+    if (customCats.some(c => c.name.toLowerCase() === name.toLowerCase())) {
+      errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> This custom category already exists.`;
+      errEl.style.display = "flex"; return;
+    }
+
+    const btn = document.getElementById("add-cat-btn");
+    btn.disabled = true; btn.textContent = "Adding...";
+    try {
+      const ref2 = await addDoc(collection(db, "categories"), {
+        name, group, createdAt: serverTimestamp(),
+      });
+      customCats.push({ id: ref2.id, name, group });
+      document.getElementById("new-cat-name").value = "";
+      document.getElementById("new-cat-group").value = "";
+      showToast(`Category "${name}" added`, "success");
+      renderCategories();
+    } catch (err) {
+      errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> Error: ${err.message}`;
+      errEl.style.display = "flex";
+    } finally {
+      btn.disabled = false; btn.innerHTML = `<i class="bi bi-plus-lg"></i> Add`;
+    }
+  });
+
+  async function deleteCategory(catId) {
+    if (!confirm("Delete this custom category? Existing ads using it will keep their category value.")) return;
+    try {
+      await deleteDoc(doc(db, "categories", catId));
+      customCats = customCats.filter(c => c.id !== catId);
+      showToast("Category deleted", "success");
+      renderCategories();
+    } catch (err) { showToast("Delete failed: " + err.message, "error"); }
+  }
 </script>
 </body>
 </html>
