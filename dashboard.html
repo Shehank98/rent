@@ -65,6 +65,9 @@
   </nav>
 </nav>
 
+<!-- Mobile sidebar overlay -->
+<div class="mobile-sidebar-overlay" id="mob-sidebar-overlay"></div>
+
 <!-- ==================== DASHBOARD LAYOUT ==================== -->
 <div class="dashboard-layout">
 
@@ -100,6 +103,10 @@
 
   <!-- MAIN CONTENT -->
   <main class="main-content">
+    <!-- Mobile sidebar trigger -->
+    <button class="mobile-sidebar-toggle" id="mob-sidebar-toggle">
+      <i class="bi bi-layout-sidebar"></i> Menu
+    </button>
 
     <!-- TAB: POST NEW AD -->
     <div class="tab-pane active" id="pane-create">
@@ -411,6 +418,8 @@
     // Load categories async (includes custom ones)
     await buildCategorySelectAsync(document.getElementById("ad-category"));
 
+    const editId = new URLSearchParams(window.location.search).get("edit");
+    if (editId) switchTab("my-ads");
     loadMyAds();
     loadVerificationStatus();
   });
@@ -619,6 +628,19 @@
           if (ad) openEditListing(ad);
         });
       });
+
+      // Auto-open edit modal if URL has ?edit=adId
+      const editId = new URLSearchParams(window.location.search).get("edit");
+      if (editId) {
+        const ad = ads.find(a => a.id === editId);
+        if (ad && (ad.status === "pending" || ad.status === "rejected")) {
+          setTimeout(() => openEditListing(ad), 200);
+        } else if (editId) {
+          showToast("That listing cannot be edited (it may already be approved).", "info");
+        }
+        // Clean URL without reload
+        history.replaceState(null, "", "dashboard.html");
+      }
     } catch (err) {
       loadingEl.style.display = "none";
       showToast("Could not load your ads: " + err.message, "error");
@@ -1033,6 +1055,19 @@
       btn.disabled = false;
       btn.innerHTML = `<i class="bi bi-patch-check"></i> Submit for Verification`;
     }
+  });
+
+  // ---- MOBILE SIDEBAR ----
+  const mobToggle  = document.getElementById("mob-sidebar-toggle");
+  const mobOverlay = document.getElementById("mob-sidebar-overlay");
+  const sidebar    = document.querySelector(".sidebar");
+  function openMobSidebar()  { sidebar.classList.add("mobile-open");    mobOverlay.classList.add("open"); }
+  function closeMobSidebar() { sidebar.classList.remove("mobile-open"); mobOverlay.classList.remove("open"); }
+  mobToggle.addEventListener("click", openMobSidebar);
+  mobOverlay.addEventListener("click", closeMobSidebar);
+  // Close sidebar when a tab is selected on mobile
+  document.querySelectorAll(".sidebar-nav a[data-tab]").forEach(a => {
+    a.addEventListener("click", () => { if (window.innerWidth < 769) closeMobSidebar(); });
   });
 </script>
 </body>

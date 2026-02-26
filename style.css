@@ -1254,20 +1254,61 @@ footer ul li a:hover { color: var(--white); }
   .footer-grid { grid-template-columns: 1fr 1fr; }
 }
 
+/* Mobile sidebar overlay system */
+.mobile-sidebar-toggle {
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-200);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  cursor: pointer;
+  border: none;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+}
+.mobile-sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: 199;
+}
+.mobile-sidebar-overlay.open { display: block; }
+
 @media (max-width: 768px) {
   .nav-links { display: none; }
   .hamburger { display: flex; }
+
+  /* Dashboard & Admin: slide-in sidebar */
   .dashboard-layout,
   .admin-layout { grid-template-columns: 1fr; }
+
+  .mobile-sidebar-toggle { display: flex; }
+
   .sidebar {
-    position: static;
-    height: auto;
-    border-right: none;
-    border-bottom: 1px solid var(--gray-200);
-    padding: 1rem 0;
+    position: fixed;
+    left: -280px;
+    top: 0;
+    bottom: 0;
+    width: 260px;
+    height: 100vh;
+    z-index: 200;
+    border-right: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-lg);
+    transition: left 0.28s cubic-bezier(.4,0,.2,1);
+    overflow-y: auto;
+    padding-top: 1rem;
   }
-  .main-content { padding: 1.5rem 1rem 3rem; }
+  .sidebar.mobile-open { left: 0; }
+
+  .main-content { padding: 1.25rem 1rem 3rem; }
   .form-row { grid-template-columns: 1fr; }
+  .price-input-group { grid-template-columns: 1fr; }
   .hero-search { flex-direction: column; }
   .hero-search select { border-left: none; border-right: none; border-top: 1px solid var(--gray-200); border-bottom: 1px solid var(--gray-200); }
   .footer-grid { grid-template-columns: 1fr; }
@@ -1277,16 +1318,33 @@ footer ul li a:hover { color: var(--white); }
   .results-count { margin-left: 0; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .days-grid { grid-template-columns: repeat(2, 1fr); }
+
+  /* Admin ad actions wrap nicely */
+  .admin-ad-actions { flex-wrap: wrap; gap: 0.35rem; }
+  .admin-ad-actions .btn { font-size: 0.78rem; padding: 0.3rem 0.6rem; }
+
+  /* User cards on mobile */
+  .user-card-header { flex-direction: column; gap: 0.5rem; }
+  .user-stats-row { gap: 0.75rem; }
+
+  /* Ad detail page on mobile */
+  .ad-content-grid { grid-template-columns: 1fr; gap: 1rem; }
+  .ad-contact-card { position: static; }
 }
 
 @media (max-width: 480px) {
-  h1 { font-size: 1.6rem; }
-  .ads-grid { grid-template-columns: 1fr; }
-  .categories-grid { grid-template-columns: repeat(3, 1fr); }
-  .hero { padding: 3rem 0 2.5rem; }
-  .hero-stats { gap: 1.5rem; }
+  h1 { font-size: 1.5rem; }
+  .ads-grid { grid-template-columns: repeat(2, 1fr); gap: 0.65rem; }
+  .categories-grid { grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+  .hero { padding: 2.5rem 0 2rem; }
+  .hero-stats { gap: 1.25rem; }
   .my-ad-item { flex-direction: column; }
   .my-ad-thumb { width: 100%; height: 160px; }
+  .card-title { font-size: 0.88rem; }
+  .card-price { font-size: 1rem; }
+  /* Modal full-screen on small phones */
+  .modal { margin: 0.5rem; }
+  .modal-overlay .modal { width: calc(100vw - 2rem); max-width: none; }
 }
 
 /* ---------- USER DROPDOWN ---------- */

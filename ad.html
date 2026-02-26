@@ -48,7 +48,8 @@
     .ad-gallery-main-img img {
       width: 100%;
       height: 100%;
-      object-fit: cover;
+      object-fit: contain;
+      background: #0f172a;
       display: none;
       cursor: zoom-in;
     }
@@ -440,6 +441,15 @@
             Always meet in a public place. Never send payments in advance.
           </div>
 
+          <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem;">
+            <button id="bookmark-btn" class="btn btn-ghost btn-sm" style="flex:1;justify-content:center;">
+              <i class="bi bi-bookmark" id="bookmark-icon"></i> <span id="bookmark-label">Save</span>
+            </button>
+            <button id="share-btn" class="btn btn-ghost btn-sm" style="flex:1;justify-content:center;">
+              <i class="bi bi-share"></i> Share
+            </button>
+          </div>
+
           <button class="report-link-modern" id="report-btn">
             <i class="bi bi-flag"></i> Report this listing
           </button>
@@ -591,7 +601,7 @@
         ownerBar.innerHTML = `
           <i class="bi bi-info-circle-fill" style="color:var(--primary);"></i>
           <span style="font-size:0.875rem;color:#1e40af;flex:1;">This is your listing.</span>
-          <a href="dashboard.html" class="btn btn-primary btn-sm"><i class="bi bi-pencil"></i> Manage / Edit</a>
+          <a href="dashboard.html?edit=${id}" class="btn btn-primary btn-sm"><i class="bi bi-pencil"></i> Edit This Listing</a>
         `;
         document.querySelector(".ad-content-grid").insertAdjacentElement("beforebegin", ownerBar);
       }
@@ -673,6 +683,41 @@
   // Report
   document.getElementById("report-btn").addEventListener("click", () => {
     showToast("Thank you for reporting. Our team will review this listing.", "info");
+  });
+
+  // Bookmark (localStorage)
+  function updateBookmarkBtn() {
+    if (!adId) return;
+    const saved = JSON.parse(localStorage.getItem("rh_bookmarks") || "[]");
+    const isBookmarked = saved.includes(adId);
+    document.getElementById("bookmark-icon").className = isBookmarked ? "bi bi-bookmark-fill" : "bi bi-bookmark";
+    document.getElementById("bookmark-label").textContent = isBookmarked ? "Saved" : "Save";
+    document.getElementById("bookmark-btn").style.color = isBookmarked ? "var(--primary)" : "";
+  }
+  document.getElementById("bookmark-btn").addEventListener("click", () => {
+    const saved = JSON.parse(localStorage.getItem("rh_bookmarks") || "[]");
+    const idx = saved.indexOf(adId);
+    if (idx > -1) { saved.splice(idx, 1); showToast("Removed from saved listings", "info"); }
+    else { saved.push(adId); showToast("Listing saved! View saved listings in Browse.", "success"); }
+    localStorage.setItem("rh_bookmarks", JSON.stringify(saved));
+    updateBookmarkBtn();
+  });
+  updateBookmarkBtn();
+
+  // Share
+  document.getElementById("share-btn").addEventListener("click", async () => {
+    const title = document.getElementById("ad-title").textContent;
+    const url = window.location.href;
+    if (navigator.share) {
+      try { await navigator.share({ title: `${title} - RentHub Sri Lanka`, url }); } catch (_) {}
+    } else {
+      try {
+        await navigator.clipboard.writeText(url);
+        showToast("Link copied to clipboard!", "success");
+      } catch (_) {
+        showToast("Copy this link: " + url, "info", 6000);
+      }
+    }
   });
 
   async function loadSimilar(category, title, description, excludeId) {

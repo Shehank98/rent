@@ -13,6 +13,10 @@
     .admin-search-wrap input:focus { border-color:var(--primary); }
     .admin-search-wrap .si { position:absolute; left:0.875rem; top:50%; transform:translateY(-50%); color:var(--gray-400); }
     .ad-user-info { font-size:0.78rem; color:var(--gray-500); margin-top:0.3rem; }
+    .admin-id-row { display:flex; align-items:center; gap:0.5rem; margin:0.2rem 0 0.3rem; }
+    .admin-listing-id { font-family:monospace; font-size:0.76rem; color:var(--gray-500); background:var(--gray-100); padding:0.15rem 0.5rem; border-radius:var(--radius-sm); border:1px solid var(--gray-200); }
+    .admin-copy-id-btn { font-size:0.72rem; padding:0.15rem 0.5rem; border:1px solid var(--gray-200); border-radius:var(--radius-sm); background:white; cursor:pointer; color:var(--primary); display:inline-flex; align-items:center; gap:0.25rem; transition:background 0.15s; }
+    .admin-copy-id-btn:hover { background:var(--gray-50); }
     .admin-section { display:none; }
     .admin-section.active { display:block; }
     /* User cards */
@@ -101,6 +105,9 @@
   </nav>
 </nav>
 
+<!-- Mobile sidebar overlay -->
+<div class="mobile-sidebar-overlay" id="mob-sidebar-overlay"></div>
+
 <!-- ==================== ADMIN LAYOUT ==================== -->
 <div class="admin-layout">
 
@@ -138,6 +145,9 @@
 
   <!-- MAIN CONTENT -->
   <main class="main-content">
+    <button class="mobile-sidebar-toggle" id="mob-sidebar-toggle">
+      <i class="bi bi-layout-sidebar"></i> Menu
+    </button>
 
     <!-- ============ SECTION: ADS ============ -->
     <div class="admin-section active" id="section-ads">
@@ -623,6 +633,14 @@
              onerror="this.src='https://placehold.co/100x72/e2e8f0/94a3b8?text=No+Image'" />
         <div class="admin-ad-info">
           <div class="admin-ad-title">${safe}</div>
+          <div class="admin-id-row">
+            <span class="admin-listing-id" title="Listing ID: ${ad.id}">
+              <i class="bi bi-hash"></i> ${ad.id.slice(0,12)}...
+            </span>
+            <button class="admin-copy-id-btn" onclick="navigator.clipboard.writeText('${ad.id}').then(()=>{this.textContent='Copied!';setTimeout(()=>{this.innerHTML='<i class=\'bi bi-copy\'></i> Copy ID'},1200)})" title="Copy full listing ID">
+              <i class="bi bi-copy"></i> Copy ID
+            </button>
+          </div>
           <div class="admin-ad-meta">
             <span><i class="bi bi-geo-alt"></i> ${escapeHtml(ad.location || "N/A")}</span>
             <span><i class="bi bi-tag"></i> ${escapeHtml(ad.category || "Other")}</span>
@@ -1453,6 +1471,18 @@
       renderCategories();
     } catch (err) { showToast("Delete failed: " + err.message, "error"); }
   }
+
+  // ---- MOBILE SIDEBAR ----
+  const mobToggleAdmin  = document.getElementById("mob-sidebar-toggle");
+  const mobOverlayAdmin = document.getElementById("mob-sidebar-overlay");
+  const sidebarAdmin    = document.querySelector(".sidebar");
+  function openMobSidebar()  { sidebarAdmin.classList.add("mobile-open");    mobOverlayAdmin.classList.add("open"); }
+  function closeMobSidebar() { sidebarAdmin.classList.remove("mobile-open"); mobOverlayAdmin.classList.remove("open"); }
+  mobToggleAdmin.addEventListener("click", openMobSidebar);
+  mobOverlayAdmin.addEventListener("click", closeMobSidebar);
+  document.querySelectorAll(".sidebar-nav a[data-section]").forEach(a => {
+    a.addEventListener("click", () => { if (window.innerWidth < 769) closeMobSidebar(); });
+  });
 </script>
 </body>
 </html>
