@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RentHub — Sri Lanka's Rental Marketplace</title>
   <meta name="description" content="Discover vans, cars, wedding vehicles, construction equipment, party items and more across Sri Lanka." />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -84,7 +85,7 @@
 
     <div class="hero-stats">
       <div class="hero-stat">
-        <strong id="stat-total">—</strong>
+        <strong id="stat-total">...</strong>
         <span>Active Listings</span>
       </div>
       <div class="hero-stat">
@@ -115,43 +116,40 @@
   </div>
 </section>
 
-<!-- ==================== FEATURED ADS ==================== -->
-<section class="featured-section" id="featured">
+<!-- ==================== ALL LISTINGS ==================== -->
+<section class="latest-section" id="all-listings-section">
   <div class="container">
-    <div class="section-header">
+    <div class="section-header" style="flex-wrap:wrap;gap:1rem;">
       <div>
-        <div class="section-badge gold"><i class="bi bi-star-fill"></i> Featured</div>
-        <div class="section-title">Featured <span>Listings</span></div>
-        <p class="section-subtitle">Promoted listings by our members</p>
+        <div class="section-badge"><i class="bi bi-grid-3x3-gap"></i> Listings</div>
+        <div class="section-title">All <span>Listings</span></div>
       </div>
-      <a href="listings.html?sort=featured" class="btn btn-outline btn-sm">View All</a>
+      <a href="listings.html" class="btn btn-outline btn-sm">Advanced Search</a>
     </div>
-    <div class="ads-grid" id="featured-ads-grid">
-      <div class="skeleton skeleton-card"></div>
-      <div class="skeleton skeleton-card"></div>
-      <div class="skeleton skeleton-card"></div>
-      <div class="skeleton skeleton-card"></div>
-    </div>
-    <div id="no-featured" class="empty-state hidden">
-      <i class="bi bi-star" style="font-size:2.5rem;color:var(--gray-300);"></i>
-      <h3>No featured listings yet</h3>
-      <p>Check back soon</p>
-    </div>
-  </div>
-</section>
 
-<!-- ==================== LATEST ADS ==================== -->
-<section class="latest-section" id="latest">
-  <div class="container">
-    <div class="section-header">
-      <div>
-        <div class="section-badge"><i class="bi bi-clock-history"></i> Latest</div>
-        <div class="section-title">Recent <span>Listings</span></div>
-        <p class="section-subtitle">Freshly posted rental ads</p>
+    <!-- Inline filters -->
+    <div style="display:flex;flex-wrap:wrap;gap:0.6rem;margin-bottom:1.5rem;align-items:center;">
+      <div style="position:relative;flex:1;min-width:180px;max-width:280px;">
+        <i class="bi bi-search" style="position:absolute;left:0.75rem;top:50%;transform:translateY(-50%);color:var(--gray-400);pointer-events:none;"></i>
+        <input type="text" id="home-search" placeholder="Search listings..." autocomplete="off"
+               style="width:100%;padding:0.55rem 0.75rem 0.55rem 2.25rem;border:1.5px solid var(--gray-200);border-radius:var(--radius);font-size:0.88rem;outline:none;font-family:inherit;"
+               onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--gray-200)'" />
       </div>
-      <a href="listings.html" class="btn btn-outline btn-sm">Browse All</a>
+      <select id="home-cat-filter"
+              style="padding:0.55rem 0.75rem;border:1.5px solid var(--gray-200);border-radius:var(--radius);font-size:0.88rem;outline:none;font-family:inherit;background:white;cursor:pointer;color:var(--gray-700);">
+        <option value="">All Categories</option>
+      </select>
+      <select id="home-loc-filter"
+              style="padding:0.55rem 0.75rem;border:1.5px solid var(--gray-200);border-radius:var(--radius);font-size:0.88rem;outline:none;font-family:inherit;background:white;cursor:pointer;color:var(--gray-700);">
+        <option value="">All Locations</option>
+      </select>
+      <button id="home-filter-reset" class="btn btn-ghost btn-sm" style="display:none;">
+        <i class="bi bi-x-circle"></i> Clear
+      </button>
     </div>
-    <div class="ads-grid" id="latest-ads-grid">
+
+    <!-- Listings grid -->
+    <div class="ads-grid" id="all-ads-grid">
       <div class="skeleton skeleton-card"></div>
       <div class="skeleton skeleton-card"></div>
       <div class="skeleton skeleton-card"></div>
@@ -161,14 +159,17 @@
       <div class="skeleton skeleton-card"></div>
       <div class="skeleton skeleton-card"></div>
     </div>
-    <div id="no-latest" class="empty-state hidden">
-      <i class="bi bi-clipboard2-x" style="font-size:2.5rem;color:var(--gray-300);"></i>
-      <h3>No listings yet</h3>
-      <p>Be the first to post a rental ad</p>
-      <button class="btn btn-primary post-ad-btn">Post an Ad</button>
+    <div id="no-listings" class="empty-state hidden">
+      <i class="bi bi-search" style="font-size:2.5rem;color:var(--gray-300);"></i>
+      <h3>No listings found</h3>
+      <p>Try changing your filters or search terms.</p>
+      <button class="btn btn-ghost btn-sm" id="no-listings-reset">Clear Filters</button>
     </div>
-    <div style="text-align:center;margin-top:2.5rem;">
-      <a href="listings.html" class="btn btn-outline btn-lg">View All Listings</a>
+
+    <div id="show-more-wrap" style="text-align:center;margin-top:2rem;display:none;">
+      <button id="show-more-btn" class="btn btn-outline btn-lg">
+        <i class="bi bi-arrow-down-circle"></i> Show More Listings
+      </button>
     </div>
   </div>
 </section>
@@ -245,12 +246,12 @@
 <script type="module">
   import {
     db, auth, onAuthStateChanged,
-    collection, query, where, orderBy, limit, getDocs,
+    collection, query, where, getDocs,
   } from "./firebase.js";
   import {
     initNavbar, buildAdCard, isFeaturedActive,
     buildCategorySelect, buildLocationDatalist,
-    CATEGORY_GROUPS, CATEGORY_ICONS, escapeHtml,
+    CATEGORY_GROUPS, escapeHtml, debounce,
     signInWithGoogle,
   } from "./main.js";
 
@@ -262,139 +263,172 @@
 
   function handlePostAdClick(e) {
     e.preventDefault();
-    if (currentUser) {
-      window.location.href = "dashboard.html";
-    } else {
-      document.getElementById("signin-modal").classList.add("open");
-    }
+    if (currentUser) window.location.href = "dashboard.html";
+    else document.getElementById("signin-modal").classList.add("open");
   }
+  document.querySelectorAll(".post-ad-btn").forEach(btn => btn.addEventListener("click", handlePostAdClick));
 
-  document.querySelectorAll(".post-ad-btn").forEach(btn => {
-    btn.addEventListener("click", handlePostAdClick);
-  });
-
-  document.getElementById("modal-close-btn").addEventListener("click", () => {
-    document.getElementById("signin-modal").classList.remove("open");
-  });
+  document.getElementById("modal-close-btn").addEventListener("click", () =>
+    document.getElementById("signin-modal").classList.remove("open"));
   document.getElementById("signin-modal").addEventListener("click", (e) => {
     if (e.target.id === "signin-modal") document.getElementById("signin-modal").classList.remove("open");
   });
-
   document.getElementById("modal-google-signin").addEventListener("click", async () => {
     const btn = document.getElementById("modal-google-signin");
     btn.disabled = true;
     btn.innerHTML = `<span class="spinner spinner-sm" style="display:inline-block;margin-right:0.5rem;"></span> Signing in...`;
-    try {
-      await signInWithGoogle();
-      window.location.href = "dashboard.html";
-    } catch (_) {
-      btn.disabled = false;
-      btn.innerHTML = `<i class="bi bi-google"></i> Continue with Google`;
-    }
+    try { await signInWithGoogle(); window.location.href = "dashboard.html"; }
+    catch (_) { btn.disabled = false; btn.innerHTML = `<i class="bi bi-google"></i> Continue with Google`; }
   });
 
-  // ---- Build category select in hero ----
+  // ---- Hero search -> navigate to listings page ----
   buildCategorySelect(document.getElementById("hero-category-select"), true);
   buildLocationDatalist(document.getElementById("hero-location-list"));
-
-  // ---- Build category cards grid ----
-  const catGrid = document.getElementById("cat-grid");
-  const groupIcons = {
-    "Vehicles":            "bi-car-front",
-    "Wedding & Events":    "bi-heart",
-    "Construction":        "bi-tools",
-    "Property":            "bi-building",
-    "Electronics & Media": "bi-camera",
-    "Party & Leisure":     "bi-gift",
-    "Clothing":            "bi-person-badge",
-    "Other":               "bi-box2",
-  };
-  const groupFirstCat = {
-    "Vehicles":            "Car",
-    "Wedding & Events":    "Wedding Car",
-    "Construction":        "Construction Equipment",
-    "Property":            "House / Villa",
-    "Electronics & Media": "Camera & Photography",
-    "Party & Leisure":     "Party Items",
-    "Clothing":            "Formal Wear",
-    "Other":               "Other",
-  };
-  catGrid.innerHTML = Object.keys(CATEGORY_GROUPS).map(group => {
-    const icon = groupIcons[group] || "bi-box2";
-    const firstCat = encodeURIComponent(groupFirstCat[group] || group);
-    return `
-      <a href="listings.html?category=${firstCat}" class="category-card">
-        <div class="cat-icon-wrap"><i class="bi ${icon}"></i></div>
-        <div class="category-name">${escapeHtml(group)}</div>
-        <div class="category-count" data-group="${escapeHtml(group)}">...</div>
-      </a>
-    `;
-  }).join("");
-
-  // ---- Hero search ----
-  document.getElementById("hero-search-btn").addEventListener("click", doSearch);
-  document.getElementById("hero-search-input").addEventListener("keydown", e => { if (e.key === "Enter") doSearch(); });
-
-  function doSearch() {
-    const q        = document.getElementById("hero-search-input").value.trim();
+  document.getElementById("hero-search-btn").addEventListener("click", doHeroSearch);
+  document.getElementById("hero-search-input").addEventListener("keydown", e => { if (e.key === "Enter") doHeroSearch(); });
+  function doHeroSearch() {
+    const q = document.getElementById("hero-search-input").value.trim();
     const category = document.getElementById("hero-category-select").value;
     const location = document.getElementById("hero-location-input").value.trim();
-    const params   = new URLSearchParams();
-    if (q)        params.set("q", q);
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
     if (category) params.set("category", category);
     if (location) params.set("location", location);
     window.location.href = `listings.html?${params.toString()}`;
   }
 
-  // ---- Load ads from Firestore ----
+  // ---- Build category cards grid ----
+  const catGrid = document.getElementById("cat-grid");
+  const groupIcons = {
+    "Vehicles":"bi-car-front","Wedding & Events":"bi-heart","Construction":"bi-tools",
+    "Property":"bi-building","Electronics & Media":"bi-camera","Party & Leisure":"bi-gift",
+    "Clothing":"bi-person-badge","Other":"bi-box2",
+  };
+  const groupFirstCat = {
+    "Vehicles":"Car","Wedding & Events":"Wedding Car","Construction":"Construction Equipment",
+    "Property":"House / Villa","Electronics & Media":"Camera & Photography",
+    "Party & Leisure":"Party Items","Clothing":"Formal Wear","Other":"Other",
+  };
+  catGrid.innerHTML = Object.keys(CATEGORY_GROUPS).map(group => {
+    const icon = groupIcons[group] || "bi-box2";
+    const cat  = encodeURIComponent(groupFirstCat[group] || group);
+    return `<a href="listings.html?category=${cat}" class="category-card">
+      <div class="cat-icon-wrap"><i class="bi ${icon}"></i></div>
+      <div class="category-name">${escapeHtml(group)}</div>
+      <div class="category-count" data-group="${escapeHtml(group)}">...</div>
+    </a>`;
+  }).join("");
+
+  // ====================================================
+  // ALL LISTINGS — load + inline filter + show more
+  // ====================================================
+  let allAds = []; // all approved ads
+  let PAGE_SIZE = 12;
+  let shownCount = PAGE_SIZE;
+
+  // Populate inline category filter
+  buildCategorySelect(document.getElementById("home-cat-filter"), true);
+
+  // Collect unique locations for location filter
+  function buildLocationFilter(ads) {
+    const locations = [...new Set(ads.map(a => a.location).filter(Boolean))].sort();
+    const sel = document.getElementById("home-loc-filter");
+    sel.innerHTML = `<option value="">All Locations</option>` +
+      locations.map(l => `<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join("");
+  }
+
+  // Filter + render
+  function getFiltered() {
+    const q   = document.getElementById("home-search").value.trim().toLowerCase();
+    const cat = document.getElementById("home-cat-filter").value;
+    const loc = document.getElementById("home-loc-filter").value;
+    const hasFilter = q || cat || loc;
+    document.getElementById("home-filter-reset").style.display = hasFilter ? "inline-flex" : "none";
+
+    return allAds.filter(ad => {
+      if (cat && ad.category !== cat) return false;
+      if (loc && ad.location !== loc) return false;
+      if (q) {
+        const hay = `${ad.title} ${ad.description} ${ad.category} ${ad.location}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }
+
+  function renderGrid() {
+    const filtered = getFiltered();
+    const grid  = document.getElementById("all-ads-grid");
+    const empty = document.getElementById("no-listings");
+    const moreWrap = document.getElementById("show-more-wrap");
+
+    if (filtered.length === 0) {
+      grid.innerHTML = "";
+      empty.classList.remove("hidden");
+      moreWrap.style.display = "none";
+      return;
+    }
+    empty.classList.add("hidden");
+    const toShow = filtered.slice(0, shownCount);
+    grid.innerHTML = toShow.map(ad => buildAdCard(ad, ad.id)).join("");
+    moreWrap.style.display = filtered.length > shownCount ? "block" : "none";
+  }
+
+  document.getElementById("home-search").addEventListener("input", debounce(() => { shownCount = PAGE_SIZE; renderGrid(); }, 250));
+  document.getElementById("home-cat-filter").addEventListener("change", () => { shownCount = PAGE_SIZE; renderGrid(); });
+  document.getElementById("home-loc-filter").addEventListener("change", () => { shownCount = PAGE_SIZE; renderGrid(); });
+  function clearFilters() {
+    document.getElementById("home-search").value = "";
+    document.getElementById("home-cat-filter").value = "";
+    document.getElementById("home-loc-filter").value = "";
+    shownCount = PAGE_SIZE;
+    renderGrid();
+  }
+  document.getElementById("home-filter-reset").addEventListener("click", clearFilters);
+  document.getElementById("no-listings-reset").addEventListener("click", clearFilters);
+  document.getElementById("show-more-btn").addEventListener("click", () => {
+    shownCount += PAGE_SIZE;
+    renderGrid();
+  });
+
+  // ---- Load all approved ads ----
   async function loadAds() {
     try {
-      const snap = await getDocs(
-        query(collection(db, "ads"), where("status", "==", "approved"), orderBy("createdAt", "desc"), limit(80))
-      );
-      const all = [];
-      snap.forEach(d => all.push({ id: d.id, ...d.data() }));
+      const snap = await getDocs(query(collection(db, "ads"), where("status", "==", "approved")));
+      allAds = [];
+      snap.forEach(d => allAds.push({ id: d.id, ...d.data() }));
 
-      // Stat
-      document.getElementById("stat-total").textContent = all.length + "+";
+      // Sort: featured first, then newest
+      allAds.sort((a, b) => {
+        const af = isFeaturedActive(a.featuredUntil) ? 1 : 0;
+        const bf = isFeaturedActive(b.featuredUntil) ? 1 : 0;
+        if (bf !== af) return bf - af;
+        return (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0);
+      });
+
+      // Stats
+      document.getElementById("stat-total").textContent = allAds.length > 0 ? allAds.length + "+" : "0";
 
       // Category group counts
       const groupCounts = {};
-      all.forEach(ad => {
+      allAds.forEach(ad => {
         Object.entries(CATEGORY_GROUPS).forEach(([group, cats]) => {
           if (cats.includes(ad.category)) groupCounts[group] = (groupCounts[group] || 0) + 1;
         });
       });
       document.querySelectorAll(".category-count[data-group]").forEach(el => {
-        const g = el.dataset.group;
-        const n = groupCounts[g] || 0;
+        const n = groupCounts[el.dataset.group] || 0;
         el.textContent = n > 0 ? `${n} listing${n !== 1 ? "s" : ""}` : "0 listings";
       });
 
-      // Featured ads
-      const now = new Date();
-      const featured = all.filter(ad => ad.featured && isFeaturedActive(ad.featuredUntil));
-      const featGrid = document.getElementById("featured-ads-grid");
-      if (featured.length === 0) {
-        featGrid.innerHTML = "";
-        document.getElementById("no-featured").classList.remove("hidden");
-      } else {
-        featGrid.innerHTML = featured.slice(0, 8).map(ad => buildAdCard(ad, ad.id)).join("");
-      }
-
-      // Latest ads
-      const latestGrid = document.getElementById("latest-ads-grid");
-      if (all.length === 0) {
-        latestGrid.innerHTML = "";
-        document.getElementById("no-latest").classList.remove("hidden");
-      } else {
-        latestGrid.innerHTML = all.slice(0, 8).map(ad => buildAdCard(ad, ad.id)).join("");
-      }
+      buildLocationFilter(allAds);
+      renderGrid();
     } catch (err) {
       console.error(err);
-      document.getElementById("featured-ads-grid").innerHTML =
-        `<div class="alert alert-warning" style="grid-column:1/-1">Could not load listings. Check your Firebase configuration.</div>`;
-      document.getElementById("latest-ads-grid").innerHTML = "";
+      document.getElementById("all-ads-grid").innerHTML =
+        `<p style="grid-column:1/-1;color:var(--gray-500);padding:2rem 0;text-align:center;">
+           <i class="bi bi-exclamation-circle"></i> Could not load listings. Please try again later.
+         </p>`;
     }
   }
 

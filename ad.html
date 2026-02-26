@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Ad Details — RentHub Sri Lanka</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
   <link rel="stylesheet" href="style.css" />
   <style>
@@ -473,12 +474,16 @@
 
 <script type="module">
   import {
-    db, collection, doc, getDoc, query, where, limit, getDocs,
+    db, auth, collection, doc, getDoc, query, where, limit, getDocs,
+    onAuthStateChanged,
   } from "./firebase.js";
   import {
     initNavbar, formatPrice, formatDate, isFeaturedActive,
     buildAdCard, escapeHtml, showToast,
   } from "./main.js";
+
+  let currentUser = null;
+  onAuthStateChanged(auth, u => { currentUser = u; });
 
   initNavbar();
 
@@ -528,7 +533,7 @@
       const priceLabel = priceTypeLabels[ad.priceType] || "Per Day";
       const priceNum = parseFloat(ad.price);
       document.getElementById("ad-price-hero").innerHTML =
-        `Rs. ${isNaN(priceNum) ? "—" : priceNum.toLocaleString("en-LK")} <small>/ ${priceLabel}</small>`;
+        `Rs. ${isNaN(priceNum) ? "-" : priceNum.toLocaleString("en-LK")} <small>/ ${priceLabel}</small>`;
 
       // Chips
       const featured = isFeaturedActive(ad.featuredUntil);
@@ -579,7 +584,19 @@
       document.getElementById("ad-hero").classList.remove("hidden");
       document.getElementById("ad-content").classList.remove("hidden");
 
-      loadSimilar(ad.category, id);
+      // Show "Manage My Listing" button if this ad belongs to the current user
+      if (currentUser && currentUser.uid === ad.userId) {
+        const ownerBar = document.createElement("div");
+        ownerBar.style.cssText = "background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:var(--radius);padding:0.75rem 1rem;margin-bottom:0.5rem;display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;";
+        ownerBar.innerHTML = `
+          <i class="bi bi-info-circle-fill" style="color:var(--primary);"></i>
+          <span style="font-size:0.875rem;color:#1e40af;flex:1;">This is your listing.</span>
+          <a href="dashboard.html" class="btn btn-primary btn-sm"><i class="bi bi-pencil"></i> Manage / Edit</a>
+        `;
+        document.querySelector(".ad-content-grid").insertAdjacentElement("beforebegin", ownerBar);
+      }
+
+      loadSimilar(ad.category, ad.title, ad.description, id);
     } catch (err) {
       console.error(err);
       document.getElementById("ad-loading").classList.add("hidden");
@@ -658,20 +675,45 @@
     showToast("Thank you for reporting. Our team will review this listing.", "info");
   });
 
-  async function loadSimilar(category, excludeId) {
+  async function loadSimilar(category, title, description, excludeId) {
     try {
+      // Load a broad set of approved ads for scoring
       const snap = await getDocs(
-        query(collection(db, "ads"),
-          where("status", "==", "approved"),
-          where("category", "==", category),
-          limit(8))
+        query(collection(db, "ads"), where("status", "==", "approved"), limit(60))
       );
-      const similar = [];
-      snap.forEach(d => { if (d.id !== excludeId) similar.push({ id: d.id, ...d.data() }); });
-      const toShow = similar.slice(0, 4);
-      if (toShow.length > 0) {
+      const candidates = [];
+      snap.forEach(d => { if (d.id !== excludeId) candidates.push({ id: d.id, ...d.data() }); });
+
+      // Score by relevance: category match + title/description keyword overlap
+      const titleWords = (title || "").toLowerCase().split(/\W+/).filter(w => w.length > 3);
+      const descWords  = (description || "").toLowerCase().split(/\W+/).filter(w => w.length > 3);
+
+      const scored = candidates.map(ad => {
+        let score = 0;
+        // Same category = strong signal
+        if (ad.category === category) score += 5;
+        // Title word overlap
+        const adTitle = (ad.title || "").toLowerCase();
+        titleWords.forEach(w => { if (adTitle.includes(w)) score += 2; });
+        // Description word overlap
+        const adDesc = (ad.description || "").toLowerCase();
+        descWords.forEach(w => { if (adDesc.includes(w)) score += 1; });
+        // Boost featured
+        if (isFeaturedActive(ad.featuredUntil)) score += 1;
+        return { ad, score };
+      });
+
+      // Sort by score descending, take top 4
+      scored.sort((a, b) => b.score - a.score);
+      const toShow = scored.filter(s => s.score > 0).slice(0, 4).map(s => s.ad);
+
+      // Fallback: if no scored matches, just take same-category ads
+      const fallback = candidates.filter(a => a.category === category).slice(0, 4);
+      const display  = toShow.length > 0 ? toShow : fallback;
+
+      if (display.length > 0) {
         document.getElementById("similar-section").classList.remove("hidden");
-        document.getElementById("similar-grid").innerHTML = toShow.map(ad => buildAdCard(ad, ad.id)).join("");
+        document.getElementById("similar-grid").innerHTML = display.map(ad => buildAdCard(ad, ad.id)).join("");
       }
     } catch (_) {}
   }

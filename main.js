@@ -259,13 +259,13 @@ export function requireAdmin(callback) {
 
 export function formatPrice(price, priceType = "day") {
   const num = parseFloat(price);
-  if (isNaN(num)) return price || "—";
+  if (isNaN(num)) return price || "-";
   const labels = { day: "Day", km: "KM", week: "Week", month: "Month", event: "Event", hour: "Hour" };
   return `Rs. ${num.toLocaleString("en-LK")} / ${labels[priceType] || priceType}`;
 }
 
 export function formatDate(timestamp) {
-  if (!timestamp) return "—";
+  if (!timestamp) return "-";
   let date;
   if (timestamp.toDate) date = timestamp.toDate();
   else if (timestamp instanceof Date) date = timestamp;
