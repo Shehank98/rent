@@ -27,6 +27,7 @@ import {
   limit,
   serverTimestamp,
   Timestamp,
+  increment,
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import {
   getStorage,
@@ -77,6 +78,7 @@ export {
   limit,
   serverTimestamp,
   Timestamp,
+  increment,
 };
 
 // Storage SDK re-exports

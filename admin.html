@@ -610,6 +610,21 @@
     listEl.querySelectorAll("[data-action]").forEach(btn => {
       btn.addEventListener("click", () => handleAdAction(btn.dataset.action, btn.dataset.id, btn.dataset.title));
     });
+
+    listEl.querySelectorAll("[data-copy-id]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const idToCopy = btn.dataset.copyId;
+        const fallback = () => {
+          const ta = document.createElement("textarea");
+          ta.value = idToCopy; ta.style.position = "fixed"; ta.style.opacity = "0";
+          document.body.appendChild(ta); ta.select(); document.execCommand("copy");
+          document.body.removeChild(ta);
+        };
+        (navigator.clipboard ? navigator.clipboard.writeText(idToCopy).catch(fallback) : Promise.reject()).catch(fallback);
+        btn.innerHTML = '<i class="bi bi-check2"></i> Copied!';
+        setTimeout(() => { btn.innerHTML = '<i class="bi bi-copy"></i> Copy ID'; }, 1500);
+      });
+    });
   }
 
   function renderAdminItem(ad) {
@@ -637,7 +652,7 @@
             <span class="admin-listing-id" title="Listing ID: ${ad.id}">
               <i class="bi bi-hash"></i> ${ad.id.slice(0,12)}...
             </span>
-            <button class="admin-copy-id-btn" onclick="navigator.clipboard.writeText('${ad.id}').then(()=>{this.textContent='Copied!';setTimeout(()=>{this.innerHTML='<i class=\'bi bi-copy\'></i> Copy ID'},1200)})" title="Copy full listing ID">
+            <button class="admin-copy-id-btn" data-copy-id="${ad.id}" title="Copy full listing ID">
               <i class="bi bi-copy"></i> Copy ID
             </button>
           </div>
@@ -646,6 +661,7 @@
             <span><i class="bi bi-tag"></i> ${escapeHtml(ad.category || "Other")}</span>
             <span><i class="bi bi-cash-stack"></i> ${formatPrice(ad.price, ad.priceType || "day")}</span>
             <span><i class="bi bi-calendar3"></i> ${formatDate(ad.createdAt)}</span>
+            <span><i class="bi bi-eye"></i> ${(ad.views || 0).toLocaleString()} views</span>
           </div>
           <div class="ad-user-info">
             <i class="bi bi-person"></i> ${escapeHtml(ad.userName || "Unknown")} &middot; ${escapeHtml(ad.userEmail || "")}
