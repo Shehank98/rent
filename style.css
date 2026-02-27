@@ -2063,3 +2063,12 @@ footer ul li a:hover { color: var(--white); }
 .review-stars-sm i.empty { color: var(--gray-300); }
 .review-date { font-size: 0.72rem; color: var(--gray-400); }
 .review-comment-text { font-size: 0.875rem; color: var(--gray-700); line-height: 1.55; }
+
+/* Listings page: compact title bar (replaces old listings-hero) */
+.listings-page-title-bar {
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-100);
+}
+@media (max-width: 768px) {
+  .listings-page-title-bar { display: none; }
+}

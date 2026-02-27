@@ -58,13 +58,24 @@
   </nav>
 </nav>
 
-<!-- ==================== PAGE HEADER ==================== -->
-<section class="listings-hero">
+<!-- ==================== ADSPOTMEDIA PROMO (top of page) ==================== -->
+<div class="adspot-promo">
   <div class="container">
-    <h1>Browse All Listings</h1>
-    <p>Find the perfect rental across Sri Lanka</p>
+    <div class="adspot-promo-inner">
+      <div class="adspot-promo-icon">
+        <i class="bi bi-newspaper"></i>
+      </div>
+      <div class="adspot-promo-text">
+        <div class="adspot-promo-label">Advertisement &bull; Partner Service</div>
+        <div class="adspot-promo-title">Need to advertise in newspapers?</div>
+        <div class="adspot-promo-sub">Book print ads across all major Sri Lanka newspapers online — fast, easy &amp; affordable.</div>
+      </div>
+      <a href="https://www.adspotmedia.lk" target="_blank" rel="noopener noreferrer" class="adspot-cta-btn">
+        Book a Newspaper Ad <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
   </div>
-</section>
+</div>
 
 <!-- ==================== MOBILE FILTER TOOLBAR ==================== -->
 <div class="listings-mobile-toolbar">
@@ -72,10 +83,17 @@
     <i class="bi bi-sliders"></i> Filters
     <span id="filter-active-badge" class="filter-active-badge hidden"></span>
   </button>
-  <span id="results-count-mobile" class="results-count"></span>
+  <span id="results-count-mobile" class="results-count" style="font-size:0.8rem;color:var(--gray-500);"></span>
 </div>
 
 <!-- ==================== FILTER BAR / DRAWER ==================== -->
+<div class="listings-page-title-bar">
+  <div class="container" style="display:flex;align-items:center;gap:0.6rem;padding-top:0.6rem;padding-bottom:0.6rem;">
+    <i class="bi bi-grid-3x3-gap" style="color:var(--primary);font-size:0.95rem;"></i>
+    <span style="font-weight:700;font-size:0.9rem;color:var(--dark-2);">Browse All Listings</span>
+    <span id="results-count-desktop" style="font-size:0.8rem;color:var(--gray-400);margin-left:0.25rem;"></span>
+  </div>
+</div>
 <div class="filter-bar" id="listings-filter-bar">
   <div class="container">
 
@@ -249,8 +267,10 @@
       noResults.classList.remove("hidden");
       loadMoreWrap.classList.add("hidden");
       countEl.textContent = "0 results";
-      const mobCount = document.getElementById("results-count-mobile");
-      if (mobCount) mobCount.textContent = "0 results";
+      const mobCount0 = document.getElementById("results-count-mobile");
+      if (mobCount0) mobCount0.textContent = "0 results";
+      const dskCount0 = document.getElementById("results-count-desktop");
+      if (dskCount0) dskCount0.textContent = "— 0 results";
       return;
     }
 
@@ -259,6 +279,8 @@
     countEl.textContent = countText;
     const mobCount = document.getElementById("results-count-mobile");
     if (mobCount) mobCount.textContent = countText;
+    const dskCount = document.getElementById("results-count-desktop");
+    if (dskCount) dskCount.textContent = `— ${countText}`;
 
     const batch = filtered.slice(rendered, rendered + PAGE_SIZE);
     grid.insertAdjacentHTML("beforeend", batch.map(ad => buildAdCard(ad, ad.id)).join(""));
