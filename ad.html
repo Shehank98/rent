@@ -495,7 +495,7 @@
           </div>
 
           <!-- Write a review (signed-in, not owner, not yet reviewed) -->
-          <div id="review-form-wrap" style="display:none;" class="review-form-box">
+          <div id="review-form-wrap" class="review-form-box" style="display:none;">
             <div style="font-weight:700;font-size:0.9rem;color:var(--dark-2);margin-bottom:0.875rem;">
               <i class="bi bi-pencil-square"></i> Write a Review
             </div>
@@ -515,7 +515,7 @@
           </div>
 
           <!-- Prompt if not signed in -->
-          <div id="review-signin-prompt" style="display:none;font-size:0.875rem;color:var(--gray-500);padding:0.5rem 0 1rem;">
+          <div id="review-signin-prompt" style="font-size:0.875rem;color:var(--gray-500);padding:0.5rem 0 1rem;display:none;">
             <i class="bi bi-info-circle"></i>
             <a href="#" id="review-signin-link" style="color:var(--primary);">Sign in</a> to leave a review for this listing.
           </div>
@@ -686,12 +686,12 @@
   } from "./main.js";
 
   let currentUser = null;
-  let _loadedReviews = null; // cached so auth callback can re-render form
+  let adOwnerId   = null; // set when the ad document loads
 
   onAuthStateChanged(auth, u => {
     currentUser = u;
-    // Reviews may have already loaded before auth resolved — re-render form visibility
-    if (_loadedReviews) updateReviewFormVisibility(_loadedReviews.ownerId, _loadedReviews.reviews);
+    // Re-render as soon as auth resolves (ad may already be loaded)
+    if (adOwnerId !== null) renderReviewFormState();
   });
 
   initNavbar();
@@ -808,8 +808,10 @@
         document.querySelector(".ad-content-grid").insertAdjacentElement("beforebegin", ownerBar);
       }
 
+      adOwnerId = ad.userId || "";
+      renderReviewFormState(); // show/hide form the moment owner is known
       loadSimilar(ad.category, ad.title, ad.description, id);
-      loadReviews(id, ad.userId || "");
+      loadReviews(id, adOwnerId);
     } catch (err) {
       console.error(err);
       document.getElementById("ad-loading").classList.add("hidden");
@@ -1129,25 +1131,24 @@
     });
   });
 
-  // Separated out so it can be called again when auth state resolves
-  function updateReviewFormVisibility(ownerId, reviews) {
+  // Show/hide the write-review form purely based on auth + ownership.
+  // Called immediately when ad loads AND again when auth resolves.
+  // Does NOT depend on the reviews fetch — so the form always appears.
+  function renderReviewFormState() {
     const formWrap     = document.getElementById("review-form-wrap");
-    const alreadyNote  = document.getElementById("already-reviewed-note");
     const signinPrompt = document.getElementById("review-signin-prompt");
-    // Reset all three first
-    formWrap.style.display     = "none";
-    alreadyNote.style.display  = "none";
-    signinPrompt.style.display = "none";
-
-    if (currentUser) {
-      const already = reviews.find(r => r.reviewerId === currentUser.uid);
-      if (already) {
-        alreadyNote.style.display = "";
-      } else if (currentUser.uid !== ownerId) {
-        formWrap.style.display = "";
-      }
-    } else {
+    if (!formWrap) return;
+    if (!currentUser) {
+      formWrap.style.display     = "none";
       signinPrompt.style.display = "";
+    } else if (currentUser.uid === adOwnerId) {
+      // Owner can't review their own listing — hide everything
+      formWrap.style.display     = "none";
+      signinPrompt.style.display = "none";
+    } else {
+      // Signed-in, not the owner → show the form
+      formWrap.style.display     = "";
+      signinPrompt.style.display = "none";
     }
   }
 
@@ -1159,15 +1160,11 @@
       );
       const reviews = [];
       snap.forEach(d => reviews.push({ id: d.id, ...d.data() }));
-      // Sort newest first client-side (avoids composite index requirement)
       reviews.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
 
-      // Cache so onAuthStateChanged can re-run visibility when auth resolves
-      _loadedReviews = { ownerId, reviews };
-
-      const listEl  = document.getElementById("reviews-list");
-      const noMsg   = document.getElementById("no-reviews-msg");
-      const sumBox  = document.getElementById("reviews-summary-box");
+      const listEl = document.getElementById("reviews-list");
+      const noMsg  = document.getElementById("no-reviews-msg");
+      const sumBox = document.getElementById("reviews-summary-box");
 
       if (reviews.length > 0) {
         noMsg.style.display = "none";
@@ -1198,8 +1195,16 @@
         }).join("");
       }
 
-      updateReviewFormVisibility(ownerId, reviews);
+      // If user already reviewed this listing, hide the form and show the note
+      if (currentUser) {
+        const already = reviews.find(r => r.reviewerId === currentUser.uid);
+        if (already) {
+          document.getElementById("review-form-wrap").style.display  = "none";
+          document.getElementById("already-reviewed-note").style.display = "";
+        }
+      }
     } catch (err) {
+      // Reviews fetch failed — form visibility is already handled by renderReviewFormState
       console.warn("Reviews load error:", err);
     }
   }
