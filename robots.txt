@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Block private/app pages from indexing
+Disallow: /admin.html
+Disallow: /dashboard.html
+Disallow: /setup-db.html
+
+Sitemap: https://rentitsl.com/sitemap.xml
