@@ -859,11 +859,13 @@
 
   let featReqTarget = null;
   let selectedFeatDays = null;
+  let selectedFeatPpd  = null;
   let featSiteSettings = {};
 
   async function openFeatReqModal(adId, adTitle) {
     featReqTarget = { id: adId, title: adTitle };
     selectedFeatDays = null;
+    selectedFeatPpd  = null;
     document.getElementById("feat-req-ref").value = "";
     document.getElementById("feat-req-error").style.display = "none";
     document.getElementById("confirm-feat-req-btn").disabled = true;
@@ -877,20 +879,20 @@
       featSiteSettings = snap.exists() ? snap.data() : {};
     } catch (_) { featSiteSettings = {}; }
 
-    const ppd = featSiteSettings.featuredPricePerDay || 200;
+    const s = featSiteSettings;
     const plans = [
-      { days: 7,  label: "7 Days",  cost: 7 * ppd },
-      { days: 14, label: "14 Days", cost: 14 * ppd, badge: "Best Value" },
-      { days: 30, label: "30 Days", cost: 30 * ppd, badge: "Most Popular" },
+      { days: 7,  ppd: s.plan7PerDay  || 50,  badge: "" },
+      { days: 14, ppd: s.plan14PerDay || 40,  badge: "Best Value" },
+      { days: 30, ppd: s.plan30PerDay || 30,  badge: "Most Popular" },
     ];
 
     document.getElementById("feat-plan-grid").innerHTML = plans.map(p => `
-      <div class="feat-plan-card" data-days="${p.days}">
+      <div class="feat-plan-card" data-days="${p.days}" data-ppd="${p.ppd}">
         ${p.badge ? `<div class="feat-plan-badge">${p.badge}</div>` : ""}
         <div class="feat-plan-number">${p.days}</div>
         <div class="feat-plan-unit">Days</div>
-        <div class="feat-plan-price">Rs. ${p.cost.toLocaleString("en-LK")}</div>
-        <div class="feat-plan-per">Rs. ${ppd}/day</div>
+        <div class="feat-plan-price">Rs. ${(p.days * p.ppd).toLocaleString("en-LK")}</div>
+        <div class="feat-plan-per">Rs. ${p.ppd.toLocaleString("en-LK")}/day</div>
       </div>`).join("");
 
     document.querySelectorAll(".feat-plan-card").forEach(card => {
@@ -898,6 +900,7 @@
         document.querySelectorAll(".feat-plan-card").forEach(c => c.classList.remove("selected"));
         card.classList.add("selected");
         selectedFeatDays = parseInt(card.dataset.days);
+        selectedFeatPpd  = parseFloat(card.dataset.ppd);
         checkFeatReady();
       });
     });
@@ -951,7 +954,6 @@
     btn.disabled = true;
     btn.innerHTML = `<span class="spinner spinner-sm" style="display:inline-block;margin-right:0.5rem;"></span> Submitting...`;
     try {
-      const ppd = featSiteSettings.featuredPricePerDay || 200;
       await addDoc(collection(db, "feature_requests"), {
         userId:     currentUser.uid,
         userEmail:  currentUser.email,
@@ -959,7 +961,8 @@
         adId:       featReqTarget.id,
         adTitle:    featReqTarget.title,
         days:       selectedFeatDays,
-        amount:     selectedFeatDays * ppd,
+        pricePerDay: selectedFeatPpd,
+        amount:     selectedFeatDays * selectedFeatPpd,
         paymentRef: payRef,
         status:     "pending",
         createdAt:  serverTimestamp(),

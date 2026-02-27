@@ -375,11 +375,30 @@
 
         <!-- Pricing card -->
         <div class="content-card">
-          <h4 style="margin-bottom:1rem;"><i class="bi bi-star-fill" style="color:var(--warning);"></i> Featured Listing Pricing</h4>
-          <div class="form-group">
-            <label class="form-label">Price Per Day (Rs.) <span>*</span></label>
-            <input type="number" class="form-control" id="settings-ppd" min="0" step="1" placeholder="e.g. 200" />
-            <p class="form-hint">Users will be charged this amount multiplied by the number of days they choose (7, 14, or 30 days).</p>
+          <h4 style="margin-bottom:0.35rem;"><i class="bi bi-star-fill" style="color:var(--warning);"></i> Featured Listing Pricing</h4>
+          <p style="font-size:0.82rem;color:var(--gray-500);margin-bottom:1rem;">Set a different price per day for each plan. Offer lower rates for longer plans to reward users.</p>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" style="display:flex;align-items:center;gap:0.4rem;">
+                <span style="background:var(--primary);color:white;font-size:0.7rem;font-weight:700;padding:0.1rem 0.45rem;border-radius:var(--radius-sm);">7 days</span> Rs./day
+              </label>
+              <input type="number" class="form-control" id="settings-ppd-7" min="0" step="1" placeholder="50" />
+              <p class="form-hint" style="margin-top:0.3rem;">Total: <strong>Rs. <span id="ppd-7-total">—</span></strong></p>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" style="display:flex;align-items:center;gap:0.4rem;">
+                <span style="background:var(--warning);color:#7c2d12;font-size:0.7rem;font-weight:700;padding:0.1rem 0.45rem;border-radius:var(--radius-sm);">14 days</span> Rs./day
+              </label>
+              <input type="number" class="form-control" id="settings-ppd-14" min="0" step="1" placeholder="40" />
+              <p class="form-hint" style="margin-top:0.3rem;">Total: <strong>Rs. <span id="ppd-14-total">—</span></strong></p>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" style="display:flex;align-items:center;gap:0.4rem;">
+                <span style="background:var(--success);color:white;font-size:0.7rem;font-weight:700;padding:0.1rem 0.45rem;border-radius:var(--radius-sm);">30 days</span> Rs./day
+              </label>
+              <input type="number" class="form-control" id="settings-ppd-30" min="0" step="1" placeholder="30" />
+              <p class="form-hint" style="margin-top:0.3rem;">Total: <strong>Rs. <span id="ppd-30-total">—</span></strong></p>
+            </div>
           </div>
         </div>
 
@@ -1999,17 +2018,31 @@
   }
 
   // ==================== SETTINGS SECTION ====================
+  function updatePpdTotals() {
+    const v7  = parseFloat(document.getElementById("settings-ppd-7").value)  || 0;
+    const v14 = parseFloat(document.getElementById("settings-ppd-14").value) || 0;
+    const v30 = parseFloat(document.getElementById("settings-ppd-30").value) || 0;
+    document.getElementById("ppd-7-total").textContent  = v7  ? (v7  *  7).toLocaleString("en-LK") : "—";
+    document.getElementById("ppd-14-total").textContent = v14 ? (v14 * 14).toLocaleString("en-LK") : "—";
+    document.getElementById("ppd-30-total").textContent = v30 ? (v30 * 30).toLocaleString("en-LK") : "—";
+  }
+  ["settings-ppd-7","settings-ppd-14","settings-ppd-30"].forEach(id =>
+    document.getElementById(id).addEventListener("input", updatePpdTotals));
+
   async function loadSettings() {
     try {
       const snap = await getDoc(doc(db, "config", "site_settings"));
       if (snap.exists()) {
         const s = snap.data();
-        document.getElementById("settings-ppd").value             = s.featuredPricePerDay ?? 200;
-        document.getElementById("settings-bank-name").value       = s.bankName || "";
-        document.getElementById("settings-account-holder").value  = s.accountHolder || "";
-        document.getElementById("settings-account-number").value  = s.accountNumber || "";
-        document.getElementById("settings-bank-branch").value     = s.bankBranch || "";
-        document.getElementById("settings-instructions").value    = s.additionalInstructions || "";
+        document.getElementById("settings-ppd-7").value          = s.plan7PerDay  ?? 50;
+        document.getElementById("settings-ppd-14").value         = s.plan14PerDay ?? 40;
+        document.getElementById("settings-ppd-30").value         = s.plan30PerDay ?? 30;
+        document.getElementById("settings-bank-name").value      = s.bankName || "";
+        document.getElementById("settings-account-holder").value = s.accountHolder || "";
+        document.getElementById("settings-account-number").value = s.accountNumber || "";
+        document.getElementById("settings-bank-branch").value    = s.bankBranch || "";
+        document.getElementById("settings-instructions").value   = s.additionalInstructions || "";
+        updatePpdTotals();
       }
     } catch (err) {
       showToast("Could not load settings: " + err.message, "error");
@@ -2026,7 +2059,9 @@
     btn.innerHTML = `<span class="spinner spinner-sm" style="display:inline-block;margin-right:0.5rem;"></span> Saving...`;
     try {
       await setDoc(doc(db, "config", "site_settings"), {
-        featuredPricePerDay:    parseFloat(document.getElementById("settings-ppd").value) || 200,
+        plan7PerDay:            parseFloat(document.getElementById("settings-ppd-7").value)  || 50,
+        plan14PerDay:           parseFloat(document.getElementById("settings-ppd-14").value) || 40,
+        plan30PerDay:           parseFloat(document.getElementById("settings-ppd-30").value) || 30,
         bankName:               document.getElementById("settings-bank-name").value.trim(),
         accountHolder:          document.getElementById("settings-account-holder").value.trim(),
         accountNumber:          document.getElementById("settings-account-number").value.trim(),
