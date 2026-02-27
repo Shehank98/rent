@@ -94,15 +94,22 @@
   <span id="results-count-mobile" class="results-count" style="font-size:0.8rem;color:var(--gray-500);"></span>
 </div>
 
-<!-- ==================== FILTER BAR / DRAWER ==================== -->
-<div class="listings-page-title-bar">
-  <div class="container" style="display:flex;align-items:center;gap:0.6rem;padding-top:0.6rem;padding-bottom:0.6rem;">
-    <i class="bi bi-grid-3x3-gap" style="color:var(--primary);font-size:0.95rem;"></i>
-    <span style="font-weight:700;font-size:0.9rem;color:var(--dark-2);">Browse All Listings</span>
-    <span id="results-count-desktop" style="font-size:0.8rem;color:var(--gray-400);margin-left:0.25rem;"></span>
+<!-- ==================== LISTINGS LAYOUT ==================== -->
+<div class="listings-layout">
+
+<!-- ==================== FILTER SIDEBAR ==================== -->
+<aside class="filter-bar" id="listings-filter-bar">
+
+  <!-- Desktop sidebar header (hidden on mobile — drawer header shows instead) -->
+  <div class="filter-sidebar-head">
+    <span class="filter-sidebar-title">
+      <i class="bi bi-sliders"></i> Filters
+    </span>
+    <button class="btn btn-ghost btn-sm" id="clear-filters-sidebar" style="font-size:0.78rem;padding:0.2rem 0.5rem;">
+      <i class="bi bi-x-circle"></i> Clear
+    </button>
   </div>
-</div>
-<div class="filter-bar" id="listings-filter-bar">
+
   <div class="container">
 
     <!-- Drawer header — visible only on mobile -->
@@ -126,6 +133,7 @@
            placeholder="Location..." list="location-list" style="min-width:160px;" />
     <datalist id="location-list"></datalist>
 
+    <div class="filter-group-label">Sort By</div>
     <select class="filter-select" id="sort-select">
       <option value="featured">Featured First</option>
       <option value="newest">Newest First</option>
@@ -133,7 +141,8 @@
       <option value="price-desc">Price: High to Low</option>
     </select>
 
-    <select class="filter-select" id="price-type-filter" style="min-width:130px;">
+    <div class="filter-group-label">Price Type</div>
+    <select class="filter-select" id="price-type-filter">
       <option value="">Any Price Type</option>
       <option value="day">Per Day</option>
       <option value="hour">Per Hour</option>
@@ -143,19 +152,20 @@
       <option value="km">Per KM</option>
     </select>
 
+    <div class="filter-group-label">Price Range (Rs.)</div>
     <div class="filter-price-range">
-      <input type="number" class="filter-price-input" id="price-min" placeholder="Min Rs." min="0" />
+      <input type="number" class="filter-price-input" id="price-min" placeholder="Min" min="0" />
       <span class="price-range-sep">–</span>
-      <input type="number" class="filter-price-input" id="price-max" placeholder="Max Rs." min="0" />
+      <input type="number" class="filter-price-input" id="price-max" placeholder="Max" min="0" />
     </div>
 
     <label class="filter-verified-toggle" id="verified-filter-label">
       <input type="checkbox" id="verified-filter" />
-      <i class="bi bi-patch-check-fill"></i> Verified
+      <i class="bi bi-patch-check-fill"></i> Verified Sellers Only
     </label>
 
-    <button class="btn btn-ghost btn-sm" id="clear-filters-btn">
-      <i class="bi bi-x-circle"></i> Clear
+    <button class="btn btn-ghost btn-sm" id="clear-filters-btn" style="display:none;">
+      <i class="bi bi-x-circle"></i> Clear All Filters
     </button>
     <span class="results-count" id="results-count">Loading...</span>
 
@@ -165,13 +175,13 @@
     </button>
 
   </div>
-</div>
+</aside>
 
-<!-- Filter drawer backdrop (mobile) -->
-<div class="listings-filter-overlay" id="listings-filter-overlay"></div>
-
-<!-- ==================== LISTINGS GRID ==================== -->
+<!-- ==================== LISTINGS MAIN ==================== -->
 <main class="listings-content">
+  <div class="listings-main-head">
+    <span id="results-count-desktop" style="font-size:0.82rem;color:var(--gray-500);"></span>
+  </div>
   <div class="container">
     <div class="ads-grid" id="listings-grid">
       <div class="skeleton skeleton-card"></div>
@@ -201,6 +211,11 @@
     </div>
   </div>
 </main>
+
+</div><!-- /.listings-layout -->
+
+<!-- Filter drawer backdrop (mobile only) -->
+<div class="listings-filter-overlay" id="listings-filter-overlay"></div>
 
 <!-- ==================== FOOTER ==================== -->
 <footer>
@@ -421,6 +436,7 @@
     applyFilters();
   }
   document.getElementById("clear-filters-btn").addEventListener("click", resetAll);
+  document.getElementById("clear-filters-sidebar").addEventListener("click", resetAll);
   document.getElementById("reset-btn").addEventListener("click", resetAll);
   document.getElementById("load-more-btn").addEventListener("click", () => renderBatch(false));
 

@@ -760,21 +760,94 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 .listings-hero h1 { color: white; font-size: 1.8rem; }
 .listings-hero p { color: #bfdbfe; }
 
+/* ---- Listings sidebar layout ---- */
+.listings-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  align-items: start;
+  min-height: calc(100vh - 64px);
+}
+
+/* ---- Filter sidebar (desktop) ---- */
 .filter-bar {
-  background: var(--white);
-  border-bottom: 1px solid var(--gray-200);
-  padding: 1rem 0;
   position: sticky;
   top: 64px;
+  height: calc(100vh - 64px);
+  overflow-y: auto;
+  background: var(--white);
+  border-right: 1px solid var(--gray-200);
   z-index: 90;
-  box-shadow: var(--shadow-sm);
+  /* scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: var(--gray-300) transparent;
 }
+.filter-bar::-webkit-scrollbar { width: 4px; }
+.filter-bar::-webkit-scrollbar-track { background: transparent; }
+.filter-bar::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 2px; }
+
+/* Sidebar header (desktop only) */
+.filter-sidebar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem 0.875rem;
+  border-bottom: 1px solid var(--gray-100);
+  position: sticky;
+  top: 0;
+  background: var(--white);
+  z-index: 1;
+}
+.filter-sidebar-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--dark-2);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.filter-sidebar-title i { color: var(--primary); }
+
+/* Section labels between filter groups */
+.filter-group-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--gray-400);
+  margin-top: 0.25rem;
+  margin-bottom: -0.15rem;
+}
+
 .filter-bar .container {
   display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  align-items: center;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1rem 1.25rem 1.5rem;
+  max-width: none;
+  margin: 0;
+  flex-wrap: nowrap;
+  align-items: stretch;
 }
+/* Stretch all controls */
+.filter-bar .filter-select,
+.filter-bar .filter-search-wrap { width: 100%; }
+.filter-bar .filter-price-range { width: 100%; }
+.filter-bar .filter-price-input { flex: 1; width: auto; }
+.filter-bar .filter-verified-toggle { width: 100%; }
+.filter-bar .results-count { margin-left: 0; font-size: 0.8rem; padding-top: 0.25rem; }
+
+/* Hide mobile-only elements in sidebar */
+.filter-bar .filter-drawer-header { display: none; }
+.filter-bar .filter-drawer-apply-btn { display: none !important; }
+
+/* Main content area */
+.listings-main-head {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1.5rem 0;
+  min-height: 36px;
+}
+
 .filter-search-wrap {
   position: relative;
   flex: 1;
@@ -863,7 +936,8 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 }
 .filter-verified-toggle:has(input:checked) i { color: var(--primary); }
 
-.listings-content { padding: 2.5rem 0 4rem; }
+.listings-content { padding: 0 0 4rem; }
+.listings-content .container { max-width: none; padding-left: 1.5rem; padding-right: 1.5rem; }
 .no-results {
   text-align: center;
   padding: 4rem 1.5rem;
@@ -1588,8 +1662,13 @@ footer ul li a:hover { color: var(--white); }
   .footer-grid { grid-template-columns: 1fr; }
   .admin-ad-item { flex-direction: column; }
   .admin-ad-actions-col { flex-direction: row; align-items: center; }
-  /* Listings filter bar → slide-in drawer on mobile */
+  /* Listings: switch back to block layout, drawer for filters */
+  .listings-layout { display: block; }
   .listings-mobile-toolbar { display: flex; }
+  .filter-sidebar-head { display: none; }
+  .filter-group-label { display: none; }
+  .listings-main-head { display: none; }
+  .listings-content .container { padding-left: 1rem; padding-right: 1rem; }
 
   .filter-bar {
     position: fixed !important;
@@ -1604,7 +1683,7 @@ footer ul li a:hover { color: var(--white); }
     box-shadow: var(--shadow-lg);
     transition: left 0.28s cubic-bezier(.4,0,.2,1);
     padding: 0 !important;
-    border-bottom: none !important;
+    border-right: none !important;
   }
   .filter-bar.drawer-open { left: 0; }
 
@@ -1624,8 +1703,8 @@ footer ul li a:hover { color: var(--white); }
   .filter-bar .filter-price-input { flex: 1; width: auto; }
   .filter-bar .filter-verified-toggle { width: 100%; justify-content: center; }
   .filter-bar .results-count { display: none; }
-  .filter-drawer-header { display: flex; }
-  .filter-drawer-apply-btn { display: flex; width: 100%; justify-content: center; margin-top: 0.25rem; }
+  .filter-drawer-header { display: flex !important; }
+  .filter-bar .filter-drawer-apply-btn { display: flex !important; width: 100%; justify-content: center; margin-top: 0.25rem; }
 
   .results-count { margin-left: 0; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
@@ -2334,11 +2413,5 @@ footer ul li a:hover { color: var(--white); }
 .review-date { font-size: 0.72rem; color: var(--gray-400); }
 .review-comment-text { font-size: 0.875rem; color: var(--gray-700); line-height: 1.55; }
 
-/* Listings page: compact title bar (replaces old listings-hero) */
-.listings-page-title-bar {
-  background: var(--white);
-  border-bottom: 1px solid var(--gray-100);
-}
-@media (max-width: 768px) {
-  .listings-page-title-bar { display: none; }
-}
+/* listings-page-title-bar — now replaced by sidebar; keep hidden */
+.listings-page-title-bar { display: none; }
