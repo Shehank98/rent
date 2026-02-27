@@ -478,6 +478,63 @@
           <p class="ad-description-text" id="ad-description-text"></p>
         </div>
 
+        <!-- ==================== REVIEWS ==================== -->
+        <div class="reviews-section" id="reviews-section">
+          <div class="ad-section-heading">
+            <i class="bi bi-star-fill" style="color:#f59e0b;"></i> Ratings &amp; Reviews
+          </div>
+
+          <!-- Summary (shown when reviews exist) -->
+          <div class="reviews-summary-box" id="reviews-summary-box" style="display:none;">
+            <div>
+              <div class="rating-avg-num" id="rating-avg-num">—</div>
+              <div class="rating-stars-row" id="rating-stars-row"></div>
+              <div class="rating-count-txt" id="rating-count-txt"></div>
+            </div>
+            <div style="font-size:0.82rem;color:var(--gray-500);">Based on verified renter reviews</div>
+          </div>
+
+          <!-- Write a review (signed-in, not owner, not yet reviewed) -->
+          <div id="review-form-wrap" style="display:none;" class="review-form-box">
+            <div style="font-weight:700;font-size:0.9rem;color:var(--dark-2);margin-bottom:0.875rem;">
+              <i class="bi bi-pencil-square"></i> Write a Review
+            </div>
+            <div class="star-picker" id="star-picker">
+              <i class="bi bi-star-fill star-pick" data-val="1"></i>
+              <i class="bi bi-star-fill star-pick" data-val="2"></i>
+              <i class="bi bi-star-fill star-pick" data-val="3"></i>
+              <i class="bi bi-star-fill star-pick" data-val="4"></i>
+              <i class="bi bi-star-fill star-pick" data-val="5"></i>
+            </div>
+            <textarea id="review-comment" class="form-control" rows="3"
+              placeholder="Share your experience with this seller or rental..."></textarea>
+            <div id="review-error" class="alert alert-error" style="display:none;margin-top:0.5rem;"></div>
+            <button id="submit-review-btn" class="btn btn-primary btn-sm" style="margin-top:0.75rem;">
+              <i class="bi bi-send"></i> Submit Review
+            </button>
+          </div>
+
+          <!-- Prompt if not signed in -->
+          <div id="review-signin-prompt" style="display:none;font-size:0.875rem;color:var(--gray-500);padding:0.5rem 0 1rem;">
+            <i class="bi bi-info-circle"></i>
+            <a href="#" id="review-signin-link" style="color:var(--primary);">Sign in</a> to leave a review for this listing.
+          </div>
+
+          <!-- Already reviewed notice -->
+          <div id="already-reviewed-note" style="display:none;font-size:0.85rem;color:var(--success);padding:0.4rem 0 0.875rem;">
+            <i class="bi bi-check-circle-fill"></i> You have already reviewed this listing.
+          </div>
+
+          <!-- Reviews list -->
+          <div class="reviews-list" id="reviews-list"></div>
+
+          <!-- Empty state -->
+          <div id="no-reviews-msg" style="font-size:0.875rem;color:var(--gray-400);text-align:center;padding:1.5rem 0;">
+            <i class="bi bi-chat-square-text" style="font-size:1.75rem;display:block;margin-bottom:0.4rem;"></i>
+            No reviews yet. Be the first to leave a review!
+          </div>
+        </div>
+
         <div style="margin-top:1.5rem;">
           <a href="listings.html" class="btn btn-ghost btn-sm">
             <i class="bi bi-arrow-left"></i> Back to listings
@@ -601,14 +658,20 @@
   <div class="container">
     <div class="footer-bottom">
       <a href="index.html" class="footer-brand" style="font-size:1.2rem;">Rent<span>Hub</span></a>
-      <span style="font-size:0.8rem;color:var(--gray-600);">&copy; 2024 RentHub Sri Lanka. All rights reserved.</span>
+      <div style="text-align:right;">
+        <div style="font-size:0.8rem;color:var(--gray-600);">&copy; 2025 RentHub Sri Lanka. All rights reserved.</div>
+        <div class="powered-by-adspot" style="justify-content:flex-end;">
+          <i class="bi bi-newspaper"></i>
+          Powered by <a href="https://www.adspotmedia.lk" target="_blank" rel="noopener noreferrer">AdSpotMedia</a>
+        </div>
+      </div>
     </div>
   </div>
 </footer>
 
 <script type="module">
   import {
-    db, auth, collection, doc, getDoc, updateDoc, addDoc, query, where, limit, getDocs,
+    db, auth, collection, doc, getDoc, updateDoc, addDoc, query, where, orderBy, limit, getDocs,
     onAuthStateChanged, increment, serverTimestamp,
   } from "./firebase.js";
   import {
@@ -734,6 +797,7 @@
       }
 
       loadSimilar(ad.category, ad.title, ad.description, id);
+      loadReviews(id, ad.userId || "");
     } catch (err) {
       console.error(err);
       document.getElementById("ad-loading").classList.add("hidden");
@@ -1012,6 +1076,153 @@
     else if (!n.startsWith("94")) n = "94" + n;
     return n;
   }
+
+  // ===================== REVIEWS =====================
+  let selectedRating = 0;
+  let reviewOwnerId  = null;
+
+  function starsHtml(rating, size = "sm") {
+    return Array.from({length: 5}, (_, i) =>
+      `<i class="bi bi-star-fill${i < Math.round(rating) ? "" : " empty"}"></i>`
+    ).join("");
+  }
+
+  function renderStarRow(rating, el) {
+    el.innerHTML = Array.from({length: 5}, (_, i) =>
+      `<i class="bi bi-star-fill ${i < Math.round(rating) ? "sf" : "se"}"></i>`
+    ).join("");
+  }
+
+  // Star picker interaction
+  document.querySelectorAll(".star-pick").forEach(s => {
+    s.addEventListener("mouseenter", () => {
+      const v = +s.dataset.val;
+      document.querySelectorAll(".star-pick").forEach(p =>
+        p.classList.toggle("lit", +p.dataset.val <= v));
+    });
+    s.addEventListener("mouseleave", () => {
+      document.querySelectorAll(".star-pick").forEach(p =>
+        p.classList.toggle("lit", +p.dataset.val <= selectedRating));
+    });
+    s.addEventListener("click", () => {
+      selectedRating = +s.dataset.val;
+      document.querySelectorAll(".star-pick").forEach(p =>
+        p.classList.toggle("lit", +p.dataset.val <= selectedRating));
+    });
+  });
+
+  async function loadReviews(adId, ownerId) {
+    reviewOwnerId = ownerId;
+    try {
+      const snap = await getDocs(
+        query(collection(db, "reviews"), where("adId", "==", adId), orderBy("createdAt", "desc"))
+      );
+      const reviews = [];
+      snap.forEach(d => reviews.push({ id: d.id, ...d.data() }));
+
+      const listEl  = document.getElementById("reviews-list");
+      const noMsg   = document.getElementById("no-reviews-msg");
+      const sumBox  = document.getElementById("reviews-summary-box");
+      const formWrap= document.getElementById("review-form-wrap");
+      const alreadyNote = document.getElementById("already-reviewed-note");
+      const signinPrompt = document.getElementById("review-signin-prompt");
+
+      if (reviews.length > 0) {
+        noMsg.style.display = "none";
+        const avg = reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;
+        document.getElementById("rating-avg-num").textContent = avg.toFixed(1);
+        renderStarRow(avg, document.getElementById("rating-stars-row"));
+        document.getElementById("rating-count-txt").textContent =
+          `${reviews.length} review${reviews.length !== 1 ? "s" : ""}`;
+        sumBox.style.display = "flex";
+
+        listEl.innerHTML = reviews.map(r => {
+          const initial = (r.reviewerName || "U")[0].toUpperCase();
+          const avatarInner = r.reviewerPhoto
+            ? `<img src="${escapeHtml(r.reviewerPhoto)}" alt="${escapeHtml(r.reviewerName || "")}" onerror="this.outerHTML='${escapeHtml(initial)}'">`
+            : escapeHtml(initial);
+          return `
+            <div class="review-item">
+              <div class="review-avatar-circle">${avatarInner}</div>
+              <div style="flex:1;min-width:0;">
+                <div class="review-name">${escapeHtml(r.reviewerName || "Anonymous")}</div>
+                <div class="review-meta">
+                  <div class="review-stars-sm">${starsHtml(r.rating)}</div>
+                  <span class="review-date">${r.createdAt ? formatDate(r.createdAt) : ""}</span>
+                </div>
+                ${r.comment ? `<div class="review-comment-text">${escapeHtml(r.comment)}</div>` : ""}
+              </div>
+            </div>`;
+        }).join("");
+      }
+
+      // Show/hide review form based on auth
+      if (currentUser) {
+        const already = reviews.find(r => r.reviewerId === currentUser.uid);
+        if (already) {
+          alreadyNote.style.display = "";
+        } else if (currentUser.uid !== ownerId) {
+          formWrap.style.display = "";
+        }
+      } else {
+        signinPrompt.style.display = "";
+      }
+    } catch (err) {
+      console.warn("Reviews load error:", err);
+    }
+  }
+
+  // Sign-in link inside reviews
+  document.getElementById("review-signin-link").addEventListener("click", e => {
+    e.preventDefault();
+    document.getElementById("signin-modal")?.classList.add("open");
+  });
+
+  // Submit review
+  document.getElementById("submit-review-btn").addEventListener("click", async () => {
+    const comment = document.getElementById("review-comment").value.trim();
+    const errEl   = document.getElementById("review-error");
+    errEl.style.display = "none";
+
+    if (!selectedRating) {
+      errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> Please select a star rating.`;
+      errEl.style.display = "flex"; return;
+    }
+    if (!currentUser) {
+      errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> Please sign in to leave a review.`;
+      errEl.style.display = "flex"; return;
+    }
+
+    const btn = document.getElementById("submit-review-btn");
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner spinner-sm" style="display:inline-block;margin-right:0.4rem;"></span> Submitting...`;
+
+    try {
+      const adSnap = await getDoc(doc(db, "ads", adId));
+      const adData = adSnap.data();
+      await addDoc(collection(db, "reviews"), {
+        adId,
+        adTitle:      adData?.title || "",
+        ownerId:      adData?.userId || "",
+        reviewerId:   currentUser.uid,
+        reviewerName: currentUser.displayName || "Anonymous",
+        reviewerPhoto: currentUser.photoURL || "",
+        rating:       selectedRating,
+        comment,
+        createdAt:    serverTimestamp(),
+      });
+      showToast("Review submitted! Thank you.", "success");
+      document.getElementById("review-form-wrap").style.display = "none";
+      document.getElementById("already-reviewed-note").style.display = "";
+      await loadReviews(adId, adData?.userId || "");
+    } catch (err) {
+      errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> Could not submit: ${err.message}`;
+      errEl.style.display = "flex";
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = `<i class="bi bi-send"></i> Submit Review`;
+    }
+  });
 </script>
 </body>
 </html>
