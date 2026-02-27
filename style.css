@@ -816,6 +816,53 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 .filter-select:focus { border-color: var(--primary); }
 .results-count { font-size: 0.875rem; color: var(--gray-500); margin-left: auto; white-space: nowrap; }
 
+/* ---------- LISTINGS EXTRA FILTERS ---------- */
+.filter-price-range {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+.filter-price-input {
+  width: 100px;
+  padding: 0.6rem 0.75rem;
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  background: var(--white);
+  outline: none;
+  transition: border-color var(--transition);
+  -moz-appearance: textfield;
+}
+.filter-price-input::-webkit-outer-spin-button,
+.filter-price-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.filter-price-input:focus { border-color: var(--primary); }
+.price-range-sep { color: var(--gray-400); font-size: 0.85rem; flex-shrink: 0; }
+.filter-verified-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  cursor: pointer;
+  padding: 0.55rem 0.85rem;
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius);
+  background: var(--white);
+  white-space: nowrap;
+  transition: border-color var(--transition), background var(--transition);
+  user-select: none;
+}
+.filter-verified-toggle input { display: none; }
+.filter-verified-toggle i { color: var(--gray-400); transition: color var(--transition); }
+.filter-verified-toggle:has(input:checked) {
+  border-color: var(--primary);
+  background: #eff6ff;
+  color: var(--primary);
+}
+.filter-verified-toggle:has(input:checked) i { color: var(--primary); }
+
 .listings-content { padding: 2.5rem 0 4rem; }
 .no-results {
   text-align: center;
@@ -1573,6 +1620,9 @@ footer ul li a:hover { color: var(--white); }
   .filter-search-wrap input { padding-left: 2.25rem; }
   .filter-bar .filter-select,
   .filter-bar .filter-search-wrap { width: 100%; }
+  .filter-bar .filter-price-range { width: 100%; }
+  .filter-bar .filter-price-input { flex: 1; width: auto; }
+  .filter-bar .filter-verified-toggle { width: 100%; justify-content: center; }
   .filter-bar .results-count { display: none; }
   .filter-drawer-header { display: flex; }
   .filter-drawer-apply-btn { display: flex; width: 100%; justify-content: center; margin-top: 0.25rem; }

@@ -133,6 +133,27 @@
       <option value="price-desc">Price: High to Low</option>
     </select>
 
+    <select class="filter-select" id="price-type-filter" style="min-width:130px;">
+      <option value="">Any Price Type</option>
+      <option value="day">Per Day</option>
+      <option value="hour">Per Hour</option>
+      <option value="week">Per Week</option>
+      <option value="month">Per Month</option>
+      <option value="event">Per Event</option>
+      <option value="km">Per KM</option>
+    </select>
+
+    <div class="filter-price-range">
+      <input type="number" class="filter-price-input" id="price-min" placeholder="Min Rs." min="0" />
+      <span class="price-range-sep">–</span>
+      <input type="number" class="filter-price-input" id="price-max" placeholder="Max Rs." min="0" />
+    </div>
+
+    <label class="filter-verified-toggle" id="verified-filter-label">
+      <input type="checkbox" id="verified-filter" />
+      <i class="bi bi-patch-check-fill"></i> Verified
+    </label>
+
     <button class="btn btn-ghost btn-sm" id="clear-filters-btn">
       <i class="bi bi-x-circle"></i> Clear
     </button>
@@ -222,10 +243,14 @@
 
   // Pre-fill from URL params
   const params = new URLSearchParams(window.location.search);
-  document.getElementById("search-input").value    = params.get("q") || "";
-  document.getElementById("category-filter").value = params.get("category") || "";
-  document.getElementById("location-filter").value = params.get("location") || "";
-  document.getElementById("sort-select").value     = params.get("sort") || "featured";
+  document.getElementById("search-input").value        = params.get("q") || "";
+  document.getElementById("category-filter").value     = params.get("category") || "";
+  document.getElementById("location-filter").value     = params.get("location") || "";
+  document.getElementById("sort-select").value         = params.get("sort") || "featured";
+  document.getElementById("price-min").value           = params.get("priceMin") || "";
+  document.getElementById("price-max").value           = params.get("priceMax") || "";
+  document.getElementById("price-type-filter").value   = params.get("priceType") || "";
+  document.getElementById("verified-filter").checked   = params.get("verified") === "1";
 
   // ---- Fetch all approved ads ----
   async function fetchAds() {
@@ -242,10 +267,28 @@
 
   // ---- Apply filters + sort ----
   function applyFilters() {
-    const search   = document.getElementById("search-input").value.trim().toLowerCase();
-    const category = document.getElementById("category-filter").value;
-    const location = document.getElementById("location-filter").value.trim().toLowerCase();
-    const sort     = document.getElementById("sort-select").value;
+    const search        = document.getElementById("search-input").value.trim().toLowerCase();
+    const category      = document.getElementById("category-filter").value;
+    const location      = document.getElementById("location-filter").value.trim().toLowerCase();
+    const sort          = document.getElementById("sort-select").value;
+    const priceMin      = parseFloat(document.getElementById("price-min").value) || 0;
+    const priceMax      = parseFloat(document.getElementById("price-max").value) || Infinity;
+    const priceType     = document.getElementById("price-type-filter").value;
+    const verifiedOnly  = document.getElementById("verified-filter").checked;
+
+    // Update active filter badge count
+    let activeCount = 0;
+    if (search) activeCount++;
+    if (category) activeCount++;
+    if (location) activeCount++;
+    if (priceMin > 0 || priceMax < Infinity) activeCount++;
+    if (priceType) activeCount++;
+    if (verifiedOnly) activeCount++;
+    const badge = document.getElementById("filter-active-badge");
+    if (badge) {
+      if (activeCount > 0) { badge.textContent = activeCount; badge.classList.remove("hidden"); }
+      else badge.classList.add("hidden");
+    }
 
     filtered = allAds.filter(ad => {
       if (category && ad.category !== category) return false;
@@ -254,6 +297,11 @@
         const hay = `${ad.title} ${ad.description} ${ad.category} ${ad.location}`.toLowerCase();
         if (!hay.includes(search)) return false;
       }
+      const adPrice = parseFloat(ad.price || 0);
+      if (priceMin > 0 && adPrice < priceMin) return false;
+      if (priceMax < Infinity && adPrice > priceMax) return false;
+      if (priceType && (ad.priceType || "day") !== priceType) return false;
+      if (verifiedOnly && !ad.userVerified) return false;
       return true;
     });
 
@@ -362,15 +410,26 @@
   document.getElementById("sort-select").addEventListener("change", applyFilters);
 
   function resetAll() {
-    document.getElementById("search-input").value    = "";
-    document.getElementById("category-filter").value = "";
-    document.getElementById("location-filter").value = "";
-    document.getElementById("sort-select").value     = "newest";
+    document.getElementById("search-input").value      = "";
+    document.getElementById("category-filter").value   = "";
+    document.getElementById("location-filter").value   = "";
+    document.getElementById("sort-select").value       = "newest";
+    document.getElementById("price-min").value         = "";
+    document.getElementById("price-max").value         = "";
+    document.getElementById("price-type-filter").value = "";
+    document.getElementById("verified-filter").checked = false;
     applyFilters();
   }
   document.getElementById("clear-filters-btn").addEventListener("click", resetAll);
   document.getElementById("reset-btn").addEventListener("click", resetAll);
   document.getElementById("load-more-btn").addEventListener("click", () => renderBatch(false));
+
+  // New filter listeners
+  const debouncedPrice = debounce(applyFilters, 400);
+  document.getElementById("price-min").addEventListener("input", debouncedPrice);
+  document.getElementById("price-max").addEventListener("input", debouncedPrice);
+  document.getElementById("price-type-filter").addEventListener("change", applyFilters);
+  document.getElementById("verified-filter").addEventListener("change", applyFilters);
 
   fetchAds().catch(err => {
     console.error(err);

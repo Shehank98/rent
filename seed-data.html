@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Seed Test Data — Rent It SL Admin</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .card { background: #1e293b; border-radius: 16px; padding: 36px; max-width: 680px; width: 100%; box-shadow: 0 8px 32px #0008; }
+    h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; color: #f8fafc; }
+    .subtitle { color: #94a3b8; font-size: .9rem; margin-bottom: 20px; }
+    .warn-box { background: #422006; border: 1px solid #92400e; border-radius: 10px; padding: 12px 16px; margin-bottom: 20px; color: #fbbf24; font-size: 0.85rem; }
+    .log { background: #0f172a; border-radius: 10px; padding: 16px; font-family: monospace; font-size: .82rem; height: 320px; overflow-y: auto; margin-bottom: 20px; }
+    .log-line { padding: 3px 0; border-bottom: 1px solid #1e293b; }
+    .ok   { color: #4ade80; }
+    .err  { color: #f87171; }
+    .info { color: #60a5fa; }
+    .warn { color: #fbbf24; }
+    .btn-row { display: flex; gap: 12px; flex-wrap: wrap; }
+    button { flex: 1; min-width: 160px; padding: 14px; border-radius: 10px; border: none; font-size: 1rem; font-weight: 600; cursor: pointer; transition: opacity .2s; }
+    #seedBtn  { background: #2563eb; color: #fff; }
+    #clearBtn { background: #dc2626; color: #fff; }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+    .done-banner { background: #14532d; color: #4ade80; border-radius: 10px; padding: 14px 18px; text-align: center; font-weight: 600; display: none; margin-bottom: 16px; }
+    #auth-status { text-align: center; padding: 12px; font-size: 0.85rem; color: #94a3b8; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <h1>🧪 Test Data Seeder</h1>
+  <p class="subtitle">Admin-only tool — inserts 30 fake test listings (marked <code>isTestData: true</code>) and can delete them all at once.</p>
+
+  <div class="warn-box">
+    ⚠️ You must be signed in as an <strong>admin</strong> to use this page. Test listings are tagged so they can be bulk-deleted anytime from the admin panel or using the "Clear Test Data" button below.
+  </div>
+
+  <div id="auth-status">Checking authentication...</div>
+
+  <div class="log" id="log"><div class="log-line info">Ready. Click "Seed 30 Test Listings" to begin.</div></div>
+  <div class="done-banner" id="doneBanner"></div>
+
+  <div class="btn-row">
+    <button id="seedBtn" disabled>🌱 Seed 30 Test Listings</button>
+    <button id="clearBtn" disabled>🗑️ Clear All Test Data</button>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import {
+  getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged,
+} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import {
+  getFirestore, collection, addDoc, getDocs, deleteDoc, doc,
+  query, where, getDoc, serverTimestamp, Timestamp,
+} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDwALfNxoI8_r_wjmhFv4HqgofsiyqaWF8",
+  authDomain: "rentgosl.firebaseapp.com",
+  projectId: "rentgosl",
+  storageBucket: "rentgosl.firebasestorage.app",
+  messagingSenderId: "1002200341463",
+  appId: "1:1002200341463:web:eddbb5ad2e94202c8a0992",
+};
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+// ── Logging helper ────────────────────────────────────────────
+const logEl = document.getElementById("log");
+function log(msg, cls = "info") {
+  const d = document.createElement("div");
+  d.className = `log-line ${cls}`;
+  d.textContent = msg;
+  logEl.appendChild(d);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+// ── Auth check ────────────────────────────────────────────────
+const authStatus = document.getElementById("auth-status");
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    authStatus.innerHTML = `<span style="color:#f87171;">Not signed in. <a href="./" style="color:#60a5fa;">Sign in first</a>, then return here.</span>`;
+    return;
+  }
+  // Check admin role
+  try {
+    const snap = await getDoc(doc(db, "users", user.uid));
+    const role = snap.exists() ? snap.data().role : "user";
+    if (role !== "admin") {
+      authStatus.innerHTML = `<span style="color:#f87171;">Access denied — admins only. Signed in as <strong>${user.email}</strong>.</span>`;
+      return;
+    }
+    authStatus.innerHTML = `<span style="color:#4ade80;">✓ Signed in as admin: <strong>${user.email}</strong></span>`;
+    document.getElementById("seedBtn").disabled  = false;
+    document.getElementById("clearBtn").disabled = false;
+  } catch (e) {
+    authStatus.innerHTML = `<span style="color:#fbbf24;">Could not verify role: ${e.message}</span>`;
+  }
+});
+
+// ── 30 Test Listings ─────────────────────────────────────────
+function daysAgo(n) {
+  const d = new Date(); d.setDate(d.getDate() - n);
+  return Timestamp.fromDate(d);
+}
+
+const TEST_LISTINGS = [
+  {
+    title: "Toyota Aqua Hybrid — Daily Rental",
+    category: "Car", location: "Colombo",
+    price: 5000, priceType: "day",
+    description: "Well-maintained 2019 Toyota Aqua hybrid. AC, power windows, bluetooth stereo. Fuel-efficient and comfortable for city and highway driving. Driver available on request.\n\nCondition: Excellent. Insurance covered.",
+    phone: "0771234567",
+    imageUrls: ["https://picsum.photos/seed/aqua-car/600/400"],
+    userVerified: true,
+  },
+  {
+    title: "Honda Vezel SUV — With Driver",
+    category: "Car", location: "Kandy",
+    price: 6500, priceType: "day",
+    description: "2020 Honda Vezel RS. Spacious interior, panoramic roof, reversing camera. Ideal for family trips and airport transfers. Driver with island experience included.",
+    phone: "0712345678",
+    imageUrls: ["https://picsum.photos/seed/vezel-suv/600/400"],
+    userVerified: true,
+  },
+  {
+    title: "KDH Van 14 Seater — School & Tours",
+    category: "Van", location: "Galle",
+    price: 9000, priceType: "day",
+    description: "Toyota KDH 14-seater van, 2018 model. Air-conditioned, comfortable seats, USB charging. Perfect for school trips, family outings, and tourist groups. Driver included.",
+    phone: "0763456789",
+    imageUrls: ["https://picsum.photos/seed/kdh-van/600/400"],
+    userVerified: false,
+  },
+  {
+    title: "Luxury Mercedes S-Class — Wedding Car",
+    category: "Wedding Car", location: "Colombo",
+    price: 30000, priceType: "event",
+    description: "White Mercedes-Benz S500 dressed with full floral decoration. Chauffeur in formal attire. Ribbon, champagne flowers included. Available across Western Province. Book 2+ weeks in advance.",
+    phone: "0777654321",
+    imageUrls: ["https://picsum.photos/seed/mercedes-wedding/600/400"],
+    userVerified: true,
+  },
+  {
+    title: "Rolls Royce Phantom — Premium Wedding Car",
+    category: "Wedding Car", location: "Colombo",
+    price: 75000, priceType: "event",
+    description: "Rare Rolls Royce Phantom available for your special day. Pearl white with gold trim, full floral decor, red carpet service. Island-wide coverage. Driver in tuxedo included.",
+    phone: "0777000111",
+    imageUrls: ["https://picsum.photos/seed/rollsroyce-wedding/600/400"],
+    userVerified: true,
+  },
+  {
+    title: "Professional Sound System — 10kW",
+    category: "Sound & Lighting", location: "Colombo",
+    price: 15000, priceType: "event",
+    description: "10kW professional sound system: 4x subwoofers, 8x line array speakers, mixing console, wireless microphones (x4). Includes setup, operation, and teardown by our technician.",
+    phone: "0705555222",
+    imageUrls: ["https://picsum.photos/seed/sound-system/600/400"],
+    userVerified: true,
+  },
+  {
+    title: "JCB 3CX Backhoe Loader",
+    category: "Heavy Machinery", location: "Gampaha",
+    price: 40000, priceType: "day",
+    description: "JCB 3CX backhoe loader, 2019 model. GPS tracked, fully serviced. Suitable for excavation, trenching, and site clearing. Minimum 3-day rental. Operator included.",
+    phone: "0712233445",
+    imageUrls: ["https://picsum.photos/seed/jcb-loader/600/400"],
+    userVerified: false,
+  },
+  {
+    title: "Concrete Mixer 350L",
+    category: "Construction Equipment", location: "Kurunegala",
+    price: 4500, priceType: "day",
+    description: "Heavy-duty 350-litre electric concrete mixer. Robust steel drum, variable speed. Suitable for foundations, slabs, and retaining walls. Delivery available within 30km.",
+    phone: "0766123456",
+    imageUrls: ["https://picsum.photos/seed/concrete-mixer/600/400"],
+    userVerified: false,
+  },
+  {
+    title: "50kVA Diesel Generator",
+    category: "Generator", location: "Colombo",
+    price: 10000, priceType: "day",
+    description: "Cummins 50kVA silent diesel generator. Ideal for events, construction sites, and backup power. Includes fuel (first 8hrs), cables and distribution board. Delivery island-wide.",
+    phone: "0722334455",
+    imageUrls: ["https://picsum.photos/seed/generator-50kva/600/400"],
+    userVerified: true,
+  },
+  {
+    title: "Canon EOS 5D Mark IV — Full Kit",
+    category: "Camera & Photography", location: "Colombo",
+    price: 3500, priceType: "day",
+    description: "Canon 5D Mark IV body + 24-70mm f/2.8 lens + 50mm f/1.4 lens. Includes 2 batteries, 64GB CF cards, tripod, and camera bag. Security deposit required. Perfect condition.",
+    phone: "0715678901",
+    imageUrls: ["https://picsum.photos/seed/canon-5d/600/400"],
+    userVerified: true,
+  },
+  {
+    title: "Sony A7 IV Mirrorless Camera",
+    category: "Camera & Photography", location: "Negombo",
+    price: 4000, priceType: "day",
+    description: "Sony A7 IV with Tamron 28-75mm f/2.8 G2 lens. 33MP, 4K60, IBIS. Ideal for weddings, events, and portraits. 3 batteries, 2x 128GB cards, cage included. Deposit Rs. 150,000.",
+    phone: "0775559876",
+    imageUrls: ["https://picsum.photos/seed/sony-a7iv/600/400"],
+    userVerified: true,
+  },
+  {
+    title: "DJI Mavic 3 Pro Drone",
+    category: "Video Equipment", location: "Colombo",
+    price: 6000, priceType: "day",
+    description: "DJI Mavic 3 Pro 4/3 CMOS Hasselblad camera. 46-min flight time, 15km range, obstacle avoidance. Includes 2 batteries, charging hub, ND filters. FAA-equivalent certified operator available.",
+    phone: "0703333789",
+    imageUrls: ["https://picsum.photos/seed/dji-mavic-drone/600/400"],
+    userVerified: true,
+  },
+  {
+    title: "3BR Beach Villa — Unawatuna",
+    category: "House / Villa", location: "Galle",
+    price: 35000, priceType: "day",
+    description: "Stunning 3-bedroom beach villa with private pool, 50m from Unawatuna beach. Fully furnished, AC in all rooms, full kitchen, BBQ area. Chef available on request. Min 2 nights.",
+    phone: "0769988776",
+    imageUrls: ["https://picsum.photos/seed/beach-villa/600/400"],
+    userVerified: true,
+  },
+  {
+    title: "Studio Apartment — Colombo 3",
+    category: "Apartment / Room", location: "Colombo",
+    price: 60000, priceType: "month",
+    description: "Fully furnished studio in the heart of Colombo 3. 24/7 security, rooftop pool, gym access, generator backup. Walking distance to supermarkets, cafes, and public transport.",
+    phone: "0712211334",
+    imageUrls: ["https://picsum.photos/seed/studio-apartment/600/400"],
+    userVerified: true,
+  },
+  {
+    title: "Prime Commercial Space — Kandy City",
+    category: "Commercial Space", location: "Kandy",
+    price: 120000, priceType: "month",
+    description: "1,200 sq ft ground-floor commercial space on Kandy main street. High foot traffic, ideal for retail, showroom, or bank. Air-conditioned, built-in display shelves, 3-phase power.",
+    phone: "0718877665",
+    imageUrls: ["https://picsum.photos/seed/commercial-space-kandy/600/400"],
+    userVerified: false,
+  },
+  {
+    title: "20x30 Event Marquee Tent",
+    category: "Event Tent / Marquee", location: "Colombo",
+    price: 18000, priceType: "event",
+    description: "Heavy-duty 20x30ft aluminium frame marquee with sidewalls. Includes ground anchors, lighting inside, flooring optional. Setup and teardown included. Fits 80–100 guests. Island-wide delivery.",
+    phone: "0705544332",
+    imageUrls: ["https://picsum.photos/seed/event-marquee/600/400"],
+    userVerified: false,
+  },
+  {
+    title: "Bouncy Castle — Kids Party",
+    category: "Bouncy Castle", location: "Negombo",
+    price: 8000, priceType: "event",
+    description: "Commercial-grade 15x15ft bouncy castle with slide. Includes electric blower, safety netting, operator attendance. Suitable for kids aged 3–12. Available Western and North-Western Province.",
+    phone: "0766778899",
+    imageUrls: ["https://picsum.photos/seed/bouncy-castle/600/400"],
+    userVerified: false,
+  },
+  {
+    title: "Party Package — 100 Pax Tables & Chairs",
+    category: "Party Items", location: "Colombo",
+    price: 4500, priceType: "event",
+    description: "Complete party furniture package for 100 guests: 10 round tables, 100 banquet chairs, white tablecloths, chair sashes. Setup included. Island-wide delivery +Rs.2,000.",
+    phone: "0722114455",
+    imageUrls: ["https://picsum.photos/seed/party-tables/600/400"],
+    userVerified: true,
+  },
+  {
+    title: "Yamaha MT-15 Motorcycle",
+    category: "Motorcycle", location: "Colombo",
+    price: 1800, priceType: "day",
+    description: "2022 Yamaha MT-15 155cc. Excellent condition, full service done. Includes helmet, lock, and basic toolkit. Security deposit Rs. 20,000. Valid license required. Pick up in Nugegoda.",
+    phone: "0714432211",
+    imageUrls: ["https://picsum.photos/seed/yamaha-mt15/600/400"],
+    userVerified: false,
+  },
+  {
+    title: "Tuk Tuk — Sightseeing Kandy",
+    category: "Tuk Tuk", location: "Kandy",
+    price: 4500, priceType: "day",
+    description: "English-speaking tuk tuk driver for Kandy sightseeing. Temple of Tooth, Botanical Gardens, tea factory tours. Custom itineraries available. WhatsApp booking preferred.",
+    phone: "0770099887",
+    imageUrls: ["https://picsum.photos/seed/tuk-tuk-kandy/600/400"],
+    userVerified: false,
+  },
+  {
+    title: "Isuzu ELF Tipper Truck",
+    category: "Truck / Lorry", location: "Gampaha",
+    price: 14000, priceType: "day",
+    description: "4-ton Isuzu ELF tipper truck for sand, gravel, rubble transport. 2020 model, well maintained. Driver included. Daily rate; weekly rate negotiable. Max payload 4,000kg.",
+    phone: "0711223344",
+    imageUrls: ["https://picsum.photos/seed/isuzu-tipper/600/400"],
+    userVerified: false,
+  },
+  {
+    title: "Professional DJ Setup — Full Night",
+    category: "DJ Equipment", location: "Colombo",
+    price: 18000, priceType: "event",
+    description: "Pioneer DJ setup (CDJ-2000NXS2 + DJM-900NXS2). Includes 2x 18\" subwoofers, 4x 12\" tops, LED lighting bar, haze machine, and DJ for 6 hours. Additional hours available.",
+    phone: "0704321098",
+    imageUrls: ["https://picsum.photos/seed/dj-equipment/600/400"],
+    userVerified: true,
+  },
+  {
+    title: "Scaffolding System — 50 Standards",
+    category: "Scaffolding", location: "Colombo",
+    price: 6000, priceType: "day",
+    description: "Kwikstage modular scaffolding system — 50 standards, boards and bracing included. Suitable for buildings up to 4 floors. Delivery and erection by our team. Island-wide.",
+    phone: "0761122334",
+    imageUrls: ["https://picsum.photos/seed/scaffolding/600/400"],
+    userVerified: false,
+  },
+  {
+    title: "Bosch Power Tool Set (18V)",
+    category: "Power Tools", location: "Matara",
+    price: 1500, priceType: "day",
+    description: "Bosch 18V cordless set: drill driver, impact driver, circular saw, jigsaw, 2 batteries, charger, and carrying case. Perfect for renovations and carpentry projects.",
+    phone: "0762233445",
+    imageUrls: ["https://picsum.photos/seed/bosch-tools/600/400"],
+    userVerified: false,
+  },
+  {
+    title: "Trek Mountain Bike 27.5\"",
+    category: "Bicycle", location: "Kandy",
+    price: 1200, priceType: "day",
+    description: "Trek Marlin 7 27.5\" mountain bike, 21-speed Shimano gears, hydraulic disc brakes. Helmet and lock included. Great for Knuckles and Hanthana trails. ID required.",
+    phone: "0771234555",
+    imageUrls: ["https://picsum.photos/seed/trek-mountain-bike/600/400"],
+    userVerified: false,
+  },
+  {
+    title: "4-Person Camping Kit — Nuwara Eliya",
+    category: "Camping Gear", location: "Nuwara Eliya",
+    price: 2500, priceType: "day",
+    description: "Complete camping set for 4: 4-person tent, 4 sleeping bags (-5°C rated), gas stove, cooking set, lantern, and trekking poles. Pre-booked setup at selected campsites available.",
+    phone: "0754456677",
+    imageUrls: ["https://picsum.photos/seed/camping-gear/600/400"],
+    userVerified: false,
+  },
+  {
+    title: "Grand Wedding Decor Package",
+    category: "Wedding Decor", location: "Colombo",
+    price: 50000, priceType: "event",
+    description: "Full hall decoration: 100m of fairy lights, 12 flower arches, backdrop, bridal table floral centrepiece, 30 table centrepieces, aisle runners, and balloon ceiling. Setup team included.",
+    phone: "0707788990",
+    imageUrls: ["https://picsum.photos/seed/wedding-decor/600/400"],
+    userVerified: true,
+  },
+  {
+    title: "Men's Designer Suit — Formal Events",
+    category: "Formal Wear", location: "Colombo",
+    price: 3500, priceType: "event",
+    description: "Premium 3-piece wool-blend suit in navy, charcoal, or black. Sizes 38–50 available. Includes shirt, tie, pocket square, and cufflinks. Dry-cleaned after each rental. 3-day hire.",
+    phone: "0717899001",
+    imageUrls: ["https://picsum.photos/seed/formal-suit/600/400"],
+    userVerified: false,
+  },
+  {
+    title: "Dell Latitude 5540 Laptop",
+    category: "Computer & IT", location: "Colombo",
+    price: 2000, priceType: "day",
+    description: "Dell Latitude 5540, Core i7 13th gen, 16GB RAM, 512GB SSD. Windows 11 Pro. Wi-Fi 6, USB-C PD charging. Perfect for conferences, events, and short-term projects. Min 3 days.",
+    phone: "0702233441",
+    imageUrls: ["https://picsum.photos/seed/dell-laptop/600/400"],
+    userVerified: true,
+  },
+  {
+    title: "Luxury 50-Seat Coach Bus",
+    category: "Bus / Coach", location: "Colombo",
+    price: 25000, priceType: "day",
+    description: "2020 Rosa luxury coach, 50 reclining seats, A/C, PA system, TV screens, luggage compartment. Experienced driver. Island-wide tours, school trips, corporate events. Diesel included.",
+    phone: "0773344556",
+    imageUrls: ["https://picsum.photos/seed/luxury-bus/600/400"],
+    userVerified: true,
+  },
+];
+
+// ── Seed ─────────────────────────────────────────────────────
+document.getElementById("seedBtn").addEventListener("click", async () => {
+  const seedBtn  = document.getElementById("seedBtn");
+  const clearBtn = document.getElementById("clearBtn");
+  seedBtn.disabled  = true;
+  clearBtn.disabled = true;
+
+  log(`Starting seed — ${TEST_LISTINGS.length} listings to create...`, "info");
+
+  const adsCol = collection(db, "ads");
+  let success = 0, fail = 0;
+
+  for (let i = 0; i < TEST_LISTINGS.length; i++) {
+    const listing = TEST_LISTINGS[i];
+    try {
+      await addDoc(adsCol, {
+        ...listing,
+        status:      "approved",
+        isTestData:  true,
+        hidden:      false,
+        userId:      "test-seed-user",
+        userName:    "Test Seeder",
+        userEmail:   "seed@rentitsl.lk",
+        userVerified: listing.userVerified || false,
+        createdAt:   serverTimestamp(),
+      });
+      success++;
+      log(`[${i + 1}/${TEST_LISTINGS.length}] ✓ ${listing.title}`, "ok");
+    } catch (e) {
+      fail++;
+      log(`[${i + 1}] ✗ ${listing.title} — ${e.message}`, "err");
+    }
+  }
+
+  log(`─────────────────────────────────`, "info");
+  log(`Done: ${success} created, ${fail} failed.`, success === TEST_LISTINGS.length ? "ok" : "warn");
+
+  const banner = document.getElementById("doneBanner");
+  banner.textContent = `✅ ${success} test listings created! Go to the admin panel to manage them, or use "Clear All Test Data" to remove them.`;
+  banner.style.display = "block";
+
+  seedBtn.disabled  = false;
+  clearBtn.disabled = false;
+});
+
+// ── Clear ─────────────────────────────────────────────────────
+document.getElementById("clearBtn").addEventListener("click", async () => {
+  if (!confirm("Delete ALL documents with isTestData: true from Firestore? This cannot be undone.")) return;
+
+  const seedBtn  = document.getElementById("seedBtn");
+  const clearBtn = document.getElementById("clearBtn");
+  seedBtn.disabled  = true;
+  clearBtn.disabled = true;
+
+  log("Querying test data docs...", "warn");
+  try {
+    const snap = await getDocs(query(collection(db, "ads"), where("isTestData", "==", true)));
+    log(`Found ${snap.size} test listings to delete.`, "warn");
+
+    let deleted = 0;
+    for (const d of snap.docs) {
+      await deleteDoc(doc(db, "ads", d.id));
+      deleted++;
+      log(`Deleted: ${d.data().title} (${d.id})`, "ok");
+    }
+
+    log(`─────────────────────────────────`, "info");
+    log(`All ${deleted} test listings deleted.`, "ok");
+
+    const banner = document.getElementById("doneBanner");
+    banner.style.background = "#450a0a";
+    banner.style.color = "#fca5a5";
+    banner.textContent = `🗑️ ${deleted} test listings removed successfully.`;
+    banner.style.display = "block";
+  } catch (e) {
+    log(`Error: ${e.message}`, "err");
+  }
+
+  seedBtn.disabled  = false;
+  clearBtn.disabled = false;
+});
+</script>
+</body>
+</html>

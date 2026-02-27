@@ -168,9 +168,17 @@
           <h2>Ad Management</h2>
           <p>Review, approve, reject, edit and feature rental listings</p>
         </div>
-        <button class="btn btn-outline btn-sm" id="refresh-btn">
-          <i class="bi bi-arrow-clockwise"></i> Refresh
-        </button>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
+          <button class="btn btn-outline btn-sm" id="refresh-btn">
+            <i class="bi bi-arrow-clockwise"></i> Refresh
+          </button>
+          <a href="../seed-data.html" class="btn btn-outline btn-sm" style="color:var(--success);border-color:var(--success);" target="_blank">
+            <i class="bi bi-database-add"></i> Seed Test Data
+          </a>
+          <button class="btn btn-danger btn-sm" id="delete-test-data-btn" style="font-size:0.8rem;">
+            <i class="bi bi-trash3"></i> Clear Test Data
+          </button>
+        </div>
       </div>
 
       <!-- STATS -->
@@ -200,6 +208,7 @@
         <button class="filter-tab" data-status="approved">Approved <span class="tab-count" id="tc-approved">0</span></button>
         <button class="filter-tab" data-status="rejected">Rejected <span class="tab-count" id="tc-rejected">0</span></button>
         <button class="filter-tab" data-status="featured">Featured <span class="tab-count" id="tc-featured">0</span></button>
+        <button class="filter-tab" data-status="test" style="color:var(--success);border-color:var(--success);">🧪 Test Data <span class="tab-count" id="tc-test">0</span></button>
       </div>
 
       <!-- SEARCH -->
@@ -589,6 +598,26 @@
   // ==================== ADS SECTION ====================
   document.getElementById("refresh-btn").addEventListener("click", loadAds);
 
+  // Delete all test data
+  document.getElementById("delete-test-data-btn").addEventListener("click", async () => {
+    const testAds = allAds.filter(a => a.isTestData === true);
+    if (testAds.length === 0) {
+      showToast("No test data found. Use 'Seed Test Data' first.", "warning");
+      return;
+    }
+    if (!confirm(`Delete all ${testAds.length} test listings? This cannot be undone.`)) return;
+    showLoading(`Deleting ${testAds.length} test listings...`);
+    try {
+      await Promise.all(testAds.map(a => deleteDoc(doc(db, "ads", a.id))));
+      showToast(`${testAds.length} test listings deleted.`, "success");
+      loadAds();
+    } catch (err) {
+      showToast("Error: " + err.message, "error");
+    } finally {
+      hideLoading();
+    }
+  });
+
   async function loadAds() {
     document.getElementById("admin-loading").style.display = "block";
     document.getElementById("admin-ad-list").style.display = "none";
@@ -628,6 +657,8 @@
     const rejected = allAds.filter(a => a.status === "rejected").length;
     const featured = allAds.filter(a => a.featured && isFeaturedActive(a.featuredUntil)).length;
 
+    const testCount = allAds.filter(a => a.isTestData).length;
+
     document.getElementById("stat-total").textContent    = allAds.length;
     document.getElementById("stat-pending").textContent  = pending;
     document.getElementById("stat-approved").textContent = approved;
@@ -637,6 +668,7 @@
     document.getElementById("tc-approved").textContent   = approved;
     document.getElementById("tc-rejected").textContent   = rejected;
     document.getElementById("tc-featured").textContent   = featured;
+    document.getElementById("tc-test").textContent       = testCount;
 
     document.getElementById("nav-pending-badge").textContent = pending > 0 ? pending : "";
   }
@@ -663,6 +695,8 @@
     let filtered = allAds;
     if (currentFilter === "featured") {
       filtered = filtered.filter(a => a.featured && isFeaturedActive(a.featuredUntil));
+    } else if (currentFilter === "test") {
+      filtered = filtered.filter(a => a.isTestData === true);
     } else if (currentFilter !== "all") {
       filtered = filtered.filter(a => a.status === currentFilter);
     }
@@ -745,6 +779,7 @@
           </div>
           <div style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:0.6rem;">
             ${statusBadge} ${featBadge}
+            ${ad.isTestData ? `<span class="badge" style="background:#d1fae5;color:#065f46;border:1px solid #a7f3d0;font-size:0.72rem;"><i class="bi bi-beaker"></i> Test Data</span>` : ""}
             ${(allReportsByAd[ad.id]?.length || 0) > 0 ? `<span class="badge badge-rejected" style="cursor:pointer;" data-action="view-reports" data-id="${ad.id}" data-title="${safe}" title="View reports"><i class="bi bi-flag-fill"></i> ${allReportsByAd[ad.id].length} Report${allReportsByAd[ad.id].length > 1 ? "s" : ""}</span>` : ""}
           </div>
           <div class="admin-ad-actions" style="margin-top:0.75rem;">
