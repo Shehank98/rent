@@ -137,6 +137,44 @@ service cloud.firestore {
     }
 
     // --------------------------------------------------------
+    // REVIEWS COLLECTION  /reviews/{reviewId}
+    // Anyone can read; authenticated non-owners can create once per ad;
+    // owner or admin can delete
+    // --------------------------------------------------------
+    match /reviews/{reviewId} {
+      // Public read — anyone can see reviews (including unauthenticated)
+      allow read: if true;
+
+      // Authenticated user can create a review
+      //   - reviewerId must match the signed-in user
+      //   - rating must be 1–5
+      //   - cannot review their own listing
+      allow create: if isAuth()
+        && request.resource.data.reviewerId == request.auth.uid
+        && request.resource.data.rating is int
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5
+        && request.resource.data.ownerId != request.auth.uid;
+
+      // Only the reviewer or an admin can delete a review
+      allow delete: if isAuth()
+        && (resource.data.reviewerId == request.auth.uid || isAdmin());
+
+      // No updates allowed — reviews are immutable once submitted
+      allow update: if false;
+    }
+
+    // --------------------------------------------------------
+    // CONTACT MESSAGES  /contact_messages/{msgId}
+    // Anyone can submit; only admin can read
+    // --------------------------------------------------------
+    match /contact_messages/{msgId} {
+      allow create: if true;
+      allow read:   if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // --------------------------------------------------------
     // Deny everything else by default
     // --------------------------------------------------------
     match /{document=**} {
