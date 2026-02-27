@@ -686,7 +686,13 @@
   } from "./main.js";
 
   let currentUser = null;
-  onAuthStateChanged(auth, u => { currentUser = u; });
+  let _loadedReviews = null; // cached so auth callback can re-render form
+
+  onAuthStateChanged(auth, u => {
+    currentUser = u;
+    // Reviews may have already loaded before auth resolved — re-render form visibility
+    if (_loadedReviews) updateReviewFormVisibility(_loadedReviews.ownerId, _loadedReviews.reviews);
+  });
 
   initNavbar();
 
@@ -1123,6 +1129,28 @@
     });
   });
 
+  // Separated out so it can be called again when auth state resolves
+  function updateReviewFormVisibility(ownerId, reviews) {
+    const formWrap     = document.getElementById("review-form-wrap");
+    const alreadyNote  = document.getElementById("already-reviewed-note");
+    const signinPrompt = document.getElementById("review-signin-prompt");
+    // Reset all three first
+    formWrap.style.display     = "none";
+    alreadyNote.style.display  = "none";
+    signinPrompt.style.display = "none";
+
+    if (currentUser) {
+      const already = reviews.find(r => r.reviewerId === currentUser.uid);
+      if (already) {
+        alreadyNote.style.display = "";
+      } else if (currentUser.uid !== ownerId) {
+        formWrap.style.display = "";
+      }
+    } else {
+      signinPrompt.style.display = "";
+    }
+  }
+
   async function loadReviews(adId, ownerId) {
     reviewOwnerId = ownerId;
     try {
@@ -1134,12 +1162,12 @@
       // Sort newest first client-side (avoids composite index requirement)
       reviews.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
 
+      // Cache so onAuthStateChanged can re-run visibility when auth resolves
+      _loadedReviews = { ownerId, reviews };
+
       const listEl  = document.getElementById("reviews-list");
       const noMsg   = document.getElementById("no-reviews-msg");
       const sumBox  = document.getElementById("reviews-summary-box");
-      const formWrap= document.getElementById("review-form-wrap");
-      const alreadyNote = document.getElementById("already-reviewed-note");
-      const signinPrompt = document.getElementById("review-signin-prompt");
 
       if (reviews.length > 0) {
         noMsg.style.display = "none";
@@ -1170,17 +1198,7 @@
         }).join("");
       }
 
-      // Show/hide review form based on auth
-      if (currentUser) {
-        const already = reviews.find(r => r.reviewerId === currentUser.uid);
-        if (already) {
-          alreadyNote.style.display = "";
-        } else if (currentUser.uid !== ownerId) {
-          formWrap.style.display = "";
-        }
-      } else {
-        signinPrompt.style.display = "";
-      }
+      updateReviewFormVisibility(ownerId, reviews);
     } catch (err) {
       console.warn("Reviews load error:", err);
     }
