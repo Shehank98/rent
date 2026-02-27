@@ -81,7 +81,7 @@ export async function signOutUser() {
   try {
     await signOut(auth);
     showToast("Signed out successfully", "success");
-    window.location.href = "index.html";
+    window.location.href = "/";
   } catch (err) {
     showToast("Sign-out failed: " + err.message, "error");
   }
@@ -178,7 +178,7 @@ export function initNavbar() {
     loginBtn.addEventListener("click", async () => {
       try {
         await signInWithGoogle();
-        window.location.href = "dashboard.html";
+        window.location.href = "/dashboard/";
       } catch (_) {}
     });
   }
@@ -220,7 +220,7 @@ export function requireAuth(callback) {
       hideLoading();
       if (!user) {
         showToast("Please sign in to continue", "warning");
-        window.location.href = "index.html";
+        window.location.href = "/";
         return;
       }
       if (callback) await callback(user);
@@ -237,14 +237,14 @@ export function requireAdmin(callback) {
       if (!user) {
         hideLoading();
         showToast("Please sign in to continue", "warning");
-        window.location.href = "index.html";
+        window.location.href = "/";
         return;
       }
       const role = await getUserRole(user.uid);
       hideLoading();
       if (role !== "admin") {
         showToast("Access denied: Admins only", "error");
-        window.location.href = "index.html";
+        window.location.href = "/";
         return;
       }
       if (callback) await callback(user);
@@ -313,7 +313,7 @@ export function buildAdCard(ad, id) {
     : "";
 
   return `
-    <a href="ad.html?id=${id}" class="card ${featured ? "featured-card" : ""}" style="display:block;text-decoration:none;">
+    <a href="/ad/?id=${id}" class="card ${featured ? "featured-card" : ""}" style="display:block;text-decoration:none;">
       ${featured ? `<div class="featured-ribbon"><i class="bi bi-star-fill"></i> Featured</div>` : ""}
       <div class="card-img-wrap">
         <img src="${img}" alt="${escapeHtml(ad.title)}" loading="lazy"

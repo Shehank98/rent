@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Panel - Rent It SL</title>
-  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="../style.css" />
   <style>
     .admin-search-wrap { position:relative; max-width:360px; margin-bottom:1.5rem; }
     .admin-search-wrap input { width:100%; padding:0.6rem 1rem 0.6rem 2.5rem; border:2px solid var(--gray-200); border-radius:var(--radius); font-size:0.9rem; outline:none; transition:border-color var(--transition); }
@@ -68,15 +68,15 @@
 <!-- ==================== NAVBAR ==================== -->
 <nav class="navbar">
   <div class="container">
-    <a href="index.html" class="nav-brand">
+    <a href="../" class="nav-brand">
       Rent It<span> SL</span>
       <span style="font-size:0.65rem;background:var(--danger);color:white;padding:0.15rem 0.5rem;border-radius:var(--radius-full);margin-left:0.5rem;vertical-align:middle;letter-spacing:0.05em;">ADMIN</span>
     </a>
     <div class="nav-links">
-      <a href="index.html">Home</a>
-      <a href="listings.html">Browse</a>
-      <a href="dashboard.html">Dashboard</a>
-      <a href="admin.html" style="color:var(--primary);font-weight:700;">Admin</a>
+      <a href="../">Home</a>
+      <a href="../listings/">Browse</a>
+      <a href="../dashboard/">Dashboard</a>
+      <a href="../admin/" style="color:var(--primary);font-weight:700;">Admin</a>
     </div>
     <div class="nav-actions">
       <div id="nav-user-wrap" class="nav-user-wrap hidden">
@@ -87,10 +87,10 @@
         </button>
         <div class="user-dropdown" id="nav-user-dropdown">
           <div class="dropdown-user-email" id="dropdown-user-email"></div>
-          <a href="dashboard.html" class="dropdown-item">
+          <a href="../dashboard/" class="dropdown-item">
             <i class="bi bi-grid-1x2-fill"></i> My Dashboard
           </a>
-          <a href="admin.html" class="dropdown-item" style="font-weight:700;color:var(--primary)">
+          <a href="../admin/" class="dropdown-item" style="font-weight:700;color:var(--primary)">
             <i class="bi bi-shield-check"></i> Admin Panel
           </a>
           <div class="dropdown-divider"></div>
@@ -105,10 +105,10 @@
     </button>
   </div>
   <nav class="mobile-nav" id="mobile-nav">
-    <a href="index.html">Home</a>
-    <a href="listings.html">Browse</a>
-    <a href="dashboard.html">My Dashboard</a>
-    <a href="admin.html">Admin Panel</a>
+    <a href="../">Home</a>
+    <a href="../listings/">Browse</a>
+    <a href="../dashboard/">My Dashboard</a>
+    <a href="../admin/">Admin Panel</a>
     <button id="mob-logout-btn" class="btn btn-ghost btn-sm hidden" style="width:fit-content">Sign Out</button>
   </nav>
 </nav>
@@ -146,10 +146,10 @@
         <span class="tab-count" id="nav-reports-badge" style="margin-left:auto;background:var(--danger);color:white;border-radius:var(--radius-full);padding:0 0.4rem;font-size:0.7rem;display:none;"></span>
       </a>
       <hr style="border:none;border-top:1px solid var(--gray-200);margin:0.75rem 0;" />
-      <a href="listings.html">
+      <a href="../listings/">
         <span class="nav-icon"><i class="bi bi-eye"></i></span> Public Listings
       </a>
-      <a href="index.html">
+      <a href="../">
         <span class="nav-icon"><i class="bi bi-house"></i></span> Home
       </a>
     </nav>
@@ -520,13 +520,13 @@
     collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
     query, where, orderBy, serverTimestamp, Timestamp,
     ref, deleteObject,
-  } from "./firebase.js";
+  } from "../firebase.js";
   import {
     requireAdmin, showToast, formatPrice, formatDate,
     isFeaturedActive, featuredDaysLeft, escapeHtml, debounce,
     CATEGORY_GROUPS, buildCategorySelect, buildCategorySelectAsync,
     buildLocationDatalist,
-  } from "./main.js";
+  } from "../main.js";
 
   let allAds = [], allUsers = [], allAdsByUser = {};
   let currentFilter = "all", currentSearch = "";
@@ -580,10 +580,10 @@
     document.addEventListener("click", (e) => { if (!userWrap?.contains(e.target)) userDropdown?.classList.remove("open"); });
   }
   document.getElementById("nav-logout-btn").addEventListener("click", async () => {
-    await signOut(auth); window.location.href = "index.html";
+    await signOut(auth); window.location.href = "/";
   });
   document.getElementById("mob-logout-btn")?.addEventListener("click", async () => {
-    await signOut(auth); window.location.href = "index.html";
+    await signOut(auth); window.location.href = "/";
   });
 
   // ==================== ADS SECTION ====================

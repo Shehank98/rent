@@ -8,31 +8,31 @@
   </url>
 
   <url>
-    <loc>https://rentitsl.com/listings.html</loc>
+    <loc>https://rentitsl.com/listings/</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://rentitsl.com/about.html</loc>
+    <loc>https://rentitsl.com/about/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
 
   <url>
-    <loc>https://rentitsl.com/contact.html</loc>
+    <loc>https://rentitsl.com/contact/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
 
   <url>
-    <loc>https://rentitsl.com/privacy.html</loc>
+    <loc>https://rentitsl.com/privacy/</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
 
   <url>
-    <loc>https://rentitsl.com/terms.html</loc>
+    <loc>https://rentitsl.com/terms/</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
