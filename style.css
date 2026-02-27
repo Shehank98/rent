@@ -470,17 +470,19 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 .hero-stat span { font-size: 0.8rem; color: #93c5fd; }
 
 /* ---------- CATEGORY SECTION ---------- */
-.categories-section { padding: 3.5rem 0; background: var(--white); }
+.categories-section { padding: 1.5rem 0; background: var(--white); }
+.categories-section .section-header { margin-bottom: 0.875rem; }
+.categories-section .section-title { font-size: 1.15rem; }
 .categories-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 0.65rem;
 }
 .category-card {
   background: var(--gray-50);
-  border: 2px solid var(--gray-200);
-  border-radius: var(--radius-lg);
-  padding: 1.25rem 0.75rem;
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius);
+  padding: 0.875rem 0.5rem;
   text-align: center;
   cursor: pointer;
   transition: all var(--transition);
@@ -488,7 +490,7 @@ textarea.form-control { resize: vertical; min-height: 100px; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.4rem;
 }
 .category-card:hover,
 .category-card.active {
@@ -502,14 +504,15 @@ textarea.form-control { resize: vertical; min-height: 100px; }
   line-height: 1;
 }
 .category-name {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--gray-700);
+  line-height: 1.25;
 }
 .category-card:hover .category-name,
 .category-card.active .category-name { color: var(--primary); }
 .category-count {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   color: var(--gray-400);
 }
 
@@ -1630,17 +1633,17 @@ footer ul li a:hover { color: var(--white); }
 
 /* ---------- CATEGORY CARD — icon via BI ---------- */
 .cat-icon-wrap {
-  width: 44px;
-  height: 44px;
+  width: 38px;
+  height: 38px;
   border-radius: var(--radius);
   background: #eff6ff;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 0.5rem;
+  margin: 0 auto 0.25rem;
   transition: all var(--transition);
 }
-.cat-icon-wrap i { font-size: 1.3rem; color: var(--primary); }
+.cat-icon-wrap i { font-size: 1.1rem; color: var(--primary); }
 .category-card:hover .cat-icon-wrap,
 .category-card.active .cat-icon-wrap {
   background: var(--primary);
