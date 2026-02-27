@@ -304,8 +304,59 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 .form-error.visible { display: block; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 
+/* ---------- PAGINATION ---------- */
+#pagination-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 2rem;
+  padding-bottom: 1rem;
+}
+.pag-btn {
+  min-width: 38px;
+  height: 38px;
+  padding: 0 0.7rem;
+  border-radius: 8px;
+  border: 1.5px solid var(--gray-200);
+  background: var(--white);
+  color: var(--dark-2);
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  line-height: 1;
+}
+.pag-btn:hover:not(:disabled) {
+  background: var(--primary-light, #eff6ff);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.pag-btn.pag-active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--white);
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(26,86,219,0.18);
+}
+.pag-btn.pag-disabled, .pag-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+  pointer-events: none;
+}
+.pag-btn.pag-arrow { font-size: 1rem; font-weight: 700; }
+.pag-btn.pag-dots { border: none; background: none; cursor: default; color: var(--gray-400); }
+@media (max-width: 480px) {
+  .pag-btn { min-width: 34px; height: 34px; font-size: 0.82rem; padding: 0 0.55rem; }
+}
+
 /* ---------- CARDS ---------- */
 .card {
+  display: block;
   background: var(--white);
   border-radius: 18px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04);
@@ -1574,50 +1625,39 @@ footer ul li a:hover { color: var(--white); }
   .home-filter-input { font-size: 0.82rem; padding: 0.42rem 0.5rem 0.42rem 1.85rem; }
   .home-filter-select { font-size: 0.82rem; padding: 0.42rem 0.4rem; flex: 1; min-width: 0; }
 
-  /* Ads grid — compact horizontal cards ~82px tall → 5-6 cards visible per screen */
-  .ads-grid { grid-template-columns: 1fr; gap: 0.45rem; }
+  /* Ads grid — single column, horizontal card layout on phones */
+  .ads-grid { grid-template-columns: 1fr; gap: 0.65rem; }
 
   .card {
     display: flex;
     flex-direction: row;
-    border-radius: 12px;
-    min-height: 82px;
-    max-height: 90px;
+    border-radius: 14px;
+    min-height: 110px;
   }
-  .card::after { border-radius: 12px; }
+  .card::after { border-radius: 14px; }
   .card-img-wrap {
-    flex: 0 0 92px;
-    width: 92px;
+    flex: 0 0 120px;
+    width: 120px;
     aspect-ratio: unset;
     align-self: stretch;
-    border-radius: 12px 0 0 12px;
+    border-radius: 14px 0 0 14px;
   }
   .card-img-wrap::after {
-    background: linear-gradient(to right, rgba(15,23,42,0.18) 0%, transparent 55%);
+    background: linear-gradient(to right, rgba(15,23,42,0.3) 0%, transparent 60%);
   }
   .card-body {
     flex: 1;
-    padding: 0.5rem 0.7rem;
+    padding: 0.7rem 0.85rem;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: 0.15rem;
     min-width: 0;
-    overflow: hidden;
   }
-  .card-title {
-    font-size: 0.83rem;
-    -webkit-line-clamp: 1;
-    margin-bottom: 0;
-    line-height: 1.3;
-  }
-  .card-price { font-size: 0.8rem; padding: 0.1rem 0.42rem; margin-bottom: 0; align-self: flex-start; }
-  .card-meta { font-size: 0.68rem; gap: 0 0.5rem; flex-wrap: nowrap; }
-  /* Hide "X time ago" — show only location to save space */
-  .card-meta span:last-child { display: none; }
-  .card-meta i { font-size: 0.62rem; }
-  .card-badges { display: none; }
-  .card-verified-badge { font-size: 0.62rem; padding: 0.1rem 0.35rem; margin-top: 0; }
+  .card-title { font-size: 0.88rem; -webkit-line-clamp: 2; margin-bottom: 0.35rem; }
+  .card-price { font-size: 0.9rem; padding: 0.15rem 0.5rem; margin-bottom: 0.4rem; }
+  .card-meta { font-size: 0.72rem; gap: 0.25rem 0.75rem; }
+  .card-badges { top: 0.5rem; left: 0.5rem; }
+  .card-verified-badge { font-size: 0.7rem; padding: 0.2rem 0.45rem; margin-top: 0.3rem; }
 
   /* My ads */
   .my-ad-item { flex-direction: column; }

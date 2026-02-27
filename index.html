@@ -169,11 +169,7 @@
       <button class="btn btn-ghost btn-sm" id="no-listings-reset">Clear Filters</button>
     </div>
 
-    <div id="show-more-wrap" style="text-align:center;margin-top:2rem;display:none;">
-      <button id="show-more-btn" class="btn btn-outline btn-lg">
-        <i class="bi bi-arrow-down-circle"></i> Show More Listings
-      </button>
-    </div>
+    <div id="pagination-wrap" style="display:none;"></div>
   </div>
 </section>
 
@@ -365,8 +361,8 @@
   // ALL LISTINGS - load + inline filter + show more
   // ====================================================
   let allAds = []; // all approved ads
-  let PAGE_SIZE = 12;
-  let shownCount = PAGE_SIZE;
+  const PAGE_SIZE = 20;
+  let currentPage = 1;
 
   // Populate inline category filter
   buildCategorySelect(document.getElementById("home-cat-filter"), true);
@@ -400,38 +396,78 @@
 
   function renderGrid() {
     const filtered = getFiltered();
-    const grid  = document.getElementById("all-ads-grid");
-    const empty = document.getElementById("no-listings");
-    const moreWrap = document.getElementById("show-more-wrap");
+    const grid      = document.getElementById("all-ads-grid");
+    const empty     = document.getElementById("no-listings");
+    const pagWrap   = document.getElementById("pagination-wrap");
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
 
     if (filtered.length === 0) {
       grid.innerHTML = "";
       empty.classList.remove("hidden");
-      moreWrap.style.display = "none";
+      pagWrap.style.display = "none";
       return;
     }
     empty.classList.add("hidden");
-    const toShow = filtered.slice(0, shownCount);
-    grid.innerHTML = toShow.map(ad => buildAdCard(ad, ad.id)).join("");
-    moreWrap.style.display = filtered.length > shownCount ? "block" : "none";
+
+    // Clamp currentPage in case filtered set shrank
+    if (currentPage > totalPages) currentPage = totalPages;
+    const start = (currentPage - 1) * PAGE_SIZE;
+    grid.innerHTML = filtered.slice(start, start + PAGE_SIZE)
+      .map(ad => buildAdCard(ad, ad.id)).join("");
+
+    // Scroll to top of grid on page change
+    grid.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    // Build pagination
+    if (totalPages <= 1) {
+      pagWrap.style.display = "none";
+      return;
+    }
+    pagWrap.style.display = "flex";
+
+    const pages = [];
+    // Always show: prev, first, ..., window around current, ..., last, next
+    const delta = 2;
+    const range = [];
+    for (let i = Math.max(2, currentPage - delta); i <= Math.min(totalPages - 1, currentPage + delta); i++) {
+      range.push(i);
+    }
+    const showLeftDots  = range[0] > 2;
+    const showRightDots = range[range.length - 1] < totalPages - 1;
+
+    pages.push({ label: "‹", page: currentPage - 1, disabled: currentPage === 1, cls: "pag-arrow" });
+    pages.push({ label: "1", page: 1, active: currentPage === 1 });
+    if (showLeftDots)  pages.push({ label: "…", page: null, disabled: true, cls: "pag-dots" });
+    range.forEach(p => pages.push({ label: String(p), page: p, active: currentPage === p }));
+    if (showRightDots) pages.push({ label: "…", page: null, disabled: true, cls: "pag-dots" });
+    if (totalPages > 1) pages.push({ label: String(totalPages), page: totalPages, active: currentPage === totalPages });
+    pages.push({ label: "›", page: currentPage + 1, disabled: currentPage === totalPages, cls: "pag-arrow" });
+
+    pagWrap.innerHTML = pages.map(p => {
+      const cls = ["pag-btn", p.cls || "", p.active ? "pag-active" : "", p.disabled ? "pag-disabled" : ""].filter(Boolean).join(" ");
+      return `<button class="${cls}" data-page="${p.page ?? ""}" ${p.disabled || !p.page ? "disabled" : ""}>${p.label}</button>`;
+    }).join("");
+
+    pagWrap.querySelectorAll(".pag-btn:not([disabled])").forEach(btn => {
+      btn.addEventListener("click", () => {
+        currentPage = Number(btn.dataset.page);
+        renderGrid();
+      });
+    });
   }
 
-  document.getElementById("home-search").addEventListener("input", debounce(() => { shownCount = PAGE_SIZE; renderGrid(); }, 250));
-  document.getElementById("home-cat-filter").addEventListener("change", () => { shownCount = PAGE_SIZE; renderGrid(); });
-  document.getElementById("home-loc-filter").addEventListener("change", () => { shownCount = PAGE_SIZE; renderGrid(); });
+  document.getElementById("home-search").addEventListener("input", debounce(() => { currentPage = 1; renderGrid(); }, 250));
+  document.getElementById("home-cat-filter").addEventListener("change", () => { currentPage = 1; renderGrid(); });
+  document.getElementById("home-loc-filter").addEventListener("change", () => { currentPage = 1; renderGrid(); });
   function clearFilters() {
     document.getElementById("home-search").value = "";
     document.getElementById("home-cat-filter").value = "";
     document.getElementById("home-loc-filter").value = "";
-    shownCount = PAGE_SIZE;
+    currentPage = 1;
     renderGrid();
   }
   document.getElementById("home-filter-reset").addEventListener("click", clearFilters);
   document.getElementById("no-listings-reset").addEventListener("click", clearFilters);
-  document.getElementById("show-more-btn").addEventListener("click", () => {
-    shownCount += PAGE_SIZE;
-    renderGrid();
-  });
 
   // ---- Load all approved ads ----
   async function loadAds() {

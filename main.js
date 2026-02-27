@@ -313,7 +313,7 @@ export function buildAdCard(ad, id) {
     : "";
 
   return `
-    <a href="/ad/?id=${id}" class="card ${featured ? "featured-card" : ""}" style="display:block;text-decoration:none;">
+    <a href="/ad/?id=${id}" class="card ${featured ? "featured-card" : ""}" style="text-decoration:none;">
       ${featured ? `<div class="featured-ribbon"><i class="bi bi-star-fill"></i> Featured</div>` : ""}
       <div class="card-img-wrap">
         <img src="${img}" alt="${escapeHtml(ad.title)}" loading="lazy"
