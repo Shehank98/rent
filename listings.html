@@ -174,6 +174,12 @@
     <div class="footer-bottom">
       <a href="index.html" class="footer-brand" style="font-size:1.2rem;">Rent<span>Hub</span></a>
       <div style="text-align:right;">
+        <div style="display:flex;gap:1rem;font-size:0.8rem;justify-content:flex-end;margin-bottom:0.25rem;">
+          <a href="about.html" style="color:var(--gray-400);">About</a>
+          <a href="contact.html" style="color:var(--gray-400);">Contact</a>
+          <a href="privacy.html" style="color:var(--gray-400);">Privacy</a>
+          <a href="terms.html" style="color:var(--gray-400);">Terms</a>
+        </div>
         <div style="font-size:0.8rem;color:var(--gray-600);">&copy; 2025 RentHub Sri Lanka. All rights reserved.</div>
         <div class="powered-by-adspot" style="justify-content:flex-end;">
           <i class="bi bi-newspaper"></i>
@@ -214,7 +220,10 @@
       query(collection(db, "ads"), where("status", "==", "approved"))
     );
     allAds = [];
-    snap.forEach(d => allAds.push({ id: d.id, ...d.data() }));
+    snap.forEach(d => {
+      const data = d.data();
+      if (!data.hidden) allAds.push({ id: d.id, ...data });
+    });
     applyFilters();
   }
 

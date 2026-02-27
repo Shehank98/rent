@@ -227,11 +227,25 @@
           <li><a href="listings.html?category=Other">Other</a></li>
         </ul>
       </div>
+      <div>
+        <h4>Legal &amp; Info</h4>
+        <ul>
+          <li><a href="about.html">About Us</a></li>
+          <li><a href="contact.html">Contact Us</a></li>
+          <li><a href="privacy.html">Privacy Policy</a></li>
+          <li><a href="terms.html">Terms &amp; Conditions</a></li>
+        </ul>
+      </div>
     </div>
     <div class="footer-bottom">
       <span>&copy; 2025 RentHub Sri Lanka. All rights reserved.</span>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.2rem;">
-        <span>Made with ❤️ in Sri Lanka</span>
+        <div style="display:flex;gap:1rem;font-size:0.8rem;">
+          <a href="privacy.html" style="color:var(--gray-400);">Privacy Policy</a>
+          <a href="terms.html" style="color:var(--gray-400);">Terms</a>
+          <a href="about.html" style="color:var(--gray-400);">About</a>
+          <a href="contact.html" style="color:var(--gray-400);">Contact</a>
+        </div>
         <div class="powered-by-adspot" style="justify-content:flex-end;">
           <i class="bi bi-newspaper"></i>
           Powered by <a href="https://www.adspotmedia.lk" target="_blank" rel="noopener noreferrer">AdSpotMedia</a>
@@ -416,7 +430,10 @@
     try {
       const snap = await getDocs(query(collection(db, "ads"), where("status", "==", "approved")));
       allAds = [];
-      snap.forEach(d => allAds.push({ id: d.id, ...d.data() }));
+      snap.forEach(d => {
+        const data = d.data();
+        if (!data.hidden) allAds.push({ id: d.id, ...data });
+      });
 
       // Sort: featured first, then newest
       allAds.sort((a, b) => {

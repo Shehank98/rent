@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact Us - RentHub Sri Lanka</title>
+  <meta name="description" content="Contact RentHub Sri Lanka - get in touch with our team for support, questions, or feedback." />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .legal-hero { background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 60%,#1a56db 100%); padding:3rem 0 2.5rem; }
+    .legal-hero h1 { color:#fff; font-size:2rem; font-weight:800; margin-bottom:0.5rem; }
+    .legal-hero p { color:#93c5fd; font-size:0.95rem; }
+    .contact-layout { max-width:900px; margin:0 auto; padding:3rem 1.25rem 4rem; display:grid; grid-template-columns:1fr 1.5fr; gap:3rem; align-items:start; }
+    @media(max-width:640px){ .contact-layout { grid-template-columns:1fr; gap:2rem; } }
+    .contact-info h2 { font-size:1.2rem; font-weight:700; color:var(--dark-2); margin-bottom:1rem; }
+    .contact-info p { font-size:0.9rem; color:var(--gray-600); line-height:1.7; margin-bottom:1.25rem; }
+    .contact-detail { display:flex; align-items:flex-start; gap:0.75rem; margin-bottom:1rem; }
+    .contact-detail-icon { width:38px; height:38px; background:#eff6ff; border-radius:var(--radius); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .contact-detail-icon i { color:var(--primary); font-size:1.1rem; }
+    .contact-detail-text { font-size:0.88rem; color:var(--gray-600); }
+    .contact-detail-text strong { display:block; color:var(--dark-2); font-size:0.9rem; margin-bottom:0.15rem; }
+    .contact-form-card { background:var(--white); border:1px solid var(--gray-200); border-radius:var(--radius-lg); padding:2rem; box-shadow:var(--shadow-sm); }
+    .contact-form-card h2 { font-size:1.15rem; font-weight:700; color:var(--dark-2); margin-bottom:1.25rem; }
+    .contact-success { background:#d1fae5; border:1px solid #6ee7b7; border-radius:var(--radius); padding:1rem 1.25rem; font-size:0.9rem; color:#065f46; display:none; margin-bottom:1rem; }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="container">
+    <a href="index.html" class="nav-brand">Rent<span>Hub</span></a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="listings.html">Browse</a>
+      <a href="admin.html" id="nav-admin-link" class="hidden">Admin</a>
+    </div>
+    <div class="nav-actions">
+      <button id="nav-login-btn" class="btn btn-primary btn-sm"><i class="bi bi-google"></i> Sign In</button>
+      <div id="nav-user-wrap" class="nav-user-wrap hidden">
+        <button class="user-menu-btn" id="nav-user-btn">
+          <img id="nav-user-avatar" class="user-avatar" src="" alt="avatar" />
+          <span id="nav-user-name" class="user-name"></span>
+          <i class="bi bi-chevron-down dropdown-arrow"></i>
+        </button>
+        <div class="user-dropdown" id="nav-user-dropdown">
+          <div class="dropdown-user-email" id="dropdown-user-email"></div>
+          <a href="dashboard.html" class="dropdown-item"><i class="bi bi-grid-1x2-fill"></i> My Dashboard</a>
+          <a href="admin.html" class="dropdown-item hidden" id="dropdown-admin-link"><i class="bi bi-shield-check"></i> Admin Panel</a>
+          <div class="dropdown-divider"></div>
+          <button class="dropdown-item dropdown-logout" id="nav-logout-btn"><i class="bi bi-box-arrow-right"></i> Sign Out</button>
+        </div>
+      </div>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Toggle menu"><span></span><span></span><span></span></button>
+  </div>
+  <nav class="mobile-nav" id="mobile-nav">
+    <a href="index.html">Home</a>
+    <a href="listings.html">Browse All</a>
+    <a href="dashboard.html">My Dashboard</a>
+    <a href="admin.html" class="hidden" id="mob-admin-link">Admin Panel</a>
+    <button id="mob-logout-btn" class="btn btn-ghost btn-sm hidden" style="width:fit-content">Sign Out</button>
+  </nav>
+</nav>
+
+<!-- HERO -->
+<section class="legal-hero">
+  <div class="container">
+    <h1><i class="bi bi-envelope" style="margin-right:0.5rem;"></i>Contact Us</h1>
+    <p>We'd love to hear from you — get in touch with our team anytime.</p>
+  </div>
+</section>
+
+<!-- BODY -->
+<div class="container">
+  <div class="contact-layout">
+
+    <!-- Left: contact info -->
+    <div class="contact-info">
+      <h2>Get In Touch</h2>
+      <p>Have a question about a listing, need help with your account, or want to report an issue? Our team is here to help.</p>
+      <p>We typically respond within 1–2 business days.</p>
+
+      <div class="contact-detail">
+        <div class="contact-detail-icon"><i class="bi bi-envelope-fill"></i></div>
+        <div class="contact-detail-text">
+          <strong>Email</strong>
+          <a href="mailto:info@renthub.lk">info@renthub.lk</a>
+        </div>
+      </div>
+
+      <div class="contact-detail">
+        <div class="contact-detail-icon"><i class="bi bi-geo-alt-fill"></i></div>
+        <div class="contact-detail-text">
+          <strong>Location</strong>
+          Sri Lanka (Island-wide service)
+        </div>
+      </div>
+
+      <div class="contact-detail">
+        <div class="contact-detail-icon"><i class="bi bi-clock-fill"></i></div>
+        <div class="contact-detail-text">
+          <strong>Response Time</strong>
+          Mon–Sat, 9 AM – 6 PM
+        </div>
+      </div>
+
+      <div class="contact-detail">
+        <div class="contact-detail-icon"><i class="bi bi-newspaper"></i></div>
+        <div class="contact-detail-text">
+          <strong>Powered by</strong>
+          <a href="https://www.adspotmedia.lk" target="_blank" rel="noopener noreferrer">AdSpotMedia</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: contact form -->
+    <div class="contact-form-card">
+      <h2><i class="bi bi-chat-dots" style="color:var(--primary);margin-right:0.4rem;"></i>Send a Message</h2>
+
+      <div class="contact-success" id="contact-success">
+        <i class="bi bi-check-circle-fill"></i> <strong>Message sent!</strong> Thank you for reaching out. We'll get back to you shortly.
+      </div>
+
+      <form id="contact-form" novalidate>
+        <div class="form-group">
+          <label class="form-label">Your Name <span>*</span></label>
+          <input type="text" class="form-control" id="contact-name" placeholder="Full name" maxlength="100" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address <span>*</span></label>
+          <input type="email" class="form-control" id="contact-email" placeholder="you@example.com" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Subject <span>*</span></label>
+          <select class="form-control" id="contact-subject" required>
+            <option value="">Select a subject...</option>
+            <option value="General Enquiry">General Enquiry</option>
+            <option value="Listing Support">Listing Support</option>
+            <option value="Account Issue">Account Issue</option>
+            <option value="Verification Request">Verification Request</option>
+            <option value="Report a Problem">Report a Problem</option>
+            <option value="Advertising / Partnership">Advertising / Partnership</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Message <span>*</span></label>
+          <textarea class="form-control" id="contact-message" rows="5" placeholder="How can we help you?" maxlength="2000" required></textarea>
+        </div>
+        <div id="contact-error" class="alert alert-error" style="display:none;margin-bottom:0.75rem;"></div>
+        <button type="submit" class="btn btn-primary" id="contact-submit-btn" style="width:100%;justify-content:center;">
+          <i class="bi bi-send"></i> Send Message
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">Rent<span>Hub</span></div>
+        <p class="footer-desc">Sri Lanka's rental marketplace. Find and list vehicles, equipment, property, and more island-wide.</p>
+      </div>
+      <div>
+        <h4>Quick Links</h4>
+        <ul>
+          <li><a href="listings.html">Browse All</a></li>
+          <li><a href="dashboard.html">Post an Ad</a></li>
+          <li><a href="about.html">About Us</a></li>
+          <li><a href="contact.html">Contact Us</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="privacy.html">Privacy Policy</a></li>
+          <li><a href="terms.html">Terms &amp; Conditions</a></li>
+          <li><a href="about.html">About RentHub</a></li>
+          <li><a href="contact.html">Contact Us</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2025 RentHub Sri Lanka. All rights reserved.</span>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.2rem;">
+        <div style="display:flex;gap:1rem;font-size:0.8rem;">
+          <a href="privacy.html" style="color:var(--gray-400);">Privacy Policy</a>
+          <a href="terms.html" style="color:var(--gray-400);">Terms</a>
+          <a href="about.html" style="color:var(--gray-400);">About</a>
+          <a href="contact.html" style="color:var(--gray-400);">Contact</a>
+        </div>
+        <div class="powered-by-adspot" style="justify-content:flex-end;">
+          <i class="bi bi-newspaper"></i>
+          Powered by <a href="https://www.adspotmedia.lk" target="_blank" rel="noopener noreferrer">AdSpotMedia</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script type="module">
+  import { db, collection, addDoc, serverTimestamp } from "./firebase.js";
+  import { initNavbar, showToast } from "./main.js";
+  initNavbar();
+
+  document.getElementById("contact-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name    = document.getElementById("contact-name").value.trim();
+    const email   = document.getElementById("contact-email").value.trim();
+    const subject = document.getElementById("contact-subject").value;
+    const message = document.getElementById("contact-message").value.trim();
+    const errEl   = document.getElementById("contact-error");
+    errEl.style.display = "none";
+
+    if (!name || !email || !subject || !message) {
+      errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> Please fill in all required fields.`;
+      errEl.style.display = "flex";
+      return;
+    }
+    const emailRx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRx.test(email)) {
+      errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> Please enter a valid email address.`;
+      errEl.style.display = "flex";
+      return;
+    }
+
+    const btn = document.getElementById("contact-submit-btn");
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner spinner-sm" style="display:inline-block;margin-right:0.5rem;"></span> Sending...`;
+
+    try {
+      await addDoc(collection(db, "contact_messages"), {
+        name, email, subject, message,
+        createdAt: serverTimestamp(),
+        read: false,
+      });
+      document.getElementById("contact-success").style.display = "block";
+      document.getElementById("contact-form").reset();
+      document.getElementById("contact-form").style.display = "none";
+    } catch (err) {
+      errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> Could not send message: ${err.message}`;
+      errEl.style.display = "flex";
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = `<i class="bi bi-send"></i> Send Message`;
+    }
+  });
+</script>
+</body>
+</html>

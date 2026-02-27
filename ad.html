@@ -659,6 +659,12 @@
     <div class="footer-bottom">
       <a href="index.html" class="footer-brand" style="font-size:1.2rem;">Rent<span>Hub</span></a>
       <div style="text-align:right;">
+        <div style="display:flex;gap:1rem;font-size:0.8rem;justify-content:flex-end;margin-bottom:0.25rem;">
+          <a href="about.html" style="color:var(--gray-400);">About</a>
+          <a href="contact.html" style="color:var(--gray-400);">Contact</a>
+          <a href="privacy.html" style="color:var(--gray-400);">Privacy</a>
+          <a href="terms.html" style="color:var(--gray-400);">Terms</a>
+        </div>
         <div style="font-size:0.8rem;color:var(--gray-600);">&copy; 2025 RentHub Sri Lanka. All rights reserved.</div>
         <div class="powered-by-adspot" style="justify-content:flex-end;">
           <i class="bi bi-newspaper"></i>
@@ -979,6 +985,12 @@
         reason:      finalReason,
         createdAt:   serverTimestamp(),
       });
+      // Increment reportCount on the ad and auto-hide if >= 5
+      await updateDoc(doc(db, "ads", adId), { reportCount: increment(1) });
+      const adSnap = await getDoc(doc(db, "ads", adId));
+      if (adSnap.exists() && (adSnap.data().reportCount || 0) >= 5) {
+        await updateDoc(doc(db, "ads", adId), { hidden: true });
+      }
       reportSubmitted = true;
       document.getElementById("report-success").style.display = "block";
       document.getElementById("report-modal-actions").style.display = "none";

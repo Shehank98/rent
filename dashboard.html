@@ -249,18 +249,41 @@
 
       <!-- Upload section (hidden once verified/pending) -->
       <div class="content-card" id="verify-upload-section" style="display:none;">
-        <h4 style="margin-bottom:0.5rem;"><i class="bi bi-upload"></i> Submit Your ID Document</h4>
-        <p style="margin-bottom:1.25rem;color:var(--gray-600);font-size:0.9rem;">
-          Upload a clear photo of your <strong>National ID Card</strong>, <strong>Passport</strong>, or <strong>Driving Licence</strong>.
-          Your document is only visible to the admin team and will not be shared publicly.
+        <h4 style="margin-bottom:0.5rem;"><i class="bi bi-patch-check"></i> Apply for Verified Seller Badge</h4>
+        <p style="margin-bottom:1.5rem;color:var(--gray-600);font-size:0.9rem;">
+          Fill in your details and upload a government-issued ID. Once approved by our team, a
+          <strong>Verified Seller</strong> badge will appear on all your listings.
+          Your information is only visible to the admin team and will not be shared publicly.
         </p>
 
+        <!-- Personal details form -->
+        <div class="form-row" style="margin-bottom:0;">
+          <div class="form-group">
+            <label class="form-label">Full Name <span>*</span></label>
+            <input type="text" class="form-control" id="verify-name" placeholder="As it appears on your ID" maxlength="100" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Mobile Number <span>*</span></label>
+            <input type="tel" class="form-control" id="verify-mobile" placeholder="07XXXXXXXX (10 digits)" maxlength="10" />
+          </div>
+        </div>
         <div class="form-group">
+          <label class="form-label">NIC Number <span>*</span></label>
+          <input type="text" class="form-control" id="verify-nic" placeholder="e.g. 199012345678 or 901234567V" maxlength="12" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Home Address <span>*</span></label>
+          <textarea class="form-control" id="verify-address" rows="2" placeholder="Full residential address" maxlength="300"></textarea>
+        </div>
+
+        <!-- ID document upload -->
+        <div class="form-group" style="margin-top:0.5rem;">
           <label class="form-label">ID Document Image <span>*</span></label>
+          <p style="font-size:0.82rem;color:var(--gray-500);margin-bottom:0.6rem;">Upload a clear photo of your <strong>National ID Card</strong>, <strong>Passport</strong>, or <strong>Driving Licence</strong>.</p>
           <div class="upload-area" id="verify-upload-area">
             <i class="bi bi-id-card" style="font-size:2.25rem;color:var(--gray-400);"></i>
             <h4 style="margin-top:0.5rem;">Drop ID image here or click to browse</h4>
-            <p>JPG or PNG - Max 10 MB</p>
+            <p>JPG or PNG &mdash; Max 10 MB</p>
             <input type="file" id="verify-file-input" accept="image/*" style="display:none;" />
           </div>
           <div id="verify-preview-wrap" style="display:none;margin-top:1rem;">
@@ -797,14 +820,21 @@
         sidebarBadge.innerHTML = `<span class="badge badge-approved" style="font-size:0.72rem;"><i class="bi bi-patch-check-fill"></i> Verified</span>`;
 
       } else if (status === "pending") {
+        const vd = userData.verificationData || {};
         statusCard.innerHTML = `
           <div class="verify-status-box" style="border-color:var(--warning-bg);">
             <i class="bi bi-hourglass-split" style="color:var(--warning);"></i>
-            <div>
+            <div style="flex:1;">
               <div style="font-weight:700;color:var(--warning);font-size:1rem;">Verification Pending</div>
               <div style="color:var(--gray-600);font-size:0.88rem;margin-top:0.2rem;">
-                Your ID document has been submitted and is being reviewed by the admin team.
+                Your details have been submitted and are being reviewed by the admin team.
               </div>
+              ${vd.name ? `<div style="margin-top:0.75rem;font-size:0.85rem;color:var(--gray-700);display:grid;grid-template-columns:auto 1fr;gap:0.3rem 0.75rem;">
+                <span style="color:var(--gray-500);">Name:</span><span>${escapeHtml(vd.name)}</span>
+                <span style="color:var(--gray-500);">Mobile:</span><span>${escapeHtml(vd.mobile || "-")}</span>
+                <span style="color:var(--gray-500);">NIC:</span><span>${escapeHtml(vd.nic || "-")}</span>
+                <span style="color:var(--gray-500);">Address:</span><span>${escapeHtml(vd.address || "-")}</span>
+              </div>` : ""}
               ${userData.verificationDocUrl
                 ? `<a href="${escapeHtml(userData.verificationDocUrl)}" target="_blank" rel="noopener noreferrer"
                       class="btn btn-outline btn-sm" style="margin-top:0.75rem;">
@@ -1056,14 +1086,34 @@
 
   document.getElementById("verify-submit-btn").addEventListener("click", async () => {
     if (!currentUser) return;
-    if (!verifyFile) { showToast("Please select an ID document image first", "warning"); return; }
 
-    const errEl  = document.getElementById("verify-error");
-    const btn    = document.getElementById("verify-submit-btn");
+    const vName    = document.getElementById("verify-name").value.trim();
+    const vMobile  = document.getElementById("verify-mobile").value.trim();
+    const vNic     = document.getElementById("verify-nic").value.trim();
+    const vAddress = document.getElementById("verify-address").value.trim();
+    const errEl    = document.getElementById("verify-error");
+    errEl.style.display = "none";
+
+    if (!vName || !vMobile || !vNic || !vAddress) {
+      errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> Please fill in all personal details (Name, Mobile, NIC, Address).`;
+      errEl.style.display = "flex";
+      return;
+    }
+    if (!/^[0-9]{10}$/.test(vMobile)) {
+      errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> Mobile number must be exactly 10 digits (e.g. 0771234567).`;
+      errEl.style.display = "flex";
+      return;
+    }
+    if (!verifyFile) {
+      errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> Please select an ID document image.`;
+      errEl.style.display = "flex";
+      return;
+    }
+
+    const btn      = document.getElementById("verify-submit-btn");
     const progWrap = document.getElementById("verify-progress");
     const progBar  = document.getElementById("verify-progress-bar");
 
-    errEl.style.display = "none";
     btn.disabled = true;
     btn.innerHTML = `<span class="spinner spinner-sm" style="display:inline-block;margin-right:0.5rem;"></span> Uploading...`;
     progWrap.style.display = "block";
@@ -1078,10 +1128,11 @@
       await updateDoc(doc(db, "users", currentUser.uid), {
         verificationStatus: "pending",
         verificationDocUrl: docUrl,
+        verificationData: { name: vName, mobile: vMobile, nic: vNic, address: vAddress },
         verificationSubmittedAt: serverTimestamp(),
       });
 
-      showToast("Verification document submitted! The admin team will review it shortly.", "success", 5000);
+      showToast("Verification submitted! The admin team will review it shortly.", "success", 5000);
       progWrap.style.display = "none";
       loadVerificationStatus();
     } catch (err) {

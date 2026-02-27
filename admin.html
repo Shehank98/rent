@@ -1419,11 +1419,19 @@
 
     let verifySection = "";
     if (vs === "pending" && u.verificationDocUrl) {
+      const vd = u.verificationData || {};
       verifySection = `
         <div class="user-verify-section">
-          <div style="font-weight:600;font-size:0.85rem;color:var(--warning);margin-bottom:0.5rem;">
+          <div style="font-weight:600;font-size:0.85rem;color:var(--warning);margin-bottom:0.75rem;">
             <i class="bi bi-hourglass-split"></i> Identity Verification Pending
           </div>
+          ${vd.name || vd.nic ? `
+          <div style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);padding:0.75rem;margin-bottom:0.75rem;font-size:0.82rem;display:grid;grid-template-columns:auto 1fr;gap:0.3rem 0.75rem;color:var(--gray-700);">
+            ${vd.name    ? `<span style="color:var(--gray-500);font-weight:600;">Name</span><span>${escapeHtml(vd.name)}</span>` : ""}
+            ${vd.mobile  ? `<span style="color:var(--gray-500);font-weight:600;">Mobile</span><span>${escapeHtml(vd.mobile)}</span>` : ""}
+            ${vd.nic     ? `<span style="color:var(--gray-500);font-weight:600;">NIC</span><span>${escapeHtml(vd.nic)}</span>` : ""}
+            ${vd.address ? `<span style="color:var(--gray-500);font-weight:600;">Address</span><span>${escapeHtml(vd.address)}</span>` : ""}
+          </div>` : ""}
           <a href="${escapeHtml(u.verificationDocUrl)}" target="_blank" rel="noopener noreferrer">
             <img src="${escapeHtml(u.verificationDocUrl)}" class="verify-doc-img"
                  alt="ID document" onerror="this.style.display='none'" />
