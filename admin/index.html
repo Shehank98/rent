@@ -145,6 +145,13 @@
         <span class="nav-icon"><i class="bi bi-flag"></i></span> Reports
         <span class="tab-count" id="nav-reports-badge" style="margin-left:auto;background:var(--danger);color:white;border-radius:var(--radius-full);padding:0 0.4rem;font-size:0.7rem;display:none;"></span>
       </a>
+      <a href="#" id="nav-feat-req-link" data-section="feat-req">
+        <span class="nav-icon"><i class="bi bi-star-fill"></i></span> Feature Requests
+        <span class="tab-count" id="nav-feat-req-badge" style="margin-left:auto;background:var(--warning);color:white;border-radius:var(--radius-full);padding:0 0.4rem;font-size:0.7rem;display:none;"></span>
+      </a>
+      <a href="#" id="nav-settings-link" data-section="settings">
+        <span class="nav-icon"><i class="bi bi-gear-fill"></i></span> Settings
+      </a>
       <hr style="border:none;border-top:1px solid var(--gray-200);margin:0.75rem 0;" />
       <a href="../listings/">
         <span class="nav-icon"><i class="bi bi-eye"></i></span> Public Listings
@@ -333,6 +340,82 @@
         <i class="bi bi-flag" style="font-size:2.5rem;color:var(--gray-300);"></i>
         <h3>No reports yet</h3>
         <p>When users flag listings, they will appear here.</p>
+      </div>
+    </div>
+
+    <!-- ============ SECTION: FEATURE REQUESTS ============ -->
+    <div class="admin-section" id="section-feat-req">
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+        <div>
+          <h2>Feature Requests</h2>
+          <p>Users requesting to boost their listings. Verify payment, then approve to activate.</p>
+        </div>
+        <button class="btn btn-outline btn-sm" id="refresh-feat-req-btn">
+          <i class="bi bi-arrow-clockwise"></i> Refresh
+        </button>
+      </div>
+      <div id="feat-req-loading" style="text-align:center;padding:2.5rem;display:none;">
+        <div class="spinner" style="margin:0 auto;"></div>
+      </div>
+      <div id="feat-req-list" class="admin-ad-list" style="display:none;"></div>
+      <div id="feat-req-empty" class="empty-state hidden">
+        <i class="bi bi-star" style="font-size:2.5rem;color:var(--gray-300);"></i>
+        <h3>No feature requests</h3>
+        <p>When users request to boost their listings, they will appear here.</p>
+      </div>
+    </div>
+
+    <!-- ============ SECTION: SETTINGS ============ -->
+    <div class="admin-section" id="section-settings">
+      <div class="page-header">
+        <h2>Site Settings</h2>
+        <p>Configure featured listing pricing and payment details shown to users when they request a boost.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;max-width:900px;">
+
+        <!-- Pricing card -->
+        <div class="content-card">
+          <h4 style="margin-bottom:1rem;"><i class="bi bi-star-fill" style="color:var(--warning);"></i> Featured Listing Pricing</h4>
+          <div class="form-group">
+            <label class="form-label">Price Per Day (Rs.) <span>*</span></label>
+            <input type="number" class="form-control" id="settings-ppd" min="0" step="1" placeholder="e.g. 200" />
+            <p class="form-hint">Users will be charged this amount multiplied by the number of days they choose (7, 14, or 30 days).</p>
+          </div>
+        </div>
+
+        <!-- Bank card -->
+        <div class="content-card">
+          <h4 style="margin-bottom:1rem;"><i class="bi bi-bank2" style="color:var(--primary);"></i> Bank Account Details</h4>
+          <div class="form-group">
+            <label class="form-label">Bank Name</label>
+            <input type="text" class="form-control" id="settings-bank-name" placeholder="e.g. Commercial Bank of Ceylon" maxlength="80" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Account Holder Name</label>
+            <input type="text" class="form-control" id="settings-account-holder" placeholder="e.g. AdSpot Media (Pvt) Ltd" maxlength="80" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Account Number</label>
+            <input type="text" class="form-control" id="settings-account-number" placeholder="e.g. 1234567890" maxlength="30" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Branch</label>
+            <input type="text" class="form-control" id="settings-bank-branch" placeholder="e.g. Colombo 3" maxlength="60" />
+          </div>
+        </div>
+      </div>
+
+      <div class="content-card" style="max-width:900px;margin-top:0;">
+        <div class="form-group">
+          <label class="form-label">Additional Payment Instructions</label>
+          <textarea class="form-control" id="settings-instructions" rows="2"
+            placeholder="e.g. Please include your listing ID in the payment reference so we can identify your payment quickly."></textarea>
+        </div>
+        <div id="settings-error" class="alert alert-error" style="display:none;margin-bottom:0.75rem;"></div>
+        <div id="settings-success" class="alert alert-success" style="display:none;margin-bottom:0.75rem;"></div>
+        <button class="btn btn-primary" id="save-settings-btn">
+          <i class="bi bi-check2-circle"></i> Save Settings
+        </button>
       </div>
     </div>
 
@@ -526,12 +609,12 @@
   import {
     auth, db, storage,
     onAuthStateChanged, signOut,
-    collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
+    collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, setDoc,
     query, where, orderBy, serverTimestamp, Timestamp,
     ref, deleteObject,
   } from "../firebase.js";
   import {
-    requireAdmin, showToast, formatPrice, formatDate,
+    requireAdmin, showToast, showLoading, hideLoading, formatPrice, formatDate,
     isFeaturedActive, featuredDaysLeft, escapeHtml, debounce,
     CATEGORY_GROUPS, buildCategorySelect, buildCategorySelectAsync,
     buildLocationDatalist,
@@ -575,6 +658,8 @@
       if (sec === "users" && allUsers.length === 0) loadUsers();
       if (sec === "categories") loadCategories();
       if (sec === "reports") loadReports();
+      if (sec === "feat-req") loadFeatureRequests();
+      if (sec === "settings") loadSettings();
     });
   });
 
@@ -1803,6 +1888,163 @@
       renderCategories();
     } catch (err) { showToast("Delete failed: " + err.message, "error"); }
   }
+
+  // ==================== FEATURE REQUESTS SECTION ====================
+  document.getElementById("refresh-feat-req-btn").addEventListener("click", loadFeatureRequests);
+
+  async function loadFeatureRequests() {
+    const loadEl  = document.getElementById("feat-req-loading");
+    const listEl  = document.getElementById("feat-req-list");
+    const emptyEl = document.getElementById("feat-req-empty");
+    loadEl.style.display = "block";
+    listEl.style.display = "none";
+    listEl.innerHTML = "";
+    emptyEl.classList.add("hidden");
+    try {
+      const snap = await getDocs(query(collection(db, "feature_requests"), orderBy("createdAt", "desc")));
+      const reqs = [];
+      snap.forEach(d => reqs.push({ id: d.id, ...d.data() }));
+      loadEl.style.display = "none";
+
+      // Update sidebar badge
+      const pending = reqs.filter(r => r.status === "pending").length;
+      const badge   = document.getElementById("nav-feat-req-badge");
+      if (pending > 0) { badge.textContent = pending; badge.style.display = "inline"; }
+      else badge.style.display = "none";
+
+      if (reqs.length === 0) { emptyEl.classList.remove("hidden"); return; }
+
+      listEl.style.display = "flex";
+      listEl.innerHTML = reqs.map(r => {
+        const statusBadge = {
+          pending:  `<span class="badge badge-pending"><i class="bi bi-hourglass-split"></i> Pending</span>`,
+          approved: `<span class="badge badge-approved"><i class="bi bi-check-circle"></i> Approved</span>`,
+          rejected: `<span class="badge badge-rejected"><i class="bi bi-x-circle"></i> Rejected</span>`,
+        }[r.status] || "";
+        return `
+          <div class="admin-ad-item" style="${r.status === "pending" ? "border-left:3px solid var(--warning);" : ""}">
+            <div style="flex:1;min-width:0;">
+              <div class="admin-ad-title">${escapeHtml(r.adTitle || "Unknown Ad")}</div>
+              <div class="admin-ad-meta" style="margin:0.3rem 0;">
+                <span><i class="bi bi-person"></i> ${escapeHtml(r.userName || "")} &middot; ${escapeHtml(r.userEmail || "")}</span>
+              </div>
+              <div class="admin-ad-meta">
+                <span><i class="bi bi-calendar-range"></i> ${r.days} days</span>
+                <span><i class="bi bi-cash-stack"></i> Rs. ${(r.amount || 0).toLocaleString("en-LK")}</span>
+                <span><i class="bi bi-receipt"></i> ${escapeHtml(r.paymentRef || "—")}</span>
+                <span><i class="bi bi-clock"></i> ${formatDate(r.createdAt)}</span>
+              </div>
+              <div style="margin-top:0.4rem;">${statusBadge}</div>
+              ${r.status === "pending" ? `
+              <div class="admin-ad-actions" style="margin-top:0.75rem;">
+                <a href="/ad/?id=${r.adId}" target="_blank" class="btn btn-outline btn-sm"><i class="bi bi-eye"></i> View Ad</a>
+                <button class="btn btn-primary btn-sm" data-feat-approve="${r.id}" data-ad-id="${r.adId}" data-days="${r.days}">
+                  <i class="bi bi-check-circle"></i> Approve (${r.days}d)
+                </button>
+                <button class="btn btn-outline btn-sm" data-feat-reject="${r.id}" style="color:var(--danger);border-color:var(--danger);">
+                  <i class="bi bi-x-circle"></i> Reject
+                </button>
+              </div>` : ""}
+            </div>
+          </div>`;
+      }).join("");
+
+      listEl.querySelectorAll("[data-feat-approve]").forEach(btn => {
+        btn.addEventListener("click", () => approveFeatureRequest(btn.dataset.featApprove, btn.dataset.adId, parseInt(btn.dataset.days)));
+      });
+      listEl.querySelectorAll("[data-feat-reject]").forEach(btn => {
+        btn.addEventListener("click", () => rejectFeatureRequest(btn.dataset.featReject));
+      });
+    } catch (err) {
+      loadEl.style.display = "none";
+      showToast("Could not load feature requests: " + err.message, "error");
+    }
+  }
+
+  async function approveFeatureRequest(reqId, adId, days) {
+    if (!confirm(`Approve this feature request for ${days} days?`)) return;
+    showLoading(`Activating featured boost for ${days} days...`);
+    try {
+      const until = new Date();
+      until.setDate(until.getDate() + days);
+      await updateDoc(doc(db, "ads", adId), {
+        featured:     true,
+        featuredUntil: Timestamp.fromDate(until),
+      });
+      await updateDoc(doc(db, "feature_requests", reqId), {
+        status:     "approved",
+        approvedAt: serverTimestamp(),
+      });
+      showToast(`Ad is now featured for ${days} days!`, "success");
+      loadFeatureRequests();
+    } catch (err) {
+      showToast("Error: " + err.message, "error");
+    } finally {
+      hideLoading();
+    }
+  }
+
+  async function rejectFeatureRequest(reqId) {
+    if (!confirm("Reject this feature request?")) return;
+    try {
+      await updateDoc(doc(db, "feature_requests", reqId), {
+        status:     "rejected",
+        rejectedAt: serverTimestamp(),
+      });
+      showToast("Feature request rejected.", "info");
+      loadFeatureRequests();
+    } catch (err) {
+      showToast("Error: " + err.message, "error");
+    }
+  }
+
+  // ==================== SETTINGS SECTION ====================
+  async function loadSettings() {
+    try {
+      const snap = await getDoc(doc(db, "config", "site_settings"));
+      if (snap.exists()) {
+        const s = snap.data();
+        document.getElementById("settings-ppd").value             = s.featuredPricePerDay ?? 200;
+        document.getElementById("settings-bank-name").value       = s.bankName || "";
+        document.getElementById("settings-account-holder").value  = s.accountHolder || "";
+        document.getElementById("settings-account-number").value  = s.accountNumber || "";
+        document.getElementById("settings-bank-branch").value     = s.bankBranch || "";
+        document.getElementById("settings-instructions").value    = s.additionalInstructions || "";
+      }
+    } catch (err) {
+      showToast("Could not load settings: " + err.message, "error");
+    }
+  }
+
+  document.getElementById("save-settings-btn").addEventListener("click", async () => {
+    const btn = document.getElementById("save-settings-btn");
+    const errEl = document.getElementById("settings-error");
+    const okEl  = document.getElementById("settings-success");
+    errEl.style.display = "none";
+    okEl.style.display  = "none";
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner spinner-sm" style="display:inline-block;margin-right:0.5rem;"></span> Saving...`;
+    try {
+      await setDoc(doc(db, "config", "site_settings"), {
+        featuredPricePerDay:    parseFloat(document.getElementById("settings-ppd").value) || 200,
+        bankName:               document.getElementById("settings-bank-name").value.trim(),
+        accountHolder:          document.getElementById("settings-account-holder").value.trim(),
+        accountNumber:          document.getElementById("settings-account-number").value.trim(),
+        bankBranch:             document.getElementById("settings-bank-branch").value.trim(),
+        additionalInstructions: document.getElementById("settings-instructions").value.trim(),
+        updatedAt:              serverTimestamp(),
+      });
+      okEl.innerHTML = `<i class="bi bi-check-circle-fill"></i> Settings saved successfully!`;
+      okEl.style.display = "flex";
+      setTimeout(() => { okEl.style.display = "none"; }, 3000);
+    } catch (err) {
+      errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> ${err.message}`;
+      errEl.style.display = "flex";
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = `<i class="bi bi-check2-circle"></i> Save Settings`;
+    }
+  });
 
   // ---- MOBILE SIDEBAR ----
   const mobToggleAdmin  = document.getElementById("mob-sidebar-toggle");

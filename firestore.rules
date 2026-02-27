@@ -71,14 +71,13 @@ service cloud.firestore {
         || isAdmin();
 
       // CREATE:
-      //   - Must be authenticated
-      //   - userId must match the creator
-      //   - Status must start as "pending"
-      //   - Featured must start as false
-      allow create: if isAuth()
-        && request.resource.data.userId == request.auth.uid
-        && request.resource.data.status == 'pending'
-        && request.resource.data.featured == false;
+      //   - Admin can create any ad (e.g., seeding test data)
+      //   - Regular users: userId must match creator, status=pending, featured=false
+      allow create: if isAdmin()
+        || (isAuth()
+          && request.resource.data.userId == request.auth.uid
+          && request.resource.data.status == 'pending'
+          && request.resource.data.featured == false);
 
       // UPDATE:
       //   - Admin can update anything (status, featured, etc.)
@@ -172,6 +171,27 @@ service cloud.firestore {
       allow create: if true;
       allow read:   if isAdmin();
       allow delete: if isAdmin();
+    }
+
+    // --------------------------------------------------------
+    // CONFIG COLLECTION  /config/{docId}
+    // Public read (pricing, bank details shown to users); admin write only
+    // --------------------------------------------------------
+    match /config/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // --------------------------------------------------------
+    // FEATURE REQUESTS  /feature_requests/{reqId}
+    // Users submit boost requests; admin reviews and approves
+    // --------------------------------------------------------
+    match /feature_requests/{reqId} {
+      allow create: if isAuth()
+        && request.resource.data.userId == request.auth.uid;
+      allow read: if isAdmin()
+        || (isAuth() && resource.data.userId == request.auth.uid);
+      allow update, delete: if isAdmin();
     }
 
     // --------------------------------------------------------

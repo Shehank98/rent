@@ -311,6 +311,9 @@ export function buildAdCard(ad, id) {
   const verifiedBadge = ad.userVerified
     ? `<span class="card-verified-badge"><i class="bi bi-patch-check-fill"></i> Verified</span>`
     : "";
+  const negotiableBadge = ad.negotiable
+    ? `<span class="card-negotiable-badge"><i class="bi bi-chat-dots-fill"></i> Negotiable</span>`
+    : "";
 
   return `
     <a href="/ad/?id=${id}" class="card ${featured ? "featured-card" : ""}" style="text-decoration:none;">
@@ -329,7 +332,7 @@ export function buildAdCard(ad, id) {
           <span><i class="bi bi-geo-alt"></i> ${escapeHtml(ad.location || "")}</span>
           <span><i class="bi bi-clock"></i> ${ago}</span>
         </div>
-        ${verifiedBadge}
+        <div class="card-badge-row">${verifiedBadge}${negotiableBadge}</div>
       </div>
     </a>
   `;

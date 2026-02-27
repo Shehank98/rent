@@ -395,16 +395,20 @@ document.getElementById("seedBtn").addEventListener("click", async () => {
   for (let i = 0; i < TEST_LISTINGS.length; i++) {
     const listing = TEST_LISTINGS[i];
     try {
+      const u = auth.currentUser;
       await addDoc(adsCol, {
         ...listing,
-        status:      "approved",
-        isTestData:  true,
-        hidden:      false,
-        userId:      "test-seed-user",
-        userName:    "Test Seeder",
-        userEmail:   "seed@rentitsl.lk",
+        status:       "approved",
+        isTestData:   true,
+        hidden:       false,
+        featured:     false,
+        featuredUntil: null,
+        userId:       u.uid,
+        userName:     u.displayName || "Admin",
+        userEmail:    u.email || "",
         userVerified: listing.userVerified || false,
-        createdAt:   serverTimestamp(),
+        views:        Math.floor(Math.random() * 200),
+        createdAt:    serverTimestamp(),
       });
       success++;
       log(`[${i + 1}/${TEST_LISTINGS.length}] ✓ ${listing.title}`, "ok");
