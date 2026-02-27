@@ -27,7 +27,7 @@
     <div class="nav-links">
       <a href="./">Home</a>
       <a href="listings/">Browse</a>
-      <a href="listings.html#categories">Categories</a>
+      <a href="listings/#categories">Categories</a>
       <a href="admin/" id="nav-admin-link" class="hidden">Admin</a>
     </div>
 
@@ -216,19 +216,19 @@
         <ul>
           <li><a href="listings/">Browse All</a></li>
           <li><a href="#" class="post-ad-btn">Post an Ad</a></li>
-          <li><a href="listings.html?category=Car">Cars</a></li>
-          <li><a href="listings.html?category=Van">Vans</a></li>
-          <li><a href="listings.html?category=Wedding+Car">Wedding Cars</a></li>
+          <li><a href="listings/?category=Car">Cars</a></li>
+          <li><a href="listings/?category=Van">Vans</a></li>
+          <li><a href="listings/?category=Wedding+Car">Wedding Cars</a></li>
         </ul>
       </div>
       <div>
         <h4>More Categories</h4>
         <ul>
-          <li><a href="listings.html?category=Construction+Equipment">Construction</a></li>
-          <li><a href="listings.html?category=House+%2F+Villa">Property</a></li>
-          <li><a href="listings.html?category=Camera+%26+Photography">Electronics</a></li>
-          <li><a href="listings.html?category=Party+Items">Party Items</a></li>
-          <li><a href="listings.html?category=Other">Other</a></li>
+          <li><a href="listings/?category=Construction+Equipment">Construction</a></li>
+          <li><a href="listings/?category=House+%2F+Villa">Property</a></li>
+          <li><a href="listings/?category=Camera+%26+Photography">Electronics</a></li>
+          <li><a href="listings/?category=Party+Items">Party Items</a></li>
+          <li><a href="listings/?category=Other">Other</a></li>
         </ul>
       </div>
       <div>
@@ -332,7 +332,7 @@
     if (q) params.set("q", q);
     if (category) params.set("category", category);
     if (location) params.set("location", location);
-    window.location.href = `listings.html?${params.toString()}`;
+    window.location.href = `/listings/?${params.toString()}`;
   }
 
   // ---- Build category cards grid ----
@@ -350,7 +350,7 @@
   catGrid.innerHTML = Object.keys(CATEGORY_GROUPS).map(group => {
     const icon = groupIcons[group] || "bi-box2";
     const cat  = encodeURIComponent(groupFirstCat[group] || group);
-    return `<a href="listings.html?category=${cat}" class="category-card">
+    return `<a href="listings/?category=${cat}" class="category-card">
       <div class="cat-icon-wrap"><i class="bi ${icon}"></i></div>
       <div class="category-name">${escapeHtml(group)}</div>
       <div class="category-count" data-group="${escapeHtml(group)}">...</div>

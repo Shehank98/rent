@@ -819,11 +819,16 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 .listings-content { padding: 2.5rem 0 4rem; }
 .no-results {
   text-align: center;
-  padding: 4rem 1rem;
-  color: var(--gray-400);
+  padding: 4rem 1.5rem;
+  color: var(--gray-500);
+  background: var(--gray-50);
+  border-radius: var(--radius);
+  border: 1.5px dashed var(--gray-200);
+  margin: 1.5rem 0;
 }
 .no-results .no-icon { font-size: 4rem; margin-bottom: 1rem; }
-.no-results h3 { font-size: 1.25rem; color: var(--gray-600); margin-bottom: 0.5rem; }
+.no-results h3 { font-size: 1.3rem; font-weight: 700; color: var(--dark-2); margin-bottom: 0.5rem; }
+.no-results p { color: var(--gray-500); font-size: 0.95rem; max-width: 380px; margin: 0 auto 1.25rem; line-height: 1.55; }
 
 /* ---------- SINGLE AD PAGE ---------- */
 .ad-page { padding: 2.5rem 0 4rem; }

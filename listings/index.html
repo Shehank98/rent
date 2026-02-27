@@ -163,12 +163,17 @@
       <div class="skeleton skeleton-card"></div>
     </div>
     <div id="no-results" class="no-results hidden">
-      <i class="bi bi-search" style="font-size:3.5rem;color:var(--gray-300);"></i>
-      <h3>No listings found</h3>
-      <p>Try adjusting your search or filters</p>
-      <button class="btn btn-outline" id="reset-btn">
-        <i class="bi bi-arrow-counterclockwise"></i> Reset Filters
-      </button>
+      <div style="font-size:3.5rem;line-height:1;margin-bottom:1rem;">🔍</div>
+      <h3 id="no-results-title">No listings found</h3>
+      <p id="no-results-msg">There are no listings in this category yet. Be the first to post one!</p>
+      <div style="display:flex;gap:0.75rem;flex-wrap:wrap;justify-content:center;margin-top:0.5rem;">
+        <button class="btn btn-outline" id="reset-btn">
+          <i class="bi bi-arrow-counterclockwise"></i> Clear Filters
+        </button>
+        <a href="/dashboard/" class="btn btn-primary">
+          <i class="bi bi-plus-lg"></i> Post a Listing
+        </a>
+      </div>
     </div>
     <div id="load-more-wrap" class="text-center mt-3 hidden">
       <button class="btn btn-outline" id="load-more-btn">Load More</button>
@@ -281,6 +286,28 @@
 
     if (filtered.length === 0) {
       grid.innerHTML = "";
+      // Build a context-aware empty-state message
+      const cat    = document.getElementById("category-filter").value;
+      const search = document.getElementById("search-input").value.trim();
+      const loc    = document.getElementById("location-filter").value.trim();
+      const titleEl = document.getElementById("no-results-title");
+      const msgEl   = document.getElementById("no-results-msg");
+      if (search) {
+        titleEl.textContent = `No results for "${search}"`;
+        msgEl.textContent   = "Try different keywords, or remove the search term to browse all listings.";
+      } else if (cat && loc) {
+        titleEl.textContent = `No "${cat}" listings in ${loc}`;
+        msgEl.textContent   = "There are no listings matching this category and location yet. Try a different location or be the first to post one!";
+      } else if (cat) {
+        titleEl.textContent = `No "${cat}" listings yet`;
+        msgEl.textContent   = "This category has no listings at the moment. Be the first to post one!";
+      } else if (loc) {
+        titleEl.textContent = `No listings in "${loc}"`;
+        msgEl.textContent   = "No listings found for this location. Try a different location or clear the filter.";
+      } else {
+        titleEl.textContent = "No listings found";
+        msgEl.textContent   = "There are no approved listings right now. Check back soon or post your own!";
+      }
       noResults.classList.remove("hidden");
       loadMoreWrap.classList.add("hidden");
       countEl.textContent = "0 results";
