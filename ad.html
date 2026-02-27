@@ -677,7 +677,7 @@
 
 <script type="module">
   import {
-    db, auth, collection, doc, getDoc, updateDoc, addDoc, query, where, orderBy, limit, getDocs,
+    db, auth, collection, doc, getDoc, updateDoc, addDoc, query, where, limit, getDocs,
     onAuthStateChanged, increment, serverTimestamp,
   } from "./firebase.js";
   import {
@@ -1127,10 +1127,12 @@
     reviewOwnerId = ownerId;
     try {
       const snap = await getDocs(
-        query(collection(db, "reviews"), where("adId", "==", adId), orderBy("createdAt", "desc"))
+        query(collection(db, "reviews"), where("adId", "==", adId))
       );
       const reviews = [];
       snap.forEach(d => reviews.push({ id: d.id, ...d.data() }));
+      // Sort newest first client-side (avoids composite index requirement)
+      reviews.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
 
       const listEl  = document.getElementById("reviews-list");
       const noMsg   = document.getElementById("no-reviews-msg");
