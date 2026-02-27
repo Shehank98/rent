@@ -402,7 +402,7 @@
     auth, db, storage,
     onAuthStateChanged, signOut,
     collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
-    query, where, orderBy, serverTimestamp,
+    query, where, serverTimestamp,
     ref, uploadBytes, getDownloadURL, deleteObject,
   } from "./firebase.js";
   import {
@@ -1104,10 +1104,11 @@
       const snap = await getDocs(query(
         collection(db, "messages"),
         where("toUid", "==", currentUser.uid),
-        where("read", "==", false),
       ));
+      let unread = 0;
+      snap.forEach(d => { if (!d.data().read) unread++; });
       const badge = document.getElementById("msg-unread-badge");
-      if (snap.size > 0) { badge.textContent = snap.size; badge.style.display = "inline-block"; }
+      if (unread > 0) { badge.textContent = unread; badge.style.display = "inline-block"; }
       else badge.style.display = "none";
     } catch (_) {}
   }
@@ -1124,13 +1125,14 @@
       const snap = await getDocs(query(
         collection(db, "messages"),
         where("toUid", "==", currentUser.uid),
-        orderBy("createdAt", "desc"),
       ));
       loadEl.style.display = "none";
       if (snap.empty) { emptyEl.classList.remove("hidden"); return; }
 
       const msgs = [];
       snap.forEach(d => msgs.push({ id: d.id, ...d.data() }));
+      // Sort newest first client-side (avoids composite index requirement)
+      msgs.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
 
       listEl.innerHTML = msgs.map(m => {
         const isUnread = !m.read;
