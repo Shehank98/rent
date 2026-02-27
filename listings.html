@@ -66,9 +66,27 @@
   </div>
 </section>
 
-<!-- ==================== FILTER BAR ==================== -->
-<div class="filter-bar">
+<!-- ==================== MOBILE FILTER TOOLBAR ==================== -->
+<div class="listings-mobile-toolbar">
+  <button class="btn btn-outline btn-sm" id="filter-drawer-btn">
+    <i class="bi bi-sliders"></i> Filters
+    <span id="filter-active-badge" class="filter-active-badge hidden"></span>
+  </button>
+  <span id="results-count-mobile" class="results-count"></span>
+</div>
+
+<!-- ==================== FILTER BAR / DRAWER ==================== -->
+<div class="filter-bar" id="listings-filter-bar">
   <div class="container">
+
+    <!-- Drawer header — visible only on mobile -->
+    <div class="filter-drawer-header">
+      <strong><i class="bi bi-sliders"></i>&nbsp; Filters</strong>
+      <button id="filter-drawer-close" class="filter-drawer-close-btn" aria-label="Close filters">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
     <div class="filter-search-wrap">
       <i class="bi bi-search search-icon"></i>
       <input type="text" id="search-input" placeholder="Search listings..." />
@@ -93,8 +111,17 @@
       <i class="bi bi-x-circle"></i> Clear
     </button>
     <span class="results-count" id="results-count">Loading...</span>
+
+    <!-- Apply button — visible only on mobile drawer -->
+    <button id="filter-drawer-apply" class="btn btn-primary filter-drawer-apply-btn">
+      <i class="bi bi-check2"></i> Show Results
+    </button>
+
   </div>
 </div>
+
+<!-- Filter drawer backdrop (mobile) -->
+<div class="listings-filter-overlay" id="listings-filter-overlay"></div>
 
 <!-- ==================== LISTINGS GRID ==================== -->
 <main class="listings-content">
@@ -216,11 +243,16 @@
       noResults.classList.remove("hidden");
       loadMoreWrap.classList.add("hidden");
       countEl.textContent = "0 results";
+      const mobCount = document.getElementById("results-count-mobile");
+      if (mobCount) mobCount.textContent = "0 results";
       return;
     }
 
     noResults.classList.add("hidden");
-    countEl.textContent = `${filtered.length} listing${filtered.length !== 1 ? "s" : ""}`;
+    const countText = `${filtered.length} listing${filtered.length !== 1 ? "s" : ""}`;
+    countEl.textContent = countText;
+    const mobCount = document.getElementById("results-count-mobile");
+    if (mobCount) mobCount.textContent = countText;
 
     const batch = filtered.slice(rendered, rendered + PAGE_SIZE);
     grid.insertAdjacentHTML("beforeend", batch.map(ad => buildAdCard(ad, ad.id)).join(""));
@@ -230,6 +262,27 @@
       : loadMoreWrap.classList.add("hidden");
   }
 
+  // ---- Mobile filter drawer ----
+  const filterBar     = document.getElementById("listings-filter-bar");
+  const filterOverlay = document.getElementById("listings-filter-overlay");
+
+  function openDrawer() {
+    filterBar.classList.add("drawer-open");
+    filterOverlay.classList.add("open");
+    document.body.style.overflow = "hidden";
+  }
+  function closeDrawer() {
+    filterBar.classList.remove("drawer-open");
+    filterOverlay.classList.remove("open");
+    document.body.style.overflow = "";
+  }
+
+  document.getElementById("filter-drawer-btn").addEventListener("click", openDrawer);
+  document.getElementById("filter-drawer-close").addEventListener("click", closeDrawer);
+  document.getElementById("filter-drawer-apply").addEventListener("click", closeDrawer);
+  filterOverlay.addEventListener("click", closeDrawer);
+
+  // ---- Filter listeners ----
   const debouncedFilter = debounce(applyFilters, 300);
   document.getElementById("search-input").addEventListener("input", debouncedFilter);
   document.getElementById("category-filter").addEventListener("change", applyFilters);
