@@ -187,6 +187,64 @@
       .ad-thumb-play-icon i { font-size: 1.2rem; }
     }
 
+    /* ---- Share panel ---- */
+    #share-modal { align-items: flex-end; }
+    @media (min-width: 520px) { #share-modal { align-items: center; } }
+    .share-panel {
+      background: var(--white);
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      padding: 1.4rem 1.4rem 2rem;
+      width: 100%;
+      max-width: 420px;
+      animation: sharePanelUp 0.26s cubic-bezier(.4,0,.2,1);
+    }
+    @media (min-width: 520px) {
+      .share-panel { border-radius: var(--radius-lg); padding-bottom: 1.4rem; animation: sharePanelFade 0.2s ease; }
+    }
+    @keyframes sharePanelUp   { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    @keyframes sharePanelFade { from { opacity: 0; transform: scale(.97); } to { opacity: 1; transform: scale(1); } }
+    .share-panel-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;
+    }
+    .share-panel-header h4 {
+      font-size: 1rem; font-weight: 700; color: var(--dark-2); margin: 0;
+      display: flex; align-items: center; gap: 0.4rem;
+    }
+    .share-panel-close {
+      background: var(--gray-100); border: none; border-radius: 50%;
+      width: 32px; height: 32px; display: flex; align-items: center;
+      justify-content: center; cursor: pointer; color: var(--gray-600);
+      font-size: 0.9rem; transition: background 0.15s;
+    }
+    .share-panel-close:hover { background: var(--gray-200); }
+    .share-wa {
+      display: flex; align-items: center; justify-content: center; gap: 0.6rem;
+      width: 100%; padding: 0.9rem; background: #25D366; color: white;
+      border-radius: var(--radius); font-weight: 700; font-size: 1rem;
+      text-decoration: none; margin-bottom: 0.85rem; transition: background 0.15s;
+    }
+    .share-wa i { font-size: 1.4rem; }
+    .share-wa:hover { background: #1db954; color: white; }
+    .share-opt-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 0.6rem; margin-bottom: 1.25rem; }
+    .share-opt {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 0.35rem; padding: 0.75rem 0.4rem;
+      border-radius: var(--radius); background: var(--gray-50);
+      border: 1.5px solid var(--gray-200); cursor: pointer;
+      text-decoration: none; color: var(--gray-700);
+      font-size: 0.72rem; font-weight: 600;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .share-opt:hover { background: var(--gray-100); border-color: var(--gray-300); }
+    .share-opt i { font-size: 1.35rem; }
+    .share-fb i { color: #1877F2; }
+    .share-tg i { color: #229ED9; }
+    .share-tw i { color: #000; }
+    .share-copy i { color: var(--primary); }
+    .share-qr-wrap { border-top: 1px solid var(--gray-100); padding-top: 1rem; display: flex; flex-direction: column; align-items: center; }
+    .share-qr-hint { font-size: 0.78rem; color: var(--gray-400); margin-bottom: 0.6rem; text-align: center; }
+    .share-qr-img { width: 140px; height: 140px; border-radius: var(--radius); border: 1px solid var(--gray-200); }
+
     /* Content area */
     .ad-content-grid {
       display: grid;
@@ -748,6 +806,43 @@
   </div>
 </section>
 
+<!-- ==================== SHARE PANEL ==================== -->
+<div class="modal-overlay" id="share-modal">
+  <div class="share-panel">
+    <div class="share-panel-header">
+      <h4><i class="bi bi-share-fill"></i> Share This Listing</h4>
+      <button class="share-panel-close" id="share-close-btn" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+    </div>
+
+    <!-- WhatsApp — hero -->
+    <a class="share-wa" id="share-wa" href="#" target="_blank" rel="noopener noreferrer">
+      <i class="bi bi-whatsapp"></i> Share on WhatsApp
+    </a>
+
+    <!-- Other platforms -->
+    <div class="share-opt-row">
+      <a class="share-opt share-fb" id="share-fb" href="#" target="_blank" rel="noopener noreferrer">
+        <i class="bi bi-facebook"></i><span>Facebook</span>
+      </a>
+      <a class="share-opt share-tg" id="share-tg" href="#" target="_blank" rel="noopener noreferrer">
+        <i class="bi bi-telegram"></i><span>Telegram</span>
+      </a>
+      <a class="share-opt share-tw" id="share-tw" href="#" target="_blank" rel="noopener noreferrer">
+        <i class="bi bi-twitter-x"></i><span>X / Twitter</span>
+      </a>
+      <button class="share-opt share-copy" id="share-copy-btn">
+        <i class="bi bi-link-45deg" id="share-copy-icon"></i><span id="share-copy-label">Copy Link</span>
+      </button>
+    </div>
+
+    <!-- QR Code -->
+    <div class="share-qr-wrap">
+      <p class="share-qr-hint">Scan to open on another device</p>
+      <img id="share-qr" src="" alt="QR Code" class="share-qr-img" loading="lazy" />
+    </div>
+  </div>
+</div>
+
 <!-- ==================== LIGHTBOX ==================== -->
 <div class="lightbox-overlay" id="lightbox-overlay" role="dialog" aria-modal="true">
   <button class="lightbox-close" id="lb-close" aria-label="Close"><i class="bi bi-x-lg"></i></button>
@@ -852,6 +947,7 @@
 
   let adPhone = "";
   let phoneRevealed = false;
+  let currentAd = null;
 
   async function loadAd(id) {
     try {
@@ -863,6 +959,7 @@
       }
 
       const ad = snap.data();
+      currentAd = { ...ad, id: snap.id };
       adPhone = ad.phone || "";
 
       // Increment view counter (fire and forget)
@@ -1274,20 +1371,44 @@
   });
   updateBookmarkBtn();
 
-  // Share
-  document.getElementById("share-btn").addEventListener("click", async () => {
-    const title = document.getElementById("ad-title").textContent;
-    const url = window.location.href;
-    if (navigator.share) {
-      try { await navigator.share({ title: `${title} - Rent It SL`, url }); } catch (_) {}
-    } else {
-      try {
-        await navigator.clipboard.writeText(url);
-        showToast("Link copied to clipboard!", "success");
-      } catch (_) {
-        showToast("Copy this link: " + url, "info", 6000);
-      }
-    }
+  // Share panel
+  document.getElementById("share-btn").addEventListener("click", () => {
+    if (!currentAd) return;
+    const url      = window.location.href;
+    const title    = currentAd.title || "";
+    const location = currentAd.location || "";
+    const priceNum = parseFloat(currentAd.price);
+    const priceStr = isNaN(priceNum) ? "" : `Rs. ${priceNum.toLocaleString("en-LK")}`;
+    const ptLabel  = { day:"day", hour:"hour", km:"km", week:"week", month:"month", event:"event" }[currentAd.priceType] || "day";
+
+    const waText = `🏷️ *${title}*\n📍 ${location}${priceStr ? ` | 💰 ${priceStr}/${ptLabel}` : ""}\n\nView on Rent It SL 👇\n${url}`;
+    const twText = `${title}${priceStr ? ` — ${priceStr}/${ptLabel}` : ""} | Rent It SL`;
+
+    document.getElementById("share-wa").href = `https://wa.me/?text=${encodeURIComponent(waText)}`;
+    document.getElementById("share-fb").href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+    document.getElementById("share-tg").href = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title + " - Rent It SL")}`;
+    document.getElementById("share-tw").href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(twText)}&url=${encodeURIComponent(url)}`;
+    document.getElementById("share-qr").src   = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(url)}`;
+
+    document.getElementById("share-modal").classList.add("open");
+  });
+
+  document.getElementById("share-copy-btn").addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      document.getElementById("share-copy-icon").className  = "bi bi-check-lg";
+      document.getElementById("share-copy-label").textContent = "Copied!";
+      setTimeout(() => {
+        document.getElementById("share-copy-icon").className  = "bi bi-link-45deg";
+        document.getElementById("share-copy-label").textContent = "Copy Link";
+      }, 2000);
+    } catch (_) { showToast("Copy: " + window.location.href, "info", 6000); }
+  });
+
+  document.getElementById("share-close-btn").addEventListener("click", () =>
+    document.getElementById("share-modal").classList.remove("open"));
+  document.getElementById("share-modal").addEventListener("click", e => {
+    if (e.target.id === "share-modal") document.getElementById("share-modal").classList.remove("open");
   });
 
   async function loadSimilar(category, title, description, excludeId) {
