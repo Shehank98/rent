@@ -139,6 +139,54 @@
     }
     .ad-thumb-img.active, .ad-thumb-img:hover { opacity: 1; outline: 2px solid var(--primary); }
 
+    /* Video slide in main area */
+    .gallery-video-wrap {
+      display: none;
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0; left: 0;
+      background: #000;
+    }
+    .gallery-video-wrap.active { display: block; }
+    .gallery-video-wrap iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    /* Video thumbnail */
+    .ad-thumb-vid {
+      position: relative;
+      overflow: hidden;
+      background: #000;
+    }
+    .ad-thumb-vid img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.85;
+      display: block;
+    }
+    .ad-thumb-play-icon {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+    .ad-thumb-play-icon i {
+      font-size: 1.6rem;
+      color: #fff;
+      filter: drop-shadow(0 1px 4px rgba(0,0,0,0.6));
+    }
+    @media (max-width: 700px) {
+      .ad-thumb-vid { flex: 0 0 76px; width: 76px; height: 56px; }
+      .ad-thumb-play-icon i { font-size: 1.2rem; }
+    }
+
     /* Content area */
     .ad-content-grid {
       display: grid;
@@ -814,7 +862,7 @@
       `;
 
       // Gallery
-      buildGallery(ad.imageUrls || []);
+      buildGallery(ad.imageUrls || [], ad.youtubeUrl || "");
 
       // Title / price
       document.getElementById("ad-title").textContent = ad.title;
@@ -907,45 +955,86 @@
     }
   }
 
-  function buildGallery(images) {
-    const mainEl   = document.getElementById("gallery-main-img");
-    const thumbsEl = document.getElementById("gallery-thumbs-col");
+  function buildGallery(images, youtubeUrl) {
+    const mainEl    = document.getElementById("gallery-main-img");
+    const thumbsEl  = document.getElementById("gallery-thumbs-col");
     const counterEl = document.getElementById("gallery-counter");
-    const fallback = "https://placehold.co/800x500/e2e8f0/94a3b8?text=No+Image";
-    const imgs = images.length > 0 ? images : [fallback];
+    const fallback  = "https://placehold.co/800x500/e2e8f0/94a3b8?text=No+Image";
+
+    // Extract YouTube video ID
+    let videoId = null;
+    if (youtubeUrl) {
+      const m = youtubeUrl.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+      videoId = m ? m[1] : null;
+    }
+
+    const imgs = images.length > 0 ? images : (videoId ? [] : [fallback]);
+    const slideEls = []; // unified array of all main-area slide elements
     let current = 0;
 
-    // Main images
+    // ---- Video slide (first) ----
+    if (videoId) {
+      const embedUrl = `https://www.youtube.com/embed/${videoId}?rel=0&enablejsapi=1`;
+      const videoWrap = document.createElement("div");
+      videoWrap.className = "gallery-video-wrap active";
+      videoWrap.innerHTML = `<iframe src="${embedUrl}" title="Listing Video" frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen></iframe>`;
+      mainEl.insertBefore(videoWrap, document.getElementById("gallery-prev"));
+      slideEls.push(videoWrap);
+
+      // Video thumbnail
+      const vThumb = document.createElement("div");
+      vThumb.className = "ad-thumb-vid ad-thumb-img active";
+      vThumb.innerHTML = `
+        <img src="https://img.youtube.com/vi/${videoId}/mqdefault.jpg" alt="Video thumbnail" />
+        <div class="ad-thumb-play-icon"><i class="bi bi-play-circle-fill"></i></div>`;
+      vThumb.addEventListener("click", () => goTo(0));
+      thumbsEl.appendChild(vThumb);
+    }
+
+    // ---- Image slides ----
     const imgEls = imgs.map((src, i) => {
       const img = document.createElement("img");
       img.src = src;
       img.alt = `Image ${i + 1}`;
       img.onerror = () => { img.src = fallback; };
-      if (i === 0) img.classList.add("active");
+      if (!videoId && i === 0) img.classList.add("active");
       mainEl.insertBefore(img, document.getElementById("gallery-prev"));
+      slideEls.push(img);
       return img;
     });
 
-    // Thumbnails
+    // Image thumbnails
     imgs.forEach((src, i) => {
       const th = document.createElement("img");
       th.src = src;
-      th.className = `ad-thumb-img ${i === 0 ? "active" : ""}`;
+      th.className = `ad-thumb-img ${!videoId && i === 0 ? "active" : ""}`;
       th.onerror = () => { th.src = fallback; };
-      th.addEventListener("click", () => goTo(i));
+      th.addEventListener("click", () => goTo(videoId ? i + 1 : i));
       thumbsEl.appendChild(th);
     });
 
+    const total = slideEls.length;
+
     function updateCounter() {
-      counterEl.textContent = `${current + 1} / ${imgs.length}`;
+      counterEl.textContent = `${current + 1} / ${total}`;
     }
     updateCounter();
 
     function goTo(idx) {
-      imgEls[current].classList.remove("active");
+      const prevEl = slideEls[current];
+      prevEl.classList.remove("active");
       thumbsEl.children[current]?.classList.remove("active");
-      current = (idx + imgs.length) % imgs.length;
-      imgEls[current].classList.add("active");
+
+      // Pause video when navigating away from video slide
+      if (prevEl.classList.contains("gallery-video-wrap")) {
+        const iframe = prevEl.querySelector("iframe");
+        if (iframe) iframe.contentWindow?.postMessage('{"event":"command","func":"pauseVideo","args":""}', "*");
+      }
+
+      current = (idx + total) % total;
+      slideEls[current].classList.add("active");
       thumbsEl.children[current]?.classList.add("active");
       updateCounter();
     }
@@ -953,13 +1042,13 @@
     document.getElementById("gallery-prev").addEventListener("click", () => goTo(current - 1));
     document.getElementById("gallery-next").addEventListener("click", () => goTo(current + 1));
 
-    if (imgs.length < 2) {
+    if (total < 2) {
       document.getElementById("gallery-prev").style.display = "none";
       document.getElementById("gallery-next").style.display = "none";
       counterEl.style.display = "none";
     }
 
-    // Touch swipe on main gallery image
+    // Touch swipe
     let touchStartX = null;
     mainEl.addEventListener("touchstart", e => {
       touchStartX = e.touches[0].clientX;
@@ -971,7 +1060,7 @@
       touchStartX = null;
     }, { passive: true });
 
-    // Click main image to open lightbox
+    // Click image to open lightbox (not video slides)
     imgEls.forEach((img, i) => {
       img.addEventListener("click", () => openLightbox(imgs, i));
     });
