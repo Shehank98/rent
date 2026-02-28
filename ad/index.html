@@ -415,6 +415,22 @@
       display: block;
       user-select: none;
     }
+    .lightbox-video-wrap {
+      width: min(90vw, 900px);
+      aspect-ratio: 16/9;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #000;
+    }
+    .lightbox-video-wrap iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+    @media (max-width: 600px) {
+      .lightbox-video-wrap { width: 95vw; }
+    }
     .lightbox-close {
       position: fixed;
       top: 1rem;
@@ -739,6 +755,11 @@
   <div class="lightbox-img-wrap">
     <img id="lb-img" src="" alt="Full size image" draggable="false" />
   </div>
+  <div class="lightbox-video-wrap" id="lb-video-wrap" style="display:none;">
+    <iframe id="lb-video-iframe" src="" title="Listing Video" frameborder="0"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen></iframe>
+  </div>
   <button class="lightbox-nav lb-next" id="lb-next" aria-label="Next"><i class="bi bi-chevron-right"></i></button>
   <div class="lightbox-counter" id="lb-counter"></div>
 </div>
@@ -991,6 +1012,9 @@
         <div class="ad-thumb-play-icon"><i class="bi bi-play-circle-fill"></i></div>`;
       vThumb.addEventListener("click", () => goTo(0));
       thumbsEl.appendChild(vThumb);
+
+      // Click on the main video slide → open fullscreen lightbox
+      videoWrap.addEventListener("click", () => openVideoLightbox(videoId));
     }
 
     // ---- Image slides ----
@@ -1072,7 +1096,28 @@
   function openLightbox(images, startIndex) {
     lbImages = images;
     lbIndex = startIndex;
+    // Make sure image mode is active
+    document.getElementById("lb-video-wrap").style.display = "none";
+    document.getElementById("lb-img").parentElement.style.display = "";
+    document.getElementById("lb-prev").style.display = "";
+    document.getElementById("lb-next").style.display = "";
     updateLightbox();
+    document.getElementById("lightbox-overlay").classList.add("open");
+    document.body.style.overflow = "hidden";
+  }
+
+  function openVideoLightbox(videoId) {
+    // Stop the gallery embedded video first (pause it)
+    const galleryIframe = document.querySelector(".gallery-video-wrap.active iframe");
+    if (galleryIframe) galleryIframe.contentWindow?.postMessage('{"event":"command","func":"pauseVideo","args":""}', "*");
+
+    document.getElementById("lb-video-iframe").src =
+      `https://www.youtube.com/embed/${videoId}?rel=0&autoplay=1&enablejsapi=1`;
+    document.getElementById("lb-video-wrap").style.display = "block";
+    document.getElementById("lb-img").parentElement.style.display = "none";
+    document.getElementById("lb-prev").style.display = "none";
+    document.getElementById("lb-next").style.display = "none";
+    document.getElementById("lb-counter").textContent = "";
     document.getElementById("lightbox-overlay").classList.add("open");
     document.body.style.overflow = "hidden";
   }
@@ -1080,6 +1125,11 @@
   function closeLightbox() {
     document.getElementById("lightbox-overlay").classList.remove("open");
     document.body.style.overflow = "";
+    // Stop video and reset lightbox to image mode
+    const iframe = document.getElementById("lb-video-iframe");
+    iframe.src = "";
+    document.getElementById("lb-video-wrap").style.display = "none";
+    document.getElementById("lb-img").parentElement.style.display = "";
   }
 
   function updateLightbox() {

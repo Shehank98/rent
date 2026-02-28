@@ -314,6 +314,9 @@ export function buildAdCard(ad, id) {
   const negotiableBadge = ad.negotiable
     ? `<span class="card-negotiable-badge"><i class="bi bi-chat-dots-fill"></i> Negotiable</span>`
     : "";
+  const videoBadge = ad.youtubeUrl
+    ? `<span class="card-video-badge"><i class="bi bi-play-circle-fill"></i> Video</span>`
+    : "";
 
   return `
     <a href="/ad/?id=${id}" class="card ${featured ? "featured-card" : ""}" style="text-decoration:none;">
@@ -323,6 +326,7 @@ export function buildAdCard(ad, id) {
              onerror="this.src='https://placehold.co/400x250/e2e8f0/94a3b8?text=No+Image'">
         <div class="card-badges">
           <span class="badge badge-category">${escapeHtml(ad.category || "Other")}</span>
+          ${videoBadge}
         </div>
       </div>
       <div class="card-body">

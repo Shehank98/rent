@@ -2234,6 +2234,22 @@ footer ul li a:hover { color: var(--white); }
 }
 .card-negotiable-badge i { color: #0284c7; font-size: 0.72rem; }
 
+/* Video badge on listing cards */
+.card-video-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(0,0,0,0.58);
+  border-radius: var(--radius-full);
+  padding: 0.22rem 0.55rem;
+  backdrop-filter: blur(4px);
+  margin-top: 0.3rem;
+}
+.card-video-badge i { color: #ff4444; font-size: 0.75rem; }
+
 /* ---- Form check toggle (negotiable in dashboard) ---- */
 .form-check-toggle {
   display: inline-flex;
