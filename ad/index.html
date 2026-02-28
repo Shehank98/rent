@@ -912,14 +912,6 @@
       }
       chips.innerHTML = chipsHtml;
 
-      // Track in recently viewed (localStorage)
-      try {
-        const rv = JSON.parse(localStorage.getItem("rentitsl_rv") || "[]");
-        const entry = { id, title: ad.title, img: ad.imageUrls?.[0] || "", category: ad.category, price: ad.price, priceType: ad.priceType, location: ad.location, userVerified: ad.userVerified, negotiable: ad.negotiable, createdAt: null };
-        const updated = [entry, ...rv.filter(v => v.id !== id)].slice(0, 6);
-        localStorage.setItem("rentitsl_rv", JSON.stringify(updated));
-      } catch (_) {}
-
       // Description
       document.getElementById("ad-description-text").textContent = ad.description || "";
 
