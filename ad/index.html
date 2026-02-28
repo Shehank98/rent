@@ -1381,7 +1381,7 @@
     const priceStr = isNaN(priceNum) ? "" : `Rs. ${priceNum.toLocaleString("en-LK")}`;
     const ptLabel  = { day:"day", hour:"hour", km:"km", week:"week", month:"month", event:"event" }[currentAd.priceType] || "day";
 
-    const waText = `🏷️ *${title}*\n📍 ${location}${priceStr ? ` | 💰 ${priceStr}/${ptLabel}` : ""}\n\nView on Rent It SL 👇\n${url}`;
+    const waText = `\uD83C\uDFF7\uFE0F *${title}*\n\uD83D\uDCCD ${location}${priceStr ? ` | \uD83D\uDCB0 ${priceStr}/${ptLabel}` : ""}\n\nView on Rent It SL \uD83D\uDC47\n${url}`;
     const twText = `${title}${priceStr ? ` — ${priceStr}/${ptLabel}` : ""} | Rent It SL`;
 
     document.getElementById("share-wa").href = `https://wa.me/?text=${encodeURIComponent(waText)}`;
