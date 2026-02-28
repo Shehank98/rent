@@ -1948,10 +1948,11 @@
     document.getElementById("cat-req-empty").classList.add("hidden");
     try {
       const snap = await getDocs(
-        query(collection(db, "categoryRequests"), where("status", "==", "pending"), orderBy("createdAt", "desc"))
+        query(collection(db, "categoryRequests"), where("status", "==", "pending"))
       );
       catRequests = [];
       snap.forEach(d => catRequests.push({ id: d.id, ...d.data() }));
+      catRequests.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
       renderCatRequests();
       // Update badges
       const count = catRequests.length;
