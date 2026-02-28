@@ -650,6 +650,47 @@
   </div>
 </div>
 
+<!-- ==================== EDIT CATEGORY MODAL ==================== -->
+<div class="modal-overlay" id="edit-cat-modal">
+  <div class="modal" style="max-width:420px;">
+    <h3><i class="bi bi-pencil-square"></i> Edit Category</h3>
+    <div style="margin-top:1rem;">
+      <div class="form-group">
+        <label class="form-label">Category Name <span>*</span></label>
+        <input type="text" class="form-control" id="edit-cat-name" maxlength="60" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Group <span>*</span></label>
+        <select class="form-control" id="edit-cat-group"></select>
+      </div>
+      <div id="edit-cat-error" class="alert alert-error mt-2" style="display:none;"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancel-edit-cat-btn">Cancel</button>
+      <button class="btn btn-primary" id="confirm-edit-cat-btn"><i class="bi bi-check2-circle"></i> Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== EDIT GROUP MODAL ==================== -->
+<div class="modal-overlay" id="edit-group-modal">
+  <div class="modal" style="max-width:380px;">
+    <h3><i class="bi bi-pencil-square"></i> Rename Group</h3>
+    <div style="margin-top:1rem;">
+      <div class="form-group">
+        <label class="form-label">Group Name <span>*</span></label>
+        <input type="text" class="form-control" id="edit-group-name-input" maxlength="50" />
+        <p class="form-hint">All categories in this group will be updated automatically.</p>
+      </div>
+      <div id="edit-group-error" class="alert alert-error mt-2" style="display:none;"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancel-edit-group-btn">Cancel</button>
+      <button class="btn btn-primary" id="confirm-edit-group-btn"><i class="bi bi-check2-circle"></i> Save</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
   import {
     auth, db, storage,
@@ -1821,7 +1862,8 @@
     let html = "";
     Object.entries(groups).forEach(([groupName, groupData]) => {
       const groupLabelExtra = groupData.isCustomGroup
-        ? ` <i class="bi bi-x-circle cat-chip-del" data-group-id="${groupData.id}" style="cursor:pointer;color:var(--danger);opacity:0.65;" title="Delete Group"></i>`
+        ? ` <i class="bi bi-pencil-square cat-group-edit" data-group-id="${groupData.id}" style="cursor:pointer;color:var(--primary);opacity:0.75;margin-right:0.25rem;" title="Rename Group"></i>
+           <i class="bi bi-x-circle cat-chip-del" data-group-id="${groupData.id}" style="cursor:pointer;color:var(--danger);opacity:0.65;" title="Delete Group"></i>`
         : "";
       const groupStyle = groupData.isCustomGroup ? "color:var(--purple);" : "";
       html += `<div class="cat-group-header" style="${groupStyle}">${escapeHtml(groupName)}${groupLabelExtra}</div>`;
@@ -1831,7 +1873,7 @@
       }
       groupData.cats.forEach(cat => {
         if (cat.isCustom) {
-          html += `<span class="cat-chip custom">${escapeHtml(cat.name)} <i class="bi bi-x cat-chip-del" data-cat-id="${cat.id}" title="Delete"></i></span>`;
+          html += `<span class="cat-chip custom">${escapeHtml(cat.name)} <i class="bi bi-pencil cat-chip-edit" data-cat-id="${cat.id}" title="Edit" style="cursor:pointer;color:var(--primary);font-size:0.65rem;margin-right:0.15rem;"></i><i class="bi bi-x cat-chip-del" data-cat-id="${cat.id}" title="Delete"></i></span>`;
         } else {
           html += `<span class="cat-chip">${escapeHtml(cat.name)}</span>`;
         }
@@ -1846,6 +1888,12 @@
     });
     displayEl.querySelectorAll(".cat-chip-del[data-group-id]").forEach(btn => {
       btn.addEventListener("click", () => deleteGroup(btn.dataset.groupId));
+    });
+    displayEl.querySelectorAll(".cat-chip-edit[data-cat-id]").forEach(btn => {
+      btn.addEventListener("click", () => openEditCat(btn.dataset.catId));
+    });
+    displayEl.querySelectorAll(".cat-group-edit[data-group-id]").forEach(btn => {
+      btn.addEventListener("click", () => openEditGroup(btn.dataset.groupId));
     });
   }
 
@@ -1936,6 +1984,111 @@
       renderCategories();
     } catch (err) { showToast("Delete failed: " + err.message, "error"); }
   }
+
+  // ==================== EDIT CATEGORY / GROUP ====================
+  let editCatTarget = null, editGroupTarget = null;
+
+  function populateEditGroupSelect() {
+    const sel = document.getElementById("edit-cat-group");
+    const defaultGroupNames = Object.keys(CATEGORY_GROUPS);
+    let html = `<option value="">Select a group...</option>`;
+    defaultGroupNames.forEach(g => { html += `<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`; });
+    customGroups.forEach(g => {
+      if (!defaultGroupNames.includes(g.name))
+        html += `<option value="${escapeHtml(g.name)}">${escapeHtml(g.name)} ✦</option>`;
+    });
+    sel.innerHTML = html;
+  }
+
+  function openEditCat(catId) {
+    const cat = customCats.find(c => c.id === catId);
+    if (!cat) return;
+    editCatTarget = cat;
+    document.getElementById("edit-cat-name").value = cat.name;
+    populateEditGroupSelect();
+    document.getElementById("edit-cat-group").value = cat.group;
+    document.getElementById("edit-cat-error").style.display = "none";
+    document.getElementById("edit-cat-modal").classList.add("open");
+  }
+
+  document.getElementById("cancel-edit-cat-btn").addEventListener("click", () => {
+    document.getElementById("edit-cat-modal").classList.remove("open");
+    editCatTarget = null;
+  });
+
+  document.getElementById("confirm-edit-cat-btn").addEventListener("click", async () => {
+    if (!editCatTarget) return;
+    const name  = document.getElementById("edit-cat-name").value.trim();
+    const group = document.getElementById("edit-cat-group").value;
+    const errEl = document.getElementById("edit-cat-error");
+    errEl.style.display = "none";
+
+    if (!name) { errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> Category name is required.`; errEl.style.display = "flex"; return; }
+    if (!group) { errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> Please select a group.`; errEl.style.display = "flex"; return; }
+
+    const btn = document.getElementById("confirm-edit-cat-btn");
+    btn.disabled = true; btn.innerHTML = `<span class="spinner spinner-sm" style="display:inline-block;margin-right:0.4rem;"></span> Saving...`;
+    try {
+      await updateDoc(doc(db, "categories", editCatTarget.id), { name, group });
+      Object.assign(editCatTarget, { name, group });
+      showToast(`Category updated`, "success");
+      document.getElementById("edit-cat-modal").classList.remove("open");
+      editCatTarget = null;
+      populateGroupSelect();
+      renderCategories();
+    } catch (err) {
+      errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> ${err.message}`; errEl.style.display = "flex";
+    } finally {
+      btn.disabled = false; btn.innerHTML = `<i class="bi bi-check2-circle"></i> Save`;
+    }
+  });
+
+  function openEditGroup(groupId) {
+    const grp = customGroups.find(g => g.id === groupId);
+    if (!grp) return;
+    editGroupTarget = grp;
+    document.getElementById("edit-group-name-input").value = grp.name;
+    document.getElementById("edit-group-error").style.display = "none";
+    document.getElementById("edit-group-modal").classList.add("open");
+  }
+
+  document.getElementById("cancel-edit-group-btn").addEventListener("click", () => {
+    document.getElementById("edit-group-modal").classList.remove("open");
+    editGroupTarget = null;
+  });
+
+  document.getElementById("confirm-edit-group-btn").addEventListener("click", async () => {
+    if (!editGroupTarget) return;
+    const newName = document.getElementById("edit-group-name-input").value.trim();
+    const errEl   = document.getElementById("edit-group-error");
+    errEl.style.display = "none";
+
+    if (!newName) { errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> Group name is required.`; errEl.style.display = "flex"; return; }
+    if (newName === editGroupTarget.name) { document.getElementById("edit-group-modal").classList.remove("open"); return; }
+
+    const btn = document.getElementById("confirm-edit-group-btn");
+    btn.disabled = true; btn.innerHTML = `<span class="spinner spinner-sm" style="display:inline-block;margin-right:0.4rem;"></span> Saving...`;
+    try {
+      const oldName = editGroupTarget.name;
+      // Rename group document
+      await updateDoc(doc(db, "categories", editGroupTarget.id), { name: newName });
+      // Update all custom categories that belong to this group
+      const catsToUpdate = customCats.filter(c => c.group === oldName);
+      await Promise.all(catsToUpdate.map(c => updateDoc(doc(db, "categories", c.id), { group: newName })));
+      // Update local data
+      editGroupTarget.name = newName;
+      catsToUpdate.forEach(c => { c.group = newName; });
+      showToast(`Group renamed to "${newName}"`, "success");
+      document.getElementById("edit-group-modal").classList.remove("open");
+      editGroupTarget = null;
+      populateGroupSelect();
+      renderCategories();
+    } catch (err) {
+      errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> ${err.message}`; errEl.style.display = "flex";
+    } finally {
+      btn.disabled = false; btn.innerHTML = `<i class="bi bi-check2-circle"></i> Save`;
+    }
+  });
 
   // ==================== CATEGORY REQUESTS SECTION ====================
   let catRequests = [];
