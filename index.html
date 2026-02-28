@@ -296,11 +296,17 @@
   initNavbar();
 
   // ---- Auth guard for "Post Ad" buttons ----
+  // authReady resolves once Firebase has confirmed whether a user is logged in or not.
+  // Without this, clicking the button too quickly after page load sees currentUser=null
+  // even when the user is actually signed in (race condition → wrong modal shown).
   let currentUser = null;
-  onAuthStateChanged(auth, (user) => { currentUser = user; });
+  const authReady = new Promise(resolve => {
+    onAuthStateChanged(auth, (user) => { currentUser = user; resolve(); });
+  });
 
-  function handlePostAdClick(e) {
+  async function handlePostAdClick(e) {
     e.preventDefault();
+    await authReady;
     if (currentUser) window.location.href = "/dashboard/";
     else document.getElementById("signin-modal").classList.add("open");
   }
