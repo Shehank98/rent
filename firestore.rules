@@ -195,6 +195,18 @@ service cloud.firestore {
     }
 
     // --------------------------------------------------------
+    // CATEGORY REQUESTS  /categoryRequests/{reqId}
+    // Authenticated users submit; admin reads and updates status
+    // --------------------------------------------------------
+    match /categoryRequests/{reqId} {
+      allow create: if isAuth()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.name is string
+        && request.resource.data.status == 'pending';
+      allow read, update, delete: if isAdmin();
+    }
+
+    // --------------------------------------------------------
     // Deny everything else by default
     // --------------------------------------------------------
     match /{document=**} {
