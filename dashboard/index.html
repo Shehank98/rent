@@ -754,7 +754,7 @@
           setTimeout(() => openEditListing(ad), 200);
         }
         // Clean URL without reload
-        history.replaceState(null, "", "dashboard.html");
+        history.replaceState(null, "", "/dashboard/");
       }
     } catch (err) {
       loadingEl.style.display = "none";
@@ -908,7 +908,6 @@
     // Bank details
     const bankBox = document.getElementById("feat-bank-box");
     const bankDetails = document.getElementById("feat-bank-details");
-    const s = featSiteSettings;
     if (s.bankName || s.accountNumber) {
       bankBox.style.display = "block";
       bankDetails.innerHTML = `
