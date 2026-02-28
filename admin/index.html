@@ -140,6 +140,7 @@
       </a>
       <a href="#" id="nav-cats-link" data-section="categories">
         <span class="nav-icon"><i class="bi bi-tags"></i></span> Categories
+        <span class="tab-count" id="nav-cats-badge" style="display:none;margin-left:auto;background:var(--warning);color:white;border-radius:var(--radius-full);padding:0 0.4rem;font-size:0.7rem;"></span>
       </a>
       <a href="#" id="nav-reports-link" data-section="reports">
         <span class="nav-icon"><i class="bi bi-flag"></i></span> Reports
@@ -317,6 +318,26 @@
         </p>
         <div id="cats-loading" style="text-align:center;padding:2rem;"><div class="spinner" style="margin:0 auto;"></div></div>
         <div id="cats-display" style="display:none;"></div>
+      </div>
+
+      <!-- Category Requests from users -->
+      <div class="content-card" style="margin-top:1.25rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+          <h4>
+            <i class="bi bi-inbox" style="color:var(--warning);"></i> Category Requests
+            <span id="cat-req-count-badge" style="display:none;background:var(--warning);color:white;border-radius:var(--radius-full);padding:0.1rem 0.5rem;font-size:0.72rem;margin-left:0.4rem;font-weight:700;"></span>
+          </h4>
+          <button class="btn btn-ghost btn-sm" id="refresh-cat-req-btn"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+        </div>
+        <p style="font-size:0.85rem;color:var(--gray-500);margin-bottom:1rem;">
+          Categories suggested by users when they can't find theirs. Approve to add it, or dismiss.
+        </p>
+        <div id="cat-req-loading" style="text-align:center;padding:1.5rem;display:none;"><div class="spinner" style="margin:0 auto;"></div></div>
+        <div id="cat-req-list"></div>
+        <div id="cat-req-empty" class="empty-state hidden" style="padding:1.5rem;">
+          <i class="bi bi-inbox" style="font-size:2rem;color:var(--gray-300);"></i>
+          <p style="margin-top:0.5rem;color:var(--gray-400);font-size:0.875rem;">No pending category requests.</p>
+        </div>
       </div>
     </div>
 
@@ -680,7 +701,7 @@
       document.getElementById(`section-${sec}`).classList.add("active");
       link.classList.add("active");
       if (sec === "users" && allUsers.length === 0) loadUsers();
-      if (sec === "categories") loadCategories();
+      if (sec === "categories") { loadCategories(); loadCatRequests(); }
       if (sec === "reports") loadReports();
       if (sec === "feat-req") loadFeatureRequests();
       if (sec === "settings") loadSettings();
@@ -1914,6 +1935,90 @@
       populateGroupSelect();
       renderCategories();
     } catch (err) { showToast("Delete failed: " + err.message, "error"); }
+  }
+
+  // ==================== CATEGORY REQUESTS SECTION ====================
+  let catRequests = [];
+
+  document.getElementById("refresh-cat-req-btn").addEventListener("click", loadCatRequests);
+
+  async function loadCatRequests() {
+    document.getElementById("cat-req-loading").style.display = "block";
+    document.getElementById("cat-req-list").innerHTML = "";
+    document.getElementById("cat-req-empty").classList.add("hidden");
+    try {
+      const snap = await getDocs(
+        query(collection(db, "categoryRequests"), where("status", "==", "pending"), orderBy("createdAt", "desc"))
+      );
+      catRequests = [];
+      snap.forEach(d => catRequests.push({ id: d.id, ...d.data() }));
+      renderCatRequests();
+      // Update badges
+      const count = catRequests.length;
+      const countBadge = document.getElementById("cat-req-count-badge");
+      const navBadge   = document.getElementById("nav-cats-badge");
+      if (count > 0) {
+        countBadge.textContent = count; countBadge.style.display = "inline";
+        navBadge.textContent   = count; navBadge.style.display   = "inline";
+      } else {
+        countBadge.style.display = "none";
+        navBadge.style.display   = "none";
+      }
+    } catch (err) {
+      showToast("Could not load category requests: " + err.message, "error");
+    } finally {
+      document.getElementById("cat-req-loading").style.display = "none";
+    }
+  }
+
+  function renderCatRequests() {
+    const listEl  = document.getElementById("cat-req-list");
+    const emptyEl = document.getElementById("cat-req-empty");
+    if (catRequests.length === 0) { emptyEl.classList.remove("hidden"); listEl.innerHTML = ""; return; }
+    emptyEl.classList.add("hidden");
+    listEl.innerHTML = catRequests.map(r => `
+      <div class="cat-req-item">
+        <div class="cat-req-info">
+          <span class="cat-req-name"><i class="bi bi-tag"></i> ${escapeHtml(r.name)}</span>
+          <span class="cat-req-meta"><i class="bi bi-person"></i> ${escapeHtml(r.userEmail || r.userId || "Unknown")}
+            ${r.createdAt ? ` &middot; ${new Date(r.createdAt.toDate()).toLocaleDateString()}` : ""}</span>
+        </div>
+        <div class="cat-req-actions">
+          <button class="btn btn-sm btn-primary approve-req-btn" data-id="${r.id}" data-name="${escapeHtml(r.name)}" style="font-size:0.78rem;">
+            <i class="bi bi-check-lg"></i> Approve
+          </button>
+          <button class="btn btn-outline-danger btn-sm dismiss-req-btn" data-id="${r.id}" style="font-size:0.78rem;">
+            <i class="bi bi-x-lg"></i> Dismiss
+          </button>
+        </div>
+      </div>
+    `).join("");
+    listEl.querySelectorAll(".approve-req-btn").forEach(btn => {
+      btn.addEventListener("click", () => approveCatRequest(btn.dataset.id, btn.dataset.name));
+    });
+    listEl.querySelectorAll(".dismiss-req-btn").forEach(btn => {
+      btn.addEventListener("click", () => dismissCatRequest(btn.dataset.id));
+    });
+  }
+
+  async function approveCatRequest(id, name) {
+    try {
+      await addDoc(collection(db, "categories"), { name, group: "Other", type: "category", createdAt: serverTimestamp() });
+      await updateDoc(doc(db, "categoryRequests", id), { status: "approved" });
+      catRequests = catRequests.filter(r => r.id !== id);
+      renderCatRequests();
+      showToast(`"${name}" approved and added under Other`, "success");
+      loadCategories();
+    } catch (err) { showToast("Approve failed: " + err.message, "error"); }
+  }
+
+  async function dismissCatRequest(id) {
+    try {
+      await updateDoc(doc(db, "categoryRequests", id), { status: "dismissed" });
+      catRequests = catRequests.filter(r => r.id !== id);
+      renderCatRequests();
+      showToast("Request dismissed", "success");
+    } catch (err) { showToast("Dismiss failed: " + err.message, "error"); }
   }
 
   // ==================== FEATURE REQUESTS SECTION ====================

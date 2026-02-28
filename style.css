@@ -2250,6 +2250,22 @@ footer ul li a:hover { color: var(--white); }
 }
 .card-video-badge i { color: #ff4444; font-size: 0.75rem; }
 
+/* ---- Category request rows (admin panel) ---- */
+.cat-req-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--gray-100);
+  flex-wrap: wrap;
+}
+.cat-req-item:last-child { border-bottom: none; }
+.cat-req-info { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
+.cat-req-name { font-weight: 700; font-size: 0.9rem; color: var(--dark-2); }
+.cat-req-meta { font-size: 0.78rem; color: var(--gray-500); }
+.cat-req-actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
+
 /* ---- Form check toggle (negotiable in dashboard) ---- */
 .form-check-toggle {
   display: inline-flex;

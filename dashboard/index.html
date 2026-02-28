@@ -146,6 +146,21 @@
               <select class="form-control" id="ad-category" required>
                 <!-- populated by JS -->
               </select>
+              <div style="margin-top:0.4rem;">
+                <button type="button" id="suggest-cat-toggle" class="btn btn-ghost btn-xs" style="font-size:0.78rem;color:var(--primary);">
+                  <i class="bi bi-question-circle"></i> Can't find your category?
+                </button>
+                <div id="suggest-cat-form" style="display:none;margin-top:0.5rem;background:var(--gray-50);border:1.5px solid var(--gray-200);border-radius:var(--radius);padding:0.75rem;">
+                  <p style="font-size:0.8rem;color:var(--gray-500);margin-bottom:0.5rem;">
+                    Suggest a category and we'll add it soon. For now, choose <strong>Other</strong>.
+                  </p>
+                  <div style="display:flex;gap:0.5rem;">
+                    <input type="text" class="form-control" id="suggest-cat-input" placeholder="e.g. Electric Scooter" maxlength="60" style="flex:1;" />
+                    <button type="button" class="btn btn-primary btn-sm" id="suggest-cat-btn">Send</button>
+                  </div>
+                  <div id="suggest-cat-msg" style="display:none;margin-top:0.4rem;font-size:0.8rem;"></div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1464,6 +1479,42 @@
   // Close sidebar when a tab is selected on mobile
   document.querySelectorAll(".sidebar-nav a[data-tab]").forEach(a => {
     a.addEventListener("click", () => { if (window.innerWidth < 769) closeMobSidebar(); });
+  });
+
+  // ---- Suggest Category ----
+  document.getElementById("suggest-cat-toggle").addEventListener("click", () => {
+    const form = document.getElementById("suggest-cat-form");
+    form.style.display = form.style.display === "none" ? "block" : "none";
+  });
+
+  document.getElementById("suggest-cat-btn").addEventListener("click", async () => {
+    const name  = document.getElementById("suggest-cat-input").value.trim();
+    const msgEl = document.getElementById("suggest-cat-msg");
+    const btn   = document.getElementById("suggest-cat-btn");
+    if (!name) return;
+    btn.disabled = true; btn.textContent = "Sending...";
+    msgEl.style.display = "none";
+    try {
+      await addDoc(collection(db, "categoryRequests"), {
+        name,
+        userId:    currentUser.uid,
+        userEmail: currentUser.email || "",
+        createdAt: serverTimestamp(),
+        status:    "pending",
+      });
+      msgEl.innerHTML = `<span style="color:var(--success);"><i class="bi bi-check-circle"></i> Sent! We'll review and add it soon.</span>`;
+      msgEl.style.display = "block";
+      document.getElementById("suggest-cat-input").value = "";
+      setTimeout(() => {
+        document.getElementById("suggest-cat-form").style.display = "none";
+        msgEl.style.display = "none";
+      }, 3000);
+    } catch (err) {
+      msgEl.innerHTML = `<span style="color:var(--danger);">Failed: ${err.message}</span>`;
+      msgEl.style.display = "block";
+    } finally {
+      btn.disabled = false; btn.textContent = "Send";
+    }
   });
 </script>
 </body>
