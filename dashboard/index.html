@@ -238,6 +238,18 @@
         </button>
       </div>
 
+      <div class="whatsapp-video-note">
+        <i class="bi bi-camera-video-fill" style="color:#25D366;font-size:1.2rem;flex-shrink:0;"></i>
+        <div>
+          <strong>Want a video on your listing?</strong>
+          Record a short video of your item and send it to
+          <a href="https://wa.me/94706421998" target="_blank" style="color:#25D366;font-weight:700;">
+            <i class="bi bi-whatsapp"></i> +94 70 642 1998
+          </a>
+          on WhatsApp along with your <strong>Listing ID</strong>. We'll upload it to YouTube and add it to your ad for free.
+        </div>
+      </div>
+
       <div id="my-ads-loading" style="text-align:center;padding:2.5rem;">
         <div class="spinner" style="margin:0 auto;"></div>
       </div>
@@ -746,6 +758,15 @@
         });
       });
 
+      listEl.querySelectorAll(".copy-id-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          navigator.clipboard.writeText(btn.dataset.id).then(() => {
+            btn.innerHTML = '<i class="bi bi-clipboard-check"></i> Copied!';
+            setTimeout(() => { btn.innerHTML = '<i class="bi bi-clipboard"></i> Copy ID'; }, 2000);
+          });
+        });
+      });
+
       // Auto-open edit modal if URL has ?edit=adId
       const editId = new URLSearchParams(window.location.search).get("edit");
       if (editId) {
@@ -780,6 +801,12 @@
              onerror="this.src='https://placehold.co/90x70/e2e8f0/94a3b8?text=No+Image'" />
         <div class="my-ad-info">
           <div class="my-ad-title">${escapeHtml(ad.title)}</div>
+          <div class="my-ad-id-row">
+            <span class="my-ad-id-label"><i class="bi bi-fingerprint"></i> ID: <code class="my-ad-id-code">${ad.id}</code></span>
+            <button class="btn btn-ghost btn-xs copy-id-btn" data-id="${ad.id}" title="Copy listing ID">
+              <i class="bi bi-clipboard"></i> Copy ID
+            </button>
+          </div>
           <div class="my-ad-meta">
             <span><i class="bi bi-geo-alt"></i> ${escapeHtml(ad.location || "-")}</span>
             <span><i class="bi bi-tag"></i> ${escapeHtml(ad.category || "Other")}</span>

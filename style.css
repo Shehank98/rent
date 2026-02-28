@@ -1271,6 +1271,48 @@ textarea.form-control { resize: vertical; min-height: 100px; }
   margin-bottom: 0.5rem;
 }
 .my-ad-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap; }
+.my-ad-id-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+  flex-wrap: wrap;
+}
+.my-ad-id-label {
+  font-size: 0.75rem;
+  color: var(--gray-500);
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.my-ad-id-code {
+  font-family: monospace;
+  font-size: 0.72rem;
+  background: var(--gray-100);
+  border-radius: 4px;
+  padding: 0.1rem 0.35rem;
+  color: var(--gray-600);
+  user-select: all;
+}
+.btn-xs {
+  font-size: 0.72rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-sm);
+  line-height: 1.4;
+}
+.whatsapp-video-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: #f0fdf4;
+  border: 1.5px solid #86efac;
+  border-radius: var(--radius);
+  padding: 0.9rem 1rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.875rem;
+  color: var(--gray-700);
+  line-height: 1.55;
+}
 
 /* ---------- ADMIN PANEL ---------- */
 .admin-layout {
@@ -1701,10 +1743,10 @@ footer ul li a:hover { color: var(--white); }
   .filter-search-wrap input { padding-left: 2.25rem; }
   .filter-bar .filter-select,
   .filter-bar .filter-search-wrap { width: 100%; }
-  /* Restore side-by-side min/max in mobile drawer */
-  .filter-bar .filter-price-range { width: 100%; flex-direction: row; gap: 0.35rem; }
-  .filter-bar .filter-price-range .price-range-sep { display: inline; }
-  .filter-bar .filter-price-input { flex: 1; width: auto; }
+  /* Stack min/max vertically in mobile drawer */
+  .filter-bar .filter-price-range { width: 100%; flex-direction: column; gap: 0.4rem; }
+  .filter-bar .filter-price-range .price-range-sep { display: none; }
+  .filter-bar .filter-price-input { width: 100%; flex: none; }
   .filter-bar .filter-verified-toggle { width: 100%; justify-content: center; }
   .filter-bar .results-count { display: none; }
   .filter-drawer-header { display: flex !important; }
