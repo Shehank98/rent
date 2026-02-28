@@ -1550,7 +1550,7 @@
     });
     // Navigate to ad
     listEl.querySelectorAll("[data-goto-ad]").forEach(btn => {
-      btn.addEventListener("click", () => window.open(`ad.html?id=${btn.dataset.gotoAd}`, "_blank"));
+      btn.addEventListener("click", () => window.open(`/ad/?id=${btn.dataset.gotoAd}`, "_blank"));
     });
     // Jump to listing in admin ads section
     listEl.querySelectorAll("[data-jump-ad]").forEach(btn => {

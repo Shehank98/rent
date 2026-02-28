@@ -301,7 +301,7 @@
 
   function handlePostAdClick(e) {
     e.preventDefault();
-    if (currentUser) window.location.href = "dashboard.html";
+    if (currentUser) window.location.href = "/dashboard/";
     else document.getElementById("signin-modal").classList.add("open");
   }
   document.querySelectorAll(".post-ad-btn").forEach(btn => btn.addEventListener("click", handlePostAdClick));
@@ -315,7 +315,7 @@
     const btn = document.getElementById("modal-google-signin");
     btn.disabled = true;
     btn.innerHTML = `<span class="spinner spinner-sm" style="display:inline-block;margin-right:0.5rem;"></span> Signing in...`;
-    try { await signInWithGoogle(); window.location.href = "dashboard.html"; }
+    try { await signInWithGoogle(); window.location.href = "/dashboard/"; }
     catch (_) { btn.disabled = false; btn.innerHTML = `<i class="bi bi-google"></i> Continue with Google`; }
   });
 
